@@ -1,50 +1,62 @@
-# Welcome to your Expo app 👋
+# iPhone天気予報アプリ
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native + Expo で作成したiPhone向け天気予報アプリ。
+気象庁API（JMA）からリアルタイムデータを取得して3日間・週間予報を表示する。
 
-## Get started
+- **公開URL**: https://masauehr.github.io/iphone-weather-app/
+- **対応地域**: 全47都道府県
 
-1. Install dependencies
+## 機能
 
-   ```bash
-   npm install
-   ```
+| 機能 | 内容 |
+|------|------|
+| 短期予報 | 3日間の天気・降水確率・最高/最低気温 |
+| 週間予報 | 7日間の天気・降水確率・最高/最低気温 |
+| 地域選択 | 主要6都市クイック選択 ＋ 全47都道府県モーダル |
+| 天気絵文字 | 時々→`//`、一時→`/` の区切り付き複合表示 |
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## 起動方法（開発）
 
 ```bash
-npm run reset-project
+# 依存パッケージのインストール
+npm install
+
+# 開発サーバー起動
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+起動後、iPhoneの「Expo Go」アプリでQRコードをスキャン（MacとiPhoneが同じWi-Fi必須）。
 
-## Learn more
+## デプロイ（GitHub Pages）
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm run deploy
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+→ https://masauehr.github.io/iphone-weather-app/ が更新される。
 
-## Join the community
+## ファイル構成
 
-Join our community of developers creating universal apps.
+```
+app/
+└── (tabs)/
+    └── index.tsx   ← メイン画面（天気予報表示）
+CLAUDE.md           ← Claude Code用プロジェクト説明
+deploy.js           ← GitHub Pagesデプロイスクリプト
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 技術スタック
+
+| 項目 | 内容 |
+|------|------|
+| フレームワーク | React Native（Expo SDK 54） |
+| 言語 | TypeScript |
+| データソース | 気象庁API（JMA） |
+| Web公開 | GitHub Pages |
+
+## 今後の拡張候補
+
+- プッシュ通知（警報・注意報）
+- お気に入り地点の保存
+- 週間予報の天気テキスト表示
+- App Store正式公開
