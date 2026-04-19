@@ -1,22 +1,14 @@
 import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import WebView from 'react-native-webview';
 import { radarHtml } from '@/assets/html/radarHtml';
 
 export default function RadarScreen() {
-  const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <WebView
-        source={{ html: radarHtml }}
-        style={styles.webview}
-        originWhitelist={['*']}
-        javaScriptEnabled
-        domStorageEnabled
-        allowsInlineMediaPlayback
-        scrollEnabled={false}
-        bounces={false}
-        overScrollMode="never"
+    <View style={styles.container}>
+      <iframe
+        srcDoc={radarHtml}
+        style={styles.iframe as any}
+        title="レーダー+衛星"
+        sandbox="allow-scripts allow-same-origin"
       />
     </View>
   );
@@ -27,8 +19,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a2e',
   },
-  webview: {
+  iframe: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    border: 'none',
+    width: '100%',
+    height: '100%',
   },
 });
