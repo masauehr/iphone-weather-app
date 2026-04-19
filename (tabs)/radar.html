@@ -1,0 +1,987 @@
+<!DOCTYPE html><html  lang="en"><head><title data-rh="true"></title><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><style id="expo-reset">#root,body,html{height:100%}body{overflow:hidden}#root{display:flex}</style><style id="react-native-stylesheet">[stylesheet-group="0"]{}
+body{margin:0;}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0;}
+html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+input::-webkit-search-cancel-button,input::-webkit-search-decoration,input::-webkit-search-results-button,input::-webkit-search-results-decoration{display:none;}
+[stylesheet-group="1"]{}
+.css-11aywtz{-moz-appearance:textfield;-webkit-appearance:none;background-color:rgba(0,0,0,0.00);border-bottom-left-radius:0px;border-bottom-right-radius:0px;border-top-left-radius:0px;border-top-right-radius:0px;border:0 solid black;box-sizing:border-box;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0px;padding:0px;resize:none;}
+.css-146c3p1{background-color:rgba(0,0,0,0.00);border:0 solid black;box-sizing:border-box;color:rgba(0,0,0,1.00);display:inline;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;list-style:none;margin:0px;padding:0px;position:relative;text-align:start;text-decoration:none;white-space:pre-wrap;word-wrap:break-word;}
+.css-1jxf684{background-color:rgba(0,0,0,0.00);border:0 solid black;box-sizing:border-box;color:inherit;display:inline;font:inherit;list-style:none;margin:0px;padding:0px;position:relative;text-align:inherit;text-decoration:none;white-space:inherit;word-wrap:break-word;}
+.css-9pa8cd{bottom:0px;height:100%;left:0px;opacity:0;position:absolute;right:0px;top:0px;width:100%;z-index:-1;}
+.css-g5y9jx{align-content:flex-start;align-items:stretch;background-color:rgba(0,0,0,0.00);border:0 solid black;box-sizing:border-box;display:flex;flex-basis:auto;flex-direction:column;flex-shrink:0;list-style:none;margin:0px;min-height:0px;min-width:0px;padding:0px;position:relative;text-decoration:none;z-index:0;}
+[stylesheet-group="2"]{}
+.r-11mg6pl{border-bottom-color:rgba(255,255,255,1.00);border-left-color:rgba(255,255,255,1.00);border-right-color:rgba(255,255,255,1.00);border-top-color:rgba(255,255,255,1.00);}
+.r-13awgt0{flex:1;}
+.r-1867qdf{border-bottom-left-radius:16px;border-bottom-right-radius:16px;border-top-left-radius:16px;border-top-right-radius:16px;}
+.r-1awa8pu{border-bottom-color:rgba(101,119,134,1.00);border-left-color:rgba(101,119,134,1.00);border-right-color:rgba(101,119,134,1.00);border-top-color:rgba(101,119,134,1.00);}
+.r-1bq2mok{margin:3px;}
+.r-1d4xg89{border-bottom-color:rgba(170,184,194,1.00);border-left-color:rgba(170,184,194,1.00);border-right-color:rgba(170,184,194,1.00);border-top-color:rgba(170,184,194,1.00);}
+.r-1dzdj1l{border-bottom-left-radius:10px;border-bottom-right-radius:10px;border-top-left-radius:10px;border-top-right-radius:10px;}
+.r-1f0042m{border-bottom-left-radius:5px;border-bottom-right-radius:5px;border-top-left-radius:5px;border-top-right-radius:5px;}
+.r-1j16mh1{border-bottom-left-radius:100%;border-bottom-right-radius:100%;border-top-left-radius:100%;border-top-right-radius:100%;}
+.r-1jkafct{border-bottom-left-radius:2px;border-bottom-right-radius:2px;border-top-left-radius:2px;border-top-right-radius:2px;}
+.r-1jyn79y{border-bottom-color:rgba(0,150,136,1.00);border-left-color:rgba(0,150,136,1.00);border-right-color:rgba(0,150,136,1.00);border-top-color:rgba(0,150,136,1.00);}
+.r-1pcd2l5{padding:20px;}
+.r-1phboty{border-bottom-style:solid;border-left-style:solid;border-right-style:solid;border-top-style:solid;}
+.r-1q9bdsx{border-bottom-left-radius:12px;border-bottom-right-radius:12px;border-top-left-radius:12px;border-top-right-radius:12px;}
+.r-1qsk4np{overflow-x:clip;overflow-y:clip;}
+.r-1rvyss1{border-bottom-color:rgba(255,255,255,0.20);border-left-color:rgba(255,255,255,0.20);border-right-color:rgba(255,255,255,0.20);border-top-color:rgba(255,255,255,0.20);}
+.r-1slz7xr{padding:14px;}
+.r-1sp51qo{padding:10px;}
+.r-1udh08x{overflow-x:hidden;overflow-y:hidden;}
+.r-1uu6nss{padding:5px;}
+.r-1uzt0r1{border-bottom-color:rgba(74,144,226,1.00);border-left-color:rgba(74,144,226,1.00);border-right-color:rgba(74,144,226,1.00);border-top-color:rgba(74,144,226,1.00);}
+.r-1xfd6ze{border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:8px;border-top-right-radius:8px;}
+.r-3ov0d1{border-bottom-color:rgba(176,205,232,1.00);border-left-color:rgba(176,205,232,1.00);border-right-color:rgba(176,205,232,1.00);border-top-color:rgba(176,205,232,1.00);}
+.r-494qqr{padding:32px;}
+.r-4a18lf{border-bottom-color:rgba(255,0,0,1.00);border-left-color:rgba(255,0,0,1.00);border-right-color:rgba(255,0,0,1.00);border-top-color:rgba(255,0,0,1.00);}
+.r-60ke3l{border-bottom-color:rgba(0,128,0,1.00);border-left-color:rgba(0,128,0,1.00);border-right-color:rgba(0,128,0,1.00);border-top-color:rgba(0,128,0,1.00);}
+.r-6t2glc{border-bottom-left-radius:40px;border-bottom-right-radius:40px;border-top-left-radius:40px;border-top-right-radius:40px;}
+.r-9x6qib{border-bottom-color:rgba(204,214,221,1.00);border-left-color:rgba(204,214,221,1.00);border-right-color:rgba(204,214,221,1.00);border-top-color:rgba(204,214,221,1.00);}
+.r-crgep1{margin:0px;}
+.r-d045u9{border-bottom-width:2px;border-left-width:2px;border-right-width:2px;border-top-width:2px;}
+.r-d23pfw{padding:24px;}
+.r-dta0w2{flex:2;}
+.r-edyy15{padding:8px;}
+.r-fx7oqy{border-bottom-color:rgba(0,0,255,1.00);border-left-color:rgba(0,0,255,1.00);border-right-color:rgba(0,0,255,1.00);border-top-color:rgba(0,0,255,1.00);}
+.r-krxsd3{display:-webkit-box;}
+.r-rs99b7{border-bottom-width:1px;border-left-width:1px;border-right-width:1px;border-top-width:1px;}
+.r-sax9pr{flex:1.5;}
+.r-t23y2h{border-bottom-left-radius:14px;border-bottom-right-radius:14px;border-top-left-radius:14px;border-top-right-radius:14px;}
+.r-t60dpp{padding:0px;}
+.r-wg31gx{border-bottom-color:rgba(49,53,56,1.00);border-left-color:rgba(49,53,56,1.00);border-right-color:rgba(49,53,56,1.00);border-top-color:rgba(49,53,56,1.00);}
+.r-xoduu5{display:inline-flex;}
+.r-ywje51{margin:auto;}
+.r-z2wwpe{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-top-left-radius:4px;border-top-right-radius:4px;}
+[stylesheet-group="2.1"]{}
+.r-11f147o{padding-bottom:8px;padding-top:8px;}
+.r-11gswi8{padding-left:3px;padding-right:3px;}
+.r-17q4wm6{margin-left:5px;margin-right:5px;}
+.r-184id4b{margin-bottom:12px;margin-top:12px;}
+.r-1d7mnkm{padding-bottom:15px;padding-top:15px;}
+.r-1e084wi{padding-left:0px;padding-right:0px;}
+.r-1mmae3n{padding-bottom:12px;padding-top:12px;}
+.r-1ntr0p{padding-left:5px;padding-right:5px;}
+.r-1rsorjc{padding-left:36px;padding-right:36px;}
+.r-1ubuhtd{padding-left:10px;padding-right:10px;}
+.r-1yd117h{padding-bottom:7px;padding-top:7px;}
+.r-3o4zer{padding-left:12px;padding-right:12px;}
+.r-cxgwc0{padding-left:24px;padding-right:24px;}
+.r-f8sm7e{margin-left:auto;margin-right:auto;}
+.r-is05cd{padding-left:8px;padding-right:8px;}
+.r-jdiy1a{margin-left:11px;margin-right:11px;}
+.r-jusfrs{margin-left:12px;margin-right:12px;}
+.r-n5f61p{margin-bottom:3px;margin-top:3px;}
+.r-n7gxbd{padding-left:4px;padding-right:4px;}
+.r-u9wvl5{padding-left:20px;padding-right:20px;}
+.r-ugi1tw{padding-left:5%;padding-right:5%;}
+.r-vuvdlw{padding-bottom:6px;padding-top:6px;}
+.r-w7s2jr{padding-bottom:16px;padding-top:16px;}
+.r-ytbthy{padding-bottom:10px;padding-top:10px;}
+[stylesheet-group="2.2"]{}
+.r-10s2tm5{left:0%;}
+.r-16o8guy{right:100%;}
+.r-1a11zyx{margin-right:12px;}
+.r-1cwvpvk{margin-left:12px;}
+.r-1e97lx8{margin-right:3px;}
+.r-1euzeng{padding-left:24px;}
+.r-1g4tz6n{margin-right:-14.5px;}
+.r-1h31txp{padding-right:16px;}
+.r-1lhn9r{margin-left:-14.5px;}
+.r-1sqnqi2{margin-left:3px;}
+.r-1vl2501{padding-right:24px;}
+.r-9mo606{margin-right:10px;}
+.r-c59us2{left:-3px;}
+.r-dqe1q{right:0%;}
+.r-qb41rp{margin-right:5px;}
+.r-rci37q{left:100%;}
+.r-uhung1{margin-left:10px;}
+.r-vpmibe{right:-3px;}
+.r-w67my2{padding-left:16px;}
+.r-wizibn{margin-left:5px;}
+[stylesheet-group="3"]{}
+.r-105ug2t{pointer-events:auto!important;}
+.r-10ptun7{height:16px;}
+.r-10v3vxq{transform:scaleX(-1);}
+.r-10x49cs{font-size:10px;}
+.r-10xqauy{padding-top:env(safe-area-inset-top);}
+.r-11j9u27{visibility:hidden;}
+.r-11mpjr4{background-color:rgba(223,223,223,1.00);}
+.r-11t4n93{color:rgba(34,34,34,1.00);}
+.r-11udlyb{background-color:rgba(0,150,136,1.00);}
+.r-11v9fek{min-width:180px;}
+.r-11yh6sk{overflow-x:hidden;}
+.r-12bsgc{background-color:rgba(232,244,253,1.00);}
+.r-12f6czt{top:17px;}
+.r-12vffkv>* {pointer-events:auto;}
+.r-12vffkv{pointer-events:none!important;}
+.r-135wba7{line-height:24px;}
+.r-13aq9py{animation-name:r-1iq689l;}
+.r-13qz1uu{width:100%;}
+.r-13tjlyg{transition-duration:0.1s;}
+.r-1472mwg{height:24px;}
+.r-14glzig{color:rgba(52,152,219,1.00);}
+.r-14gqq1x{margin-top:4px;}
+.r-14lw9ot{background-color:rgba(255,255,255,1.00);}
+.r-14sbq61{background-color:rgba(33,150,243,1.00);}
+.r-150rngu{-webkit-overflow-scrolling:touch;}
+.r-15kcn5h{color:rgba(26,58,92,1.00);}
+.r-16y2uox{flex-grow:1;}
+.r-173mn98{align-self:flex-end;}
+.r-173mzie{transform:scaleY(-1);}
+.r-1777fci{justify-content:center;}
+.r-17bb2tj{animation-duration:0.75s;}
+.r-17leim2{background-repeat:repeat;}
+.r-17rnw9f{line-height:30px;}
+.r-17s6mgv{justify-content:flex-end;}
+.r-17tb59b{opacity:0.7;}
+.r-17tloay{opacity:0.6;}
+.r-17u3ijr{background-color:rgba(155,161,166,0.27);}
+.r-181bzza{color:rgba(85,85,85,1.00);}
+.r-184en5c{z-index:1;}
+.r-18nhz7w{top:-3px;}
+.r-18u1ve8{color:rgba(255,255,255,0.40);}
+.r-18u37iz{flex-direction:row;}
+.r-18v0ysc{color:rgba(231,76,60,1.00);}
+.r-19h5ruw{margin-top:15px;}
+.r-19oahor{font-size:64px;}
+.r-19wmn03{width:20px;}
+.r-19z077z{touch-action:none;}
+.r-1a2p6p6{-webkit-text-decoration-style:solid;text-decoration-style:solid;}
+.r-1abnn5w{animation-play-state:paused;}
+.r-1acpoxo{width:36px;}
+.r-1aiqnjv{font-family:monospace,monospace;}
+.r-1aockid{width:40px;}
+.r-1awozwy{align-items:center;}
+.r-1ay1djp{animation-duration:1s;}
+.r-1b43r93{font-size:14px;}
+.r-1bymd8e{margin-top:2px;}
+.r-1c6unfx{forced-color-adjust:none;}
+.r-1c85bru{width:270px;}
+.r-1cad53l{margin-bottom:14px;}
+.r-1cmwbt1{gap:8px;}
+.r-1d2f490{left:0px;}
+.r-1d5kdc7{flex-direction:column-reverse;}
+.r-1ddef8g{-webkit-text-decoration-line:underline;text-decoration-line:underline;}
+.r-1dernwh{height:70%;}
+.r-1dinhj7{background-color:rgba(240,244,248,1.00);}
+.r-1dnsj32{color:rgba(128,128,128,1.00);}
+.r-1ei5mc7{cursor:inherit;}
+.r-1enofrn{font-size:12px;}
+.r-1euycsn{flex-direction:row-reverse;}
+.r-1ewcgjf{box-shadow:0px 1px 3px rgba(0,0,0,0.5);}
+.r-1ff274t{text-align:right;}
+.r-1ffj0ar{background-color:rgba(0,0,0,0.40);}
+.r-1g80hic{opacity:0.8;}
+.r-1ge9hsw{max-width:960px;}
+.r-1ghxqbu{font-variant:tabular-nums;}
+.r-1gkfh8e{font-size:11px;}
+.r-1h0z5md{justify-content:flex-start;}
+.r-1h2t8mc{width:0px;}
+.r-1habvwh{align-items:flex-start;}
+.r-1i10wst{font-size:18px;}
+.r-1i6wzkk{-moz-transition-property:opacity;-webkit-transition-property:opacity;transition-property:opacity;}
+.r-1i71y14{gap:14px;}
+.r-1ikidpy{letter-spacing:0.5px;}
+.r-1iln25a{word-wrap:normal;}
+.r-1inkyih{font-size:17px;}
+.r-1iusvr4{flex-basis:0px;}
+.r-1iuttuq{bottom:-90px;}
+.r-1janqcz{width:16px;}
+.r-1jkjb{margin-left:8px;}
+.r-1kb76zh{margin-right:8px;}
+.r-1kfrs79{font-weight:600;}
+.r-1khnkhu{color:rgba(51,51,51,1.00);}
+.r-1kihuf0{align-self:center;}
+.r-1kl1mp1{height:250px;}
+.r-1ld3bg{top:-4px;}
+.r-1ldzwu0{animation-timing-function:linear;}
+.r-1loqt21{cursor:pointer;}
+.r-1mlwlqe{flex-basis:auto;}
+.r-1mrlafo{background-position:0;}
+.r-1muvv40{animation-iteration-count:infinite;}
+.r-1niwhzg{background-color:rgba(0,0,0,0.00);}
+.r-1nlw0im{bottom:8px;}
+.r-1no09lo{margin-top:28px;}
+.r-1nxhmzv{margin-bottom:28px;}
+.r-1ny4l3l{outline-style:none;}
+.r-1ocf4r9{scroll-snap-type:y mandatory;}
+.r-1onu96p{border-curve:continuous;}
+.r-1oszu61{align-items:stretch;}
+.r-1otgn73{touch-action:manipulation;}
+.r-1p0dtai{bottom:0px;}
+.r-1pi2tsx{height:100%;}
+.r-1pm8pkb{font-family:Courier;}
+.r-1qd0xha{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.r-1qulhi1{animation-name:r-1pzkwqh;}
+.r-1r4fvd0{color:rgba(82,169,255,1.00);}
+.r-1r74h94{left:8px;}
+.r-1r8g8re{height:36px;}
+.r-1rnoaur{overflow-y:auto;}
+.r-1sg8ghl{z-index:1000;}
+.r-1srvcxg{color:rgba(170,170,170,1.00);}
+.r-1ssbvtb{gap:12px;}
+.r-1sxrcry{background-size:auto;}
+.r-1udbk01{text-overflow:ellipsis;}
+.r-1ui5ee8{font-size:32px;}
+.r-1v78gzs{color:rgba(10,126,164,1.00);}
+.r-1vkfoo1{background-color:rgba(74,144,226,1.00);}
+.r-1vr29t4{font-weight:800;}
+.r-1w2pmg{height:0px;}
+.r-1w6e6rj{flex-wrap:wrap;}
+.r-1wbh5a2{flex-shrink:1;}
+.r-1wtj0ep{justify-content:space-between;}
+.r-1wyyakw{z-index:-1;}
+.r-1x0uki6{margin-top:20px;}
+.r-1xcajam{position:fixed;}
+.r-1xnzce8{-moz-user-select:text;-webkit-user-select:text;user-select:text;}
+.r-1xpsq9i{box-shadow:0px 3px 3px rgba(0, 0, 0, 0.33);}
+.r-1xzupcd{width:13px;}
+.r-1yef0xd{animation-name:r-11cv4x;}
+.r-1yv2962{box-shadow:0px 0px 4px rgba(0,0,0,0.05);}
+.r-2eszeu::-webkit-scrollbar{display:none}
+.r-2eszeu{scrollbar-width:none;}
+.r-30o5oe{-moz-appearance:none;-ms-appearance:none;-webkit-appearance:none;appearance:none;}
+.r-356f0p{letter-spacing:0.35px;}
+.r-37tt59{line-height:32px;}
+.r-3mc0re{right:8px;}
+.r-3s2u2q{white-space:nowrap;}
+.r-417010{z-index:0;}
+.r-4gszlv{background-size:cover;}
+.r-4v7adb{height:5px;}
+.r-5753bg{background-color:rgba(26,26,46,1.00);}
+.r-5oul0u{margin-bottom:8px;}
+.r-60vfwk{min-width:1px;}
+.r-633pao>* {pointer-events:none;}
+.r-633pao{pointer-events:none!important;}
+.r-6dt33c{opacity:1;}
+.r-6gpygo{margin-bottom:12px;}
+.r-6taxm2:-ms-input-placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6taxm2::-moz-placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6taxm2::-webkit-input-placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6taxm2::placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6uxfom{margin-left:24px;}
+.r-726pan{width:31px;}
+.r-76blku{height:21px;}
+.r-7cikom{font-size:inherit;}
+.r-7q8q6z{cursor:default;}
+.r-8akbws{-webkit-box-orient:vertical;}
+.r-8ay8q1{letter-spacing:0.1px;}
+.r-97e31f{padding-bottom:env(safe-area-inset-bottom);}
+.r-9daxd3{animation-duration:250ms;}
+.r-a023e6{font-size:15px;}
+.r-adyw6z{font-size:20px;}
+.r-agouwx{transform:translateZ(0);}
+.r-ah5dr5>* {pointer-events:none;}
+.r-ah5dr5{pointer-events:auto!important;}
+.r-aruset{font-weight:200;}
+.r-bcqeeo{min-width:0px;}
+.r-bi4vy9{transform:translateY(100%);}
+.r-bt1l66{min-height:20px;}
+.r-buy8e9{overflow-y:hidden;}
+.r-bv2aro{padding-left:env(safe-area-inset-left);}
+.r-c68hjy{color:rgba(161,161,161,1.00);}
+.r-cpa5s6{scroll-snap-align:start;}
+.r-cqee49{color:rgba(0,0,0,1.00);}
+.r-cqzzvf{border-top-right-radius:20px;}
+.r-dkge59{background-color:rgba(170,184,194,1.00);}
+.r-dnmrzs{max-width:100%;}
+.r-drfeu3{background-color:rgba(0,0,0,0.50);}
+.r-ea455c{border:none;}
+.r-eafdt9{transition-duration:0.15s;}
+.r-ebwn4k{animation-name:r-q67da2;}
+.r-ehq7j7{background-size:contain;}
+.r-eqz5dr{flex-direction:column;}
+.r-eu3ka{height:40px;}
+.r-evnaw{font-size:22px;}
+.r-f1w8kp{border-top-left-radius:20px;}
+.r-f4gmv6{gap:16px;}
+.r-f4l0r{color:rgba(204,221,238,1.00);}
+.r-f5c2rd{max-height:75%;}
+.r-fdjqy7{text-align:left;}
+.r-g3mlsw{animation-name:r-t2lo5v;}
+.r-ghxds0{transform:translateY(0%);}
+.r-gtdqiz{position:-webkit-sticky;position:sticky;}
+.r-h0d30l{height:28px;}
+.r-howw7u{color:rgba(255,0,0,1.00);}
+.r-hxflta{padding-right:env(safe-area-inset-right);}
+.r-icoktb{opacity:0.5;}
+.r-ipm5af{top:0px;}
+.r-jwli3a{color:rgba(255,255,255,1.00);}
+.r-k200y{align-self:flex-start;}
+.r-kc8jnq{margin-top:6px;}
+.r-kemksi{background-color:rgba(0,0,0,1.00);}
+.r-kizejy{color:rgba(155,161,166,1.00);}
+.r-knv0ih{margin-top:8px;}
+.r-krg9a9{color:rgba(74,144,226,1.00);}
+.r-l71dzp{margin-top:14px;}
+.r-leqjx2{animation-timing-function:cubic-bezier(0.215, 0.61, 0.355, 1);}
+.r-lltvgl{overflow-x:auto;}
+.r-lpb231{height:168px;}
+.r-lrsllp{width:24px;}
+.r-lrvibr{-moz-user-select:none;-webkit-user-select:none;user-select:none;}
+.r-m6qmqv{color:rgba(221,238,255,1.00);}
+.r-majxgm{font-weight:500;}
+.r-mfh4gg{scroll-snap-type:x mandatory;}
+.r-mhe3cw{z-index:10;}
+.r-mro3nb{background-color:rgba(21,23,24,1.00);}
+.r-n6v787{font-size:13px;}
+.r-o4n3w5{width:23px;}
+.r-obd0qt{align-items:flex-end;}
+.r-ojf8lh{gap:6px;}
+.r-orgf3d{opacity:0;}
+.r-q4m81j{text-align:center;}
+.r-qfi6ny{top:30000px;}
+.r-qklmqi{border-bottom-width:1px;}
+.r-qn3fzs{padding-bottom:24px;}
+.r-qsh48c{left:-35px;}
+.r-rjixqe{line-height:20px;}
+.r-rs94m5{background-image:url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIgogICB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIgogICB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgdmVyc2lvbj0iMS4xIgogICB2aWV3Qm94PSIwIDAgMSAxIgogICBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWluWU1pbiBtZWV0Ij4KICA8cGF0aAogICAgIGQ9Ik0gMC4wNDAzODA1OSwwLjYyNjc3NjcgMC4xNDY0NDY2MSwwLjUyMDcxMDY4IDAuNDI5Mjg5MzIsMC44MDM1NTMzOSAwLjMyMzIyMzMsMC45MDk2MTk0MSB6IE0gMC4yMTcxNTcyOSwwLjgwMzU1MzM5IDAuODUzNTUzMzksMC4xNjcxNTcyOSAwLjk1OTYxOTQxLDAuMjczMjIzMyAwLjMyMzIyMzMsMC45MDk2MTk0MSB6IgogICAgIGlkPSJyZWN0Mzc4MCIKICAgICBzdHlsZT0iZmlsbDojZmZmZmZmO2ZpbGwtb3BhY2l0eToxO3N0cm9rZTpub25lIiAvPgo8L3N2Zz4K");}
+.r-s62m2j{animation-timing-function:cubic-bezier(0.47, 0, 0.745, 0.715);}
+.r-sfbmgh{z-index:9999;}
+.r-so7y2g{line-height:64px;}
+.r-tsynxw{text-transform:uppercase;}
+.r-u04ygo{padding-top:60px;}
+.r-u6sd8q{background-repeat:no-repeat;}
+.r-u8s1d{position:absolute;}
+.r-u92y06{background-color:rgba(255,165,0,1.00);}
+.r-ubezar{font-size:16px;}
+.r-uho16t{font-size:34px;}
+.r-vacyoi{padding-bottom:64px;}
+.r-van48c{caret-color:transparent;}
+.r-vboj7i{top:-7px;}
+.r-vvn4in{background-position:center;}
+.r-vw2c0b{font-weight:bold;}
+.r-wfqgy4{transition-duration:100ms;}
+.r-ws9h79{left:4px;}
+.r-x11e5r{font-family:SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+.r-x3cy2q{background-size:100% 100%;}
+.r-xdvzot{color:rgba(136,136,136,1.00);}
+.r-xx3c9p{animation-name:r-imtty0;}
+.r-y7v2we{background-color:rgba(32,36,37,1.00);}
+.r-z80fyv{height:20px;}
+.r-zchlnj{right:0px;}
+.r-zl2h9q{margin-bottom:2px;}
+.r-zz5t5d{font-size:28px;}
+@-webkit-keyframes r-11cv4x{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+@-webkit-keyframes r-1iq689l{0%{transform:translateY(0%);}100%{transform:translateY(100%);}}
+@-webkit-keyframes r-1pzkwqh{0%{transform:translateY(100%);}100%{transform:translateY(0%);}}
+@-webkit-keyframes r-imtty0{0%{opacity:0;}100%{opacity:1;}}
+@-webkit-keyframes r-q67da2{0%{transform:translateX(-100%);}100%{transform:translateX(400%);}}
+@-webkit-keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}
+@keyframes r-11cv4x{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+@keyframes r-1iq689l{0%{transform:translateY(0%);}100%{transform:translateY(100%);}}
+@keyframes r-1pzkwqh{0%{transform:translateY(100%);}100%{transform:translateY(0%);}}
+@keyframes r-imtty0{0%{opacity:0;}100%{opacity:1;}}
+@keyframes r-q67da2{0%{transform:translateX(-100%);}100%{transform:translateX(400%);}}
+@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script><link rel="icon" href="/iphone-weather-app/favicon.ico" /></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"><!--$--><div style="position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;visibility:hidden"></div><div class="css-g5y9jx r-13awgt0"><div class="css-g5y9jx r-13awgt0 r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af" style="background-color:rgba(242,242,242,1.00);display:flex"><div class="css-g5y9jx r-13awgt0"><div class="css-g5y9jx r-13awgt0"><!--$--><div style="position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;visibility:hidden"></div><div class="css-g5y9jx r-13awgt0" style="flex-direction:column"><div class="css-g5y9jx r-13awgt0 r-1udh08x"><div class="css-g5y9jx r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af" style="z-index:0"><div class="css-g5y9jx r-13awgt0" style="background-color:rgba(242,242,242,1.00)"><div class="css-g5y9jx r-13awgt0"><!--$--><div class="css-g5y9jx r-5753bg r-13awgt0"><iframe srcDoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ja&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;/&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,user-scalable=no,minimum-scale=1,maximum-scale=1&quot;/&gt;
+&lt;title&gt;レーダー+衛星&lt;/title&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.css&quot;/&gt;
+&lt;style&gt;
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh;background:#1a1a2e;color:#e0e0e0;font-family:sans-serif;font-size:12px}
+#header{padding:4px 8px;background:#0f3460;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#header .title{font-weight:bold;font-size:13px}
+#timeDisp{font-size:11px;color:#90caf9}
+#controls{padding:4px 6px;background:#16213e;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+.ctrl-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.btn-group{display:flex;gap:2px}
+button{padding:4px 8px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0;border-radius:4px;font-size:11px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button.active{background:#4a90e2;color:#fff;border-color:#4a90e2}
+button:disabled{opacity:0.35;border-color:#555}
+#autoStatus{font-size:10px;color:#81c784;margin-left:4px}
+#autoStatus.paused{color:#ffb74d}
+#map{flex:1;background:#000;touch-action:none}
+#bottom{padding:4px 6px;background:#0f3460;flex-shrink:0}
+#sliderRow{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+#frameSlider{flex:1;accent-color:#4a90e2;height:24px;cursor:pointer}
+#frameLabel{font-size:10px;white-space:nowrap;color:#90caf9;min-width:36px;text-align:right}
+#loadRow{display:flex;align-items:center;gap:6px;height:14px}
+.load-bar{flex:1;height:4px;background:#333;border-radius:2px;overflow:hidden}
+.load-bar-fill{height:100%;background:#4a90e2;transition:width 0.2s;width:0%}
+#loadStatus{font-size:10px;color:#aaa;min-width:120px}
+.sep{color:#555;font-size:10px}
+select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0;border-radius:4px;font-size:11px}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div id=&quot;header&quot;&gt;
+  &lt;span class=&quot;title&quot;&gt;🌧️🛰️ レーダー+衛星&lt;/span&gt;
+  &lt;span id=&quot;timeDisp&quot;&gt;-&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;div id=&quot;controls&quot;&gt;
+  &lt;div class=&quot;ctrl-row&quot;&gt;
+    &lt;div class=&quot;btn-group&quot;&gt;
+      &lt;button id=&quot;aJP&quot; class=&quot;active&quot; onclick=&quot;setArea(&#x27;jp&#x27;)&quot;&gt;日本域&lt;/button&gt;
+      &lt;button id=&quot;aFD&quot; onclick=&quot;setArea(&#x27;fd&#x27;)&quot;&gt;全球&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;span class=&quot;sep&quot;&gt;|&lt;/span&gt;
+    &lt;div class=&quot;btn-group&quot;&gt;
+      &lt;button id=&quot;bETC&quot; class=&quot;active&quot; onclick=&quot;setBand(&#x27;ETC&#x27;)&quot;&gt;雲頂&lt;/button&gt;
+      &lt;button id=&quot;bB13&quot; onclick=&quot;setBand(&#x27;B13&#x27;)&quot;&gt;赤外&lt;/button&gt;
+      &lt;button id=&quot;bB03&quot; onclick=&quot;setBand(&#x27;B03&#x27;)&quot;&gt;可視&lt;/button&gt;
+      &lt;button id=&quot;bB08&quot; onclick=&quot;setBand(&#x27;B08&#x27;)&quot;&gt;水蒸気&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;span class=&quot;sep&quot;&gt;|&lt;/span&gt;
+    &lt;button onclick=&quot;onBuild()&quot;&gt;更新&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;ctrl-row&quot;&gt;
+    &lt;div class=&quot;btn-group&quot;&gt;
+      &lt;button id=&quot;mBoth&quot;  class=&quot;active&quot; onclick=&quot;setMode(&#x27;both&#x27;)&quot;&gt;重ね&lt;/button&gt;
+      &lt;button id=&quot;mRadar&quot; onclick=&quot;setMode(&#x27;radar&#x27;)&quot;&gt;レーダー&lt;/button&gt;
+      &lt;button id=&quot;mSat&quot;   onclick=&quot;setMode(&#x27;sat&#x27;)&quot;&gt;衛星&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;span class=&quot;sep&quot;&gt;|&lt;/span&gt;
+    &lt;label style=&quot;font-size:11px&quot;&gt;&lt;input type=&quot;checkbox&quot; id=&quot;osmOn&quot; onchange=&quot;toggleOsm(this.checked)&quot;&gt; OSM&lt;/label&gt;
+    &lt;span class=&quot;sep&quot;&gt;|&lt;/span&gt;
+    &lt;select id=&quot;speedSelect&quot; onchange=&quot;onSpeedChange(this.value)&quot;&gt;
+      &lt;option value=&quot;0&quot;&gt;遅い&lt;/option&gt;
+      &lt;option value=&quot;1&quot; selected&gt;普通&lt;/option&gt;
+      &lt;option value=&quot;2&quot;&gt;速い&lt;/option&gt;
+      &lt;option value=&quot;3&quot;&gt;最速&lt;/option&gt;
+    &lt;/select&gt;
+    &lt;span id=&quot;autoStatus&quot;&gt;🔄 AUTO&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id=&quot;map&quot;&gt;&lt;/div&gt;
+
+&lt;div id=&quot;bottom&quot;&gt;
+  &lt;div id=&quot;sliderRow&quot;&gt;
+    &lt;button style=&quot;padding:4px 10px&quot; onclick=&quot;onPlay()&quot;&gt;▶&lt;/button&gt;
+    &lt;button style=&quot;padding:4px 10px&quot; onclick=&quot;onPause()&quot;&gt;⏸&lt;/button&gt;
+    &lt;input id=&quot;frameSlider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;0&quot; value=&quot;0&quot; oninput=&quot;onSlider(this.value)&quot;/&gt;
+    &lt;span id=&quot;frameLabel&quot;&gt;0/0&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div id=&quot;loadRow&quot;&gt;
+    &lt;span id=&quot;loadStatus&quot;&gt;&lt;/span&gt;
+    &lt;div class=&quot;load-bar&quot;&gt;&lt;div id=&quot;loadBarFill&quot; class=&quot;load-bar-fill&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(function(){
+&#x27;use strict&#x27;;
+
+/* ── 定数 ── */
+var FRAME_COUNT    = 12;
+var LOAD_TIMEOUT   = 10000;
+var PROBE_TIMEOUT  = 5000;
+var SPEEDS         = [600,300,150,80];
+var AUTO_INTERVAL  = 60*1000;
+var PAUSE_DURATION = 10*60*1000;
+var LEAD_SEC       = 12.5*60;
+var RADAR_INT      = 5*60;
+
+var PROBE = {
+  fd:{zoom:5,x:28,y:12},
+  jp:{zoom:6,x:56,y:24}
+};
+var SAT_SEG = {
+  ETC:&#x27;SND/ETC&#x27;, B13:&#x27;B13/TBB&#x27;, B03:&#x27;B03/ALBD&#x27;, B08:&#x27;B08/TBB&#x27;
+};
+var AREA_PARAMS = {
+  jp:{nativeZoom:6,interval:2.5*60,center:[35.5,137.0],zoom:6},
+  fd:{nativeZoom:5,interval:10*60, center:[26.2,127.7],zoom:5}
+};
+
+/* ── common.js インライン ── */
+function pad2(n){ return n&lt;10?&#x27;0&#x27;+n:&#x27;&#x27;+n; }
+function fmtUtc(d){
+  return &#x27;&#x27;+d.getUTCFullYear()+pad2(d.getUTCMonth()+1)+pad2(d.getUTCDate())+
+    pad2(d.getUTCHours())+pad2(d.getUTCMinutes())+pad2(d.getUTCSeconds());
+}
+function getBaseTime(leadSec,intervalSec){
+  var t=Date.now()-leadSec*1000;
+  t=t-(t%(intervalSec*1000));
+  var d=new Date(t);
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate(),
+    d.getHours(),d.getMinutes(),d.getSeconds());
+}
+function fmtLocal(d){
+  return d.getFullYear()+&#x27;-&#x27;+pad2(d.getMonth()+1)+&#x27;-&#x27;+pad2(d.getDate())+&#x27; &#x27;+
+    pad2(d.getHours())+&#x27;:&#x27;+pad2(d.getMinutes())+&#x27; JST&#x27;;
+}
+
+/* ── Leaflet 地図 ── */
+var map=L.map(&#x27;map&#x27;,{
+  zoomControl:true,
+  scrollWheelZoom:true,
+  fadeAnimation:false,
+  zoomAnimation:false,
+  tap:false
+}).setView([35.5,137.0],6);
+map.setMinZoom(4);map.setMaxZoom(12);
+
+/* CartoDB Dark（常時表示ベースマップ）— ズーム中も黒画面にならない */
+L.tileLayer(&#x27;https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png&#x27;,{
+  maxZoom:19,
+  subdomains:[&#x27;a&#x27;,&#x27;b&#x27;,&#x27;c&#x27;,&#x27;d&#x27;],
+  attribution:&#x27;© CartoDB&#x27;
+}).addTo(map);
+
+map.createPane(&#x27;satPane&#x27;);
+map.createPane(&#x27;radarPane&#x27;);
+map.createPane(&#x27;coastPane&#x27;);
+map.getPane(&#x27;satPane&#x27;).style.zIndex   = 200;
+map.getPane(&#x27;radarPane&#x27;).style.zIndex = 350;
+map.getPane(&#x27;coastPane&#x27;).style.zIndex = 600;
+/* coastPane はポインタイベントを透過させる */
+map.getPane(&#x27;coastPane&#x27;).style.pointerEvents = &#x27;none&#x27;;
+
+var osmLayer=L.tileLayer(&#x27;https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png&#x27;,{
+  maxZoom:18,attribution:&#x27;© OpenStreetMap contributors&#x27;
+});
+
+/* ── 海岸線（Natural Earth 50m）をCDNから非同期ロード ── */
+fetch(&#x27;https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_coastline.geojson&#x27;)
+  .then(function(r){return r.json();})
+  .then(function(data){
+    L.geoJSON(data,{
+      pane:&#x27;coastPane&#x27;,
+      style:{color:&#x27;#00cc44&#x27;,weight:1.2,opacity:0.85,fill:false}
+    }).addTo(map);
+  })
+  .catch(function(){});  /* オフライン時はサイレント失敗 */
+
+/* ── 状態変数 ── */
+var satFrames=[],radarFrames=[];
+var satLayers=[],radarLayers=[];
+var currentIdx=-1,prevRadarIdx=-1;
+var timerId=null,playing=false,speedIdx=1;
+var isLoading=false;
+var autoTimerId=null,pauseAt=0;
+var latestSatTime=null,latestRadarTime=null;
+var currentArea=&#x27;jp&#x27;,currentBand=&#x27;ETC&#x27;,displayMode=&#x27;both&#x27;;
+var _wasPlaying=false;
+var currentNativeMax=10;
+
+/* ── 表示位置の保存/復元（localStorage）── */
+function saveState(){
+  try{
+    var c=map.getCenter();
+    localStorage.setItem(&#x27;radarState&#x27;,JSON.stringify({
+      lat:c.lat,lng:c.lng,zoom:map.getZoom(),
+      area:currentArea,band:currentBand
+    }));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    var s=localStorage.getItem(&#x27;radarState&#x27;);
+    return s?JSON.parse(s):null;
+  }catch(e){return null;}
+}
+
+/* ── DOM ── */
+var elTime    =document.getElementById(&#x27;timeDisp&#x27;);
+var elSlider  =document.getElementById(&#x27;frameSlider&#x27;);
+var elLabel   =document.getElementById(&#x27;frameLabel&#x27;);
+var elFill    =document.getElementById(&#x27;loadBarFill&#x27;);
+var elStatus  =document.getElementById(&#x27;loadStatus&#x27;);
+var elAuto    =document.getElementById(&#x27;autoStatus&#x27;);
+
+/* ── URL生成 ── */
+function satUrl(area,ymdhms,band){
+  return &#x27;https://www.jma.go.jp/bosai/himawari/data/satimg/&#x27;+
+    ymdhms+&#x27;/&#x27;+area+&#x27;/&#x27;+ymdhms+&#x27;/&#x27;+SAT_SEG[band]+&#x27;/{z}/{x}/{y}.jpg&#x27;;
+}
+function probeUrl(area,ymdhms,band){
+  var p=PROBE[area];
+  return &#x27;https://www.jma.go.jp/bosai/himawari/data/satimg/&#x27;+
+    ymdhms+&#x27;/&#x27;+area+&#x27;/&#x27;+ymdhms+&#x27;/&#x27;+SAT_SEG[band]+&#x27;/&#x27;+
+    p.zoom+&#x27;/&#x27;+p.x+&#x27;/&#x27;+p.y+&#x27;.jpg&#x27;;
+}
+function radarUrl(ymdhms){
+  return &#x27;https://www.jma.go.jp/bosai/jmatile/data/nowc/&#x27;+
+    ymdhms+&#x27;/none/&#x27;+ymdhms+&#x27;/surf/hrpns/{z}/{x}/{y}.png&#x27;;
+}
+
+/* ── 奇数ズーム対策: maxNativeZoom を偶数に丸める ── */
+function getEffectiveRadarNativeMax(){
+  var z=map.getZoom();
+  var nMax=(z%2===1)?z-1:z;
+  if(nMax&lt;4)nMax=4;
+  if(nMax&gt;10)nMax=10;
+  return nMax;
+}
+
+/* ── Layer生成 ── */
+function makeSatLayer(f,band){
+  var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
+    minNativeZoom:f.nativeZoom,maxNativeZoom:f.nativeZoom,
+    minZoom:4,maxZoom:12,opacity:0,
+    updateWhenIdle:false,keepBuffer:6,pane:&#x27;satPane&#x27;
+  });
+  l.on(&#x27;tileload&#x27;,function(){reapplyOpacity();});
+  l.on(&#x27;load&#x27;,function(){reapplyOpacity();});
+  return l;
+}
+function makeRadarLayer(ymdhms,nMax){
+  var l=L.tileLayer(radarUrl(ymdhms),{
+    minNativeZoom:4,maxNativeZoom:nMax||10,
+    minZoom:4,maxZoom:12,opacity:0,
+    updateWhenIdle:false,keepBuffer:6,pane:&#x27;radarPane&#x27;
+  });
+  l.on(&#x27;tileload&#x27;,function(e){
+    e.tile.style.imageRendering=&#x27;pixelated&#x27;;
+    reapplyOpacity();
+  });
+  l.on(&#x27;load&#x27;,function(){reapplyOpacity();});
+  return l;
+}
+
+/* ── ズーム変化時にレーダー全レイヤを再構築 ── */
+function rebuildRadarLayersAtZoom(newMax){
+  var oldIdx=prevRadarIdx;
+  var i;
+  for(i=0;i&lt;radarLayers.length;i++){
+    if(radarLayers[i])map.removeLayer(radarLayers[i]);
+    radarLayers[i]=makeRadarLayer(fmtUtc(radarFrames[i].time),newMax);
+    radarLayers[i].addTo(map);
+  }
+  currentNativeMax=newMax;
+  prevRadarIdx=-1;
+  if(oldIdx&gt;=0&amp;&amp;radarLayers[oldIdx]){
+    radarLayers[oldIdx].setOpacity(radarOpacity());
+    prevRadarIdx=oldIdx;
+  }
+  reapplyOpacity();
+  if(_wasPlaying)play();
+}
+
+/* ── クリーンアップ ── */
+function cleanup(){
+  var i;
+  for(i=0;i&lt;satLayers.length;i++)if(satLayers[i])map.removeLayer(satLayers[i]);
+  for(i=0;i&lt;radarLayers.length;i++)if(radarLayers[i])map.removeLayer(radarLayers[i]);
+  satLayers=[];radarLayers=[];satFrames=[];radarFrames=[];
+  currentIdx=-1;prevRadarIdx=-1;
+}
+
+/* ── ロードUI ── */
+function setLoadUI(done,total,msg){
+  elFill.style.width=(total&gt;0?Math.round(done/total*100):0)+&#x27;%&#x27;;
+  elStatus.textContent=msg||(&#x27;読込中 &#x27;+done+&#x27;/&#x27;+total);
+}
+function clearLoadUI(){elFill.style.width=&#x27;0%&#x27;;elStatus.textContent=&#x27;&#x27;;}
+
+/* ── 自動更新インジケーター ── */
+function updateAutoUI(){
+  if(pauseAt&gt;0&amp;&amp;Date.now()-pauseAt&lt;PAUSE_DURATION){
+    var rem=Math.ceil((PAUSE_DURATION-(Date.now()-pauseAt))/60000);
+    elAuto.textContent=&#x27;⏸ PAUSE &#x27;+rem+&#x27;分&#x27;;elAuto.className=&#x27;paused&#x27;;
+  } else {
+    elAuto.textContent=&#x27;🔄 AUTO&#x27;;elAuto.className=&#x27;&#x27;;
+  }
+}
+
+/* ── 最近接レーダーindex ── */
+function closestRadar(satTime){
+  var best=0,bestD=Infinity;
+  for(var i=0;i&lt;radarFrames.length;i++){
+    var d=Math.abs(radarFrames[i].time-satTime);
+    if(d&lt;bestD){bestD=d;best=i;}
+  }
+  return best;
+}
+
+/* ── Opacity値 ── */
+function satOpacity(){  return displayMode===&#x27;radar&#x27;?0:0.9; }
+function radarOpacity(){return displayMode===&#x27;sat&#x27;?0:(displayMode===&#x27;radar&#x27;?0.9:0.6);}
+
+/* ── opacity再適用（zoomend・tileload共用） ── */
+function reapplyOpacity(){
+  if(currentIdx&gt;=0&amp;&amp;satLayers[currentIdx])
+    satLayers[currentIdx].setOpacity(satOpacity());
+  if(prevRadarIdx&gt;=0&amp;&amp;radarLayers[prevRadarIdx])
+    radarLayers[prevRadarIdx].setOpacity(radarOpacity());
+}
+
+/* ── フレーム表示 ── */
+function showFrame(idx){
+  if(!satFrames.length)return;
+  idx=((idx%satFrames.length)+satFrames.length)%satFrames.length;
+  if(currentIdx&gt;=0&amp;&amp;satLayers[currentIdx])satLayers[currentIdx].setOpacity(0);
+  currentIdx=idx;
+  if(satLayers[idx])satLayers[idx].setOpacity(satOpacity());
+
+  var hasRadar=radarLayers.length&gt;0;
+  if(hasRadar&amp;&amp;displayMode!==&#x27;sat&#x27;){
+    var ri=closestRadar(satFrames[idx].time);
+    if(ri!==prevRadarIdx){
+      if(prevRadarIdx&gt;=0&amp;&amp;radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
+      if(radarLayers[ri])radarLayers[ri].setOpacity(radarOpacity());
+      prevRadarIdx=ri;
+    }
+  } else {
+    if(prevRadarIdx&gt;=0&amp;&amp;radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
+    prevRadarIdx=-1;
+  }
+  elSlider.value=String(idx);
+  elLabel.textContent=(idx+1)+&#x27;/&#x27;+satFrames.length;
+  elTime.textContent=fmtLocal(satFrames[idx].time);
+}
+
+/* ── 表示モード切替（現フレームに即反映） ── */
+function applyMode(){
+  if(currentIdx&lt;0)return;
+  if(satLayers[currentIdx])satLayers[currentIdx].setOpacity(satOpacity());
+  var hasRadar=radarLayers.length&gt;0;
+  if(hasRadar){
+    if(displayMode===&#x27;sat&#x27;){
+      if(prevRadarIdx&gt;=0&amp;&amp;radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
+      prevRadarIdx=-1;
+    } else {
+      var ri=closestRadar(satFrames[currentIdx].time);
+      if(prevRadarIdx&gt;=0&amp;&amp;prevRadarIdx!==ri&amp;&amp;radarLayers[prevRadarIdx])
+        radarLayers[prevRadarIdx].setOpacity(0);
+      if(radarLayers[ri])radarLayers[ri].setOpacity(radarOpacity());
+      prevRadarIdx=ri;
+    }
+  }
+}
+
+/* ── 再生制御 ── */
+function play(){
+  if(playing||!satFrames.length||isLoading)return;
+  playing=true;
+  (function tick(){
+    if(!playing)return;
+    showFrame((currentIdx+1)%satFrames.length);
+    timerId=setTimeout(tick,SPEEDS[speedIdx]);
+  })();
+}
+function pause(){playing=false;clearTimeout(timerId);timerId=null;}
+
+/* ── ズーム中はアニメーション停止・終了後に再開＋opacity再適用 ── */
+map.on(&#x27;zoomstart&#x27;,function(){
+  _wasPlaying=playing;
+  pause();
+});
+map.on(&#x27;zoomend&#x27;,function(){
+  saveState();
+  /* レーダー: 奇数ズーム対策 — nativeMax が変化した場合は全レイヤ再構築 */
+  if(currentArea===&#x27;jp&#x27;&amp;&amp;radarLayers.length&gt;0){
+    var newMax=getEffectiveRadarNativeMax();
+    if(newMax!==currentNativeMax){
+      rebuildRadarLayersAtZoom(newMax);
+      return;
+    }
+  }
+  reapplyOpacity();
+  setTimeout(function(){reapplyOpacity();if(_wasPlaying)play();},300);
+});
+map.on(&#x27;moveend&#x27;,function(){saveState();setTimeout(reapplyOpacity,100);});
+
+/* ── フェーズ1: 衛星プローブ ── */
+function probe(area,band,candidates,onDone){
+  var total=candidates.length,resolved=0,valid=[];
+  function finish(){
+    valid.sort(function(a,b){return a.time-b.time;});
+    onDone(valid);
+  }
+  candidates.forEach(function(f){
+    var ymdhms=fmtUtc(f.time);
+    var img=new Image(),done=false;
+    function resolve(ok){
+      if(done)return;done=true;
+      if(ok)valid.push(f);
+      resolved++;
+      setLoadUI(resolved,total,&#x27;衛星確認中 &#x27;+resolved+&#x27;/&#x27;+total+&#x27;（有効 &#x27;+valid.length+&#x27;）&#x27;);
+      if(resolved===total)finish();
+    }
+    img.onload=function(){resolve(true);};
+    img.onerror=function(){resolve(false);};
+    setTimeout(function(){resolve(false);},PROBE_TIMEOUT);
+    img.src=probeUrl(area,ymdhms,band);
+  });
+}
+
+/* ── フェーズ2: 全レイヤープリロード ── */
+function loadAll(band,area){
+  var needRadar=true;
+  var total=satFrames.length+(needRadar?radarFrames.length:0);
+  if(!total){isLoading=false;elStatus.textContent=&#x27;レイヤなし&#x27;;return;}
+
+  elSlider.max=String(satFrames.length-1);
+  elSlider.value=String(satFrames.length-1);
+  elLabel.textContent=satFrames.length+&#x27;/&#x27;+satFrames.length;
+  setLoadUI(0,total);
+
+  var loaded=0;
+  function onReady(){
+    loaded++;
+    setLoadUI(loaded,total);
+    if(loaded===total){
+      setTimeout(function(){
+        isLoading=false;clearLoadUI();
+        showFrame(satFrames.length-1);play();
+      },400);
+    }
+  }
+
+  satLayers=new Array(satFrames.length).fill(null);
+  satFrames.forEach(function(f,i){
+    var l=makeSatLayer(f,band);
+    l.addTo(map);satLayers[i]=l;
+    var n=false;
+    l.on(&#x27;load&#x27;,function(){if(!n){n=true;onReady();}});
+    setTimeout(function(){if(!n){n=true;onReady();}},LOAD_TIMEOUT);
+  });
+
+  if(needRadar){
+    currentNativeMax=getEffectiveRadarNativeMax();
+    radarLayers=new Array(radarFrames.length).fill(null);
+    radarFrames.forEach(function(f,i){
+      var l=makeRadarLayer(fmtUtc(f.time),currentNativeMax);
+      l.addTo(map);radarLayers[i]=l;
+      var n=false;
+      l.on(&#x27;load&#x27;,function(){if(!n){n=true;onReady();}});
+      setTimeout(function(){if(!n){n=true;onReady();}},LOAD_TIMEOUT);
+    });
+  }
+}
+
+/* ── メイン: フレーム構築 ── */
+function buildFrames(preserveView){
+  if(isLoading)return;
+  isLoading=true;pause();cleanup();
+
+  var params=AREA_PARAMS[currentArea];
+  if(!preserveView)map.setView(params.center,params.zoom);
+
+  elSlider.min=&#x27;0&#x27;;elSlider.max=&#x27;0&#x27;;elSlider.value=&#x27;0&#x27;;
+  elLabel.textContent=&#x27;0/0&#x27;;
+
+  radarFrames=[];
+  var bt=getBaseTime(LEAD_SEC,RADAR_INT);
+  latestRadarTime=bt;
+  for(var j=FRAME_COUNT-1;j&gt;=0;j--)
+    radarFrames.push({time:new Date(bt.getTime()-j*RADAR_INT*1000)});
+
+  var satBt=getBaseTime(LEAD_SEC,params.interval);
+  latestSatTime=satBt;
+  var cands=[];
+  for(var i=FRAME_COUNT-1;i&gt;=0;i--)
+    cands.push({time:new Date(satBt.getTime()-i*params.interval*1000),
+                area:currentArea,nativeZoom:params.nativeZoom});
+
+  setLoadUI(0,cands.length,&#x27;衛星確認中 0/&#x27;+cands.length);
+
+  probe(currentArea,currentBand,cands,function(valid){
+    satFrames=valid;
+    if(!satFrames.length){
+      isLoading=false;elStatus.textContent=&#x27;有効な衛星フレームなし&#x27;;return;
+    }
+    elStatus.textContent=&#x27;有効 &#x27;+satFrames.length+&#x27;/&#x27;+cands.length+&#x27;  読込中…&#x27;;
+    loadAll(currentBand,currentArea);
+  });
+}
+
+/* ── 自動更新ループ ── */
+function autoLoop(){
+  updateAutoUI();
+  if(pauseAt&gt;0&amp;&amp;Date.now()-pauseAt&lt;PAUSE_DURATION){scheduleAuto();return;}
+  if(pauseAt&gt;0){pauseAt=0;updateAutoUI();}
+  if(isLoading){scheduleAuto();return;}
+
+  var params=AREA_PARAMS[currentArea];
+  var newSat=getBaseTime(LEAD_SEC,params.interval);
+  var satChanged=!latestSatTime||newSat.getTime()!==latestSatTime.getTime();
+  var newR=getBaseTime(LEAD_SEC,RADAR_INT);
+  var radarChanged=!latestRadarTime||newR.getTime()!==latestRadarTime.getTime();
+  if(satChanged||radarChanged)buildFrames(true);
+  scheduleAuto();
+}
+function scheduleAuto(){clearTimeout(autoTimerId);autoTimerId=setTimeout(autoLoop,AUTO_INTERVAL);}
+
+/* ── UI操作 ── */
+window.setArea=function(a,noRebuild){
+  currentArea=a;
+  document.getElementById(&#x27;aJP&#x27;).className=a===&#x27;jp&#x27;?&#x27;active&#x27;:&#x27;&#x27;;
+  document.getElementById(&#x27;aFD&#x27;).className=a===&#x27;fd&#x27;?&#x27;active&#x27;:&#x27;&#x27;;
+  document.getElementById(&#x27;mBoth&#x27;).disabled=false;
+  document.getElementById(&#x27;mRadar&#x27;).disabled=false;
+  latestSatTime=null;latestRadarTime=null;
+  if(!noRebuild){saveState();buildFrames(true);}  /* ビュー位置を維持したまま再構築 */
+};
+
+window.setBand=function(b){
+  currentBand=b;
+  [&#x27;ETC&#x27;,&#x27;B13&#x27;,&#x27;B03&#x27;,&#x27;B08&#x27;].forEach(function(x){
+    document.getElementById(&#x27;b&#x27;+x).className=x===b?&#x27;active&#x27;:&#x27;&#x27;;
+  });
+  latestSatTime=null;
+  saveState();buildFrames(true);
+};
+
+window.setMode=function(m,noApply){
+  displayMode=m;
+  document.getElementById(&#x27;mBoth&#x27;).className=m===&#x27;both&#x27;?&#x27;active&#x27;:&#x27;&#x27;;
+  document.getElementById(&#x27;mRadar&#x27;).className=m===&#x27;radar&#x27;?&#x27;active&#x27;:&#x27;&#x27;;
+  document.getElementById(&#x27;mSat&#x27;).className=m===&#x27;sat&#x27;?&#x27;active&#x27;:&#x27;&#x27;;
+  if(!noApply)applyMode();
+};
+
+window.toggleOsm=function(on){
+  if(on){if(!map.hasLayer(osmLayer))osmLayer.addTo(map);}
+  else{if(map.hasLayer(osmLayer))map.removeLayer(osmLayer);}
+};
+
+window.onBuild=function(){
+  pauseAt=0;latestSatTime=null;latestRadarTime=null;
+  clearTimeout(autoTimerId);
+  buildFrames(false);scheduleAuto();updateAutoUI();
+};
+
+window.onPlay=play;
+window.onPause=pause;
+
+window.onSpeedChange=function(v){
+  speedIdx=parseInt(v,10);
+  if(playing){pause();play();}
+};
+
+window.onSlider=function(v){
+  pause();pauseAt=Date.now();updateAutoUI();
+  showFrame(parseInt(v,10));
+};
+
+/* ── 初期化: 前回の表示状態を復元 ── */
+(function(){
+  var s=loadState();
+  if(s){
+    /* area/band を UI に反映（rebuild なし） */
+    if(s.area)setArea(s.area,true);
+    if(s.band){
+      currentBand=s.band;
+      [&#x27;ETC&#x27;,&#x27;B13&#x27;,&#x27;B03&#x27;,&#x27;B08&#x27;].forEach(function(x){
+        document.getElementById(&#x27;b&#x27;+x).className=x===s.band?&#x27;active&#x27;:&#x27;&#x27;;
+      });
+    }
+    /* 前回の位置・ズームを復元 */
+    if(s.lat!=null&amp;&amp;s.zoom!=null)map.setView([s.lat,s.lng],s.zoom);
+  }
+  buildFrames(true);  /* 常に現在のビューを維持して構築 */
+  updateAutoUI();
+  scheduleAuto();
+
+  /* ── opacity安全網: 2秒ごとに現フレームのopacityが0になっていたら修正 ── */
+  setInterval(function(){
+    if(!isLoading &amp;&amp; currentIdx&gt;=0) reapplyOpacity();
+  }, 2000);
+})();
+
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;" style="flex:1;border:none;width:100%;height:100%" title="レーダー+衛星" sandbox="allow-scripts allow-same-origin"></iframe></div><!--/$--></div></div></div></div><div class="css-g5y9jx r-1p0dtai r-zchlnj r-1d2f490 r-105ug2t" style="border-top-width:1px;background-color:rgba(255,255,255,1.00);border-top-color:rgba(216,216,216,1.00);border-right-color:rgba(216,216,216,1.00);border-bottom-color:rgba(216,216,216,1.00);border-left-color:rgba(216,216,216,1.00);height:49px;padding-bottom:0px;padding-top:0px;padding-right:0px;padding-left:0px;transform:translateY(0px)"><div class="css-g5y9jx r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af r-633pao"></div><div role="tablist" class="css-g5y9jx r-13awgt0 r-18u37iz"><div class="css-g5y9jx r-13awgt0" style="border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;overflow-x:visible;overflow-y:visible"><a href="/iphone-weather-app/" role="tab" aria-selected="false" tabindex="0" class="css-g5y9jx r-1otgn73 r-1awozwy r-1onu96p r-eqz5dr r-1h0z5md r-1uu6nss" style="cursor:pointer;flex:1;background-color:rgba(0,0,0,0.00);border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;opacity:1"><div class="css-g5y9jx r-h0d30l r-726pan"><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:0;min-width:25px"><div dir="auto" class="css-146c3p1"></div></div><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:1"><div dir="auto" class="css-146c3p1"></div></div></div><div dir="auto" class="css-146c3p1 r-dnmrzs r-1udh08x r-1udbk01 r-3s2u2q r-1iln25a r-1niwhzg r-q4m81j r-10x49cs" style="color:rgba(142,142,143,1.00);font-family:system-ui, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;font-weight:500">Home</div></a></div><div class="css-g5y9jx r-13awgt0" style="border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;overflow-x:visible;overflow-y:visible"><a href="/iphone-weather-app/radar" role="tab" aria-selected="true" tabindex="0" class="css-g5y9jx r-1otgn73 r-1awozwy r-1onu96p r-eqz5dr r-1h0z5md r-1uu6nss" style="cursor:pointer;flex:1;background-color:rgba(0,0,0,0.00);border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;opacity:1"><div class="css-g5y9jx r-h0d30l r-726pan"><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:1;min-width:25px"><div dir="auto" class="css-146c3p1"></div></div><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:0"><div dir="auto" class="css-146c3p1"></div></div></div><div dir="auto" class="css-146c3p1 r-dnmrzs r-1udh08x r-1udbk01 r-3s2u2q r-1iln25a r-1niwhzg r-q4m81j r-10x49cs" style="color:rgba(10,126,164,1.00);font-family:system-ui, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;font-weight:500">衛星/レーダー</div></a></div><div class="css-g5y9jx r-13awgt0" style="border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;overflow-x:visible;overflow-y:visible"><a href="/iphone-weather-app/explore" role="tab" aria-selected="false" tabindex="0" class="css-g5y9jx r-1otgn73 r-1awozwy r-1onu96p r-eqz5dr r-1h0z5md r-1uu6nss" style="cursor:pointer;flex:1;background-color:rgba(0,0,0,0.00);border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;opacity:1"><div class="css-g5y9jx r-h0d30l r-726pan"><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:0;min-width:25px"><div dir="auto" class="css-146c3p1"></div></div><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:1"><div dir="auto" class="css-146c3p1"></div></div></div><div dir="auto" class="css-146c3p1 r-dnmrzs r-1udh08x r-1udbk01 r-3s2u2q r-1iln25a r-1niwhzg r-q4m81j r-10x49cs" style="color:rgba(142,142,143,1.00);font-family:system-ui, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;font-weight:500">Explore</div></a></div></div></div></div><!--/$--></div></div></div></div><!--/$--></div></div><script src="/iphone-weather-app/_expo/static/js/web/entry-9b7ae3fec9025ac660b5c8c1e6d3be28.js" defer></script>
+</body></html>
