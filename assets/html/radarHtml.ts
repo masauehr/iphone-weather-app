@@ -597,6 +597,11 @@ window.onSlider=function(v){
   buildFrames(true);  /* 常に現在のビューを維持して構築 */
   updateAutoUI();
   scheduleAuto();
+
+  /* ── opacity安全網: 2秒ごとに現フレームのopacityが0になっていたら修正 ── */
+  setInterval(function(){
+    if(!isLoading && currentIdx>=0) reapplyOpacity();
+  }, 2000);
 })();
 
 })();
