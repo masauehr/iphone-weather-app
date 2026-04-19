@@ -83,26 +83,26 @@ function weatherEmoji(code: string): string {
     106:'☀️/☂️❄️', // 一時雨か雪
     107:'☀️//☂️❄️',// 時々雨か雪
     108:'☀️/⛈️',   // 一時雷雨
-    110:'☀️//⛅',   // のち時々くもり
-    111:'☀️⛅',    // のちくもり
-    112:'☀️/☂️',   // のち一時雨
-    113:'☀️//☂️',  // のち時々雨
-    114:'☀️☂️',   // のち雨
-    115:'☀️/❄️',   // のち一時雪
-    116:'☀️//❄️',  // のち時々雪
-    117:'☀️❄️',   // のち雪
-    118:'☀️☂️❄️', // のち雨か雪
-    119:'☀️⛈️',   // のち雷雨
+    110:'☀️→//⛅',  // のち時々くもり
+    111:'☀️→⛅',   // のちくもり
+    112:'☀️→/☂️',  // のち一時雨
+    113:'☀️→//☂️', // のち時々雨
+    114:'☀️→☂️',   // のち雨
+    115:'☀️→/❄️',  // のち一時雪
+    116:'☀️→//❄️', // のち時々雪
+    117:'☀️→❄️',   // のち雪
+    118:'☀️→☂️❄️', // のち雨か雪
+    119:'☀️→⛈️',   // のち雷雨
     120:'☀️/☂️',   // 一時雨（朝夕）
     121:'☀️/☂️',   // 一時雨（朝）
     122:'☀️/☂️',   // 一時雨（夕）
     123:'☀️/⛈️',   // 一時雷雨
     124:'☀️/❄️',   // 一時雪
     125:'☀️/⛈️',   // 一時雷雨（午後）
-    126:'☀️☂️',   127:'☀️☂️', 128:'☀️☂️',
+    126:'☀️→☂️',   127:'☀️→☂️', 128:'☀️→☂️',  // 昼/夕/夜から雨
     130:'🌫️☀️',   131:'☀️🌫️', 132:'☀️//⛅',
     140:'☀️//⛈️',  // 時々雷雨
-    160:'☀️/☂️❄️', 170:'☀️//☂️❄️', 181:'☀️☂️❄️',
+    160:'☀️/☂️❄️', 170:'☀️//☂️❄️', 181:'☀️→☂️❄️', // のち雨か雪
     // くもり系
     200:'☁️',
     201:'☁️//☀️',   // 時々晴れ
@@ -114,18 +114,18 @@ function weatherEmoji(code: string): string {
     207:'☁️//☂️❄️',// 時々雨か雪
     208:'☁️/⛈️',   // 一時雷雨
     209:'🌫️',
-    210:'☁️//☀️',   // のち時々晴れ
-    211:'☁️☀️',    // のち晴れ
-    212:'☁️/☂️',   // のち一時雨
-    213:'☁️//☂️',  // のち時々雨
-    214:'☁️☂️',   215:'☁️/❄️',  216:'☁️//❄️',
-    217:'☁️❄️',   218:'☁️☂️❄️', 219:'☁️⛈️',
+    210:'☁️→//☀️',  // のち時々晴れ
+    211:'☁️→☀️',   // のち晴れ
+    212:'☁️→/☂️',  // のち一時雨
+    213:'☁️→//☂️', // のち時々雨
+    214:'☁️→☂️',  215:'☁️→/❄️', 216:'☁️→//❄️', // のち雨/一時雪/時々雪
+    217:'☁️→❄️',  218:'☁️→☂️❄️', 219:'☁️→⛈️',  // のち雪/雨か雪/雷雨
     220:'☁️/☂️',   221:'☁️/☂️',  222:'☁️/☂️',
     223:'☁️//☀️',   // 時々晴れ
-    224:'☁️☂️',   225:'☁️☂️',  226:'☁️☂️',
-    228:'☁️❄️',   229:'☁️❄️',  230:'☁️❄️',  231:'☁️🌫️',
+    224:'☁️→☂️',  225:'☁️→☂️',  226:'☁️→☂️',   // 昼/夕/夜から雨
+    228:'☁️→❄️',  229:'☁️→❄️',  230:'☁️→❄️',  231:'☁️🌫️', // のち雪
     240:'☁️//⛈️',  // 時々雷雨
-    250:'☁️//⛈️❄️', 260:'☁️/☂️❄️', 270:'☁️//☂️❄️', 281:'☁️☂️❄️',
+    250:'☁️//⛈️❄️', 260:'☁️/☂️❄️', 270:'☁️//☂️❄️', 281:'☁️→☂️❄️', // のち雨か雪
     // 雨系
     300:'☂️',
     301:'☂️//☀️',  // 時々晴れ
@@ -133,16 +133,16 @@ function weatherEmoji(code: string): string {
     303:'☂️//❄️',  // 時々雪
     304:'☂️❄️',   306:'☂️',    308:'☂️💨',
     309:'☂️/❄️',   // 一時雪
-    311:'☂️☀️',   313:'☂️☁️',
-    314:'☂️//❄️',  // のち時々雪
-    315:'☂️❄️',   316:'☂️❄️☀️', 317:'☂️❄️☁️',
-    320:'☂️☀️',   321:'☂️☁️',
+    311:'☂️→☀️',  313:'☂️→☁️',  // のち晴れ/くもり
+    314:'☂️→//❄️', // のち時々雪
+    315:'☂️→❄️',  316:'☂️❄️→☀️', 317:'☂️❄️→☁️', // のち雪/雨か雪のち晴れ/くもり
+    320:'☂️→☀️',  321:'☂️→☁️',  // のち晴れ/くもり（夕/夜）
     322:'☂️/❄️',   // 一時雪（朝晩）
-    323:'☂️☀️',   324:'☂️☀️',  325:'☂️☀️',
-    326:'☂️❄️',   327:'☂️❄️',  328:'☂️',
+    323:'☂️→☀️',  324:'☂️→☀️',  325:'☂️→☀️',  // 昼/夕/夜晴れ
+    326:'☂️→❄️',  327:'☂️→❄️',  328:'☂️',
     329:'☂️/❄️',   // 一時みぞれ
     340:'❄️☂️',   350:'☂️⛈️',
-    361:'❄️☂️☀️', 371:'❄️☂️☁️',
+    361:'❄️☂️→☀️', 371:'❄️☂️→☁️', // 雪か雨のち晴れ/くもり
     // 雪系
     400:'❄️',
     401:'❄️//☀️',  // 時々晴れ
@@ -150,10 +150,10 @@ function weatherEmoji(code: string): string {
     403:'❄️//☂️',  // 時々雨
     405:'❄️',      406:'❄️💨',  407:'❄️🌀',
     409:'❄️/☂️',   // 一時雨
-    411:'❄️☀️',   413:'❄️☁️',  414:'❄️☂️',
-    420:'❄️☀️',   421:'❄️☁️',  422:'❄️☂️',  423:'❄️☂️',
+    411:'❄️→☀️',  413:'❄️→☁️',  414:'❄️→☂️',  // のち晴れ/くもり/雨
+    420:'❄️→☀️',  421:'❄️→☁️',  422:'❄️→☂️',  423:'❄️→☂️', // のち系（夕/夜）
     425:'❄️',
-    426:'❄️/☂️',   // のちみぞれ
+    426:'❄️→/☂️',  // のちみぞれ
     427:'❄️/☂️',   // 一時みぞれ
     450:'❄️⛈️',
   };
@@ -219,45 +219,62 @@ export default function WeatherScreen() {
         return vals.length > 0 ? String(Math.max(...vals)) : '--';
       };
 
-      // 今日の気温
-      const todayTemps: string[] = ts0[2]?.areas[0]?.temps ?? [];
-      const todayDate = toDay(ts0[2]?.timeDefines?.[0] ?? '');
+      // 短期予報の気温系列（今日・明日分）から日付照合で最高・最低を取得
+      const shortTempDates: string[] = ts0[2]?.timeDefines ?? [];
+      const shortTempValues: string[] = ts0[2]?.areas[0]?.temps ?? [];
+      const getShortTemp = (dateStr: string) => {
+        const vals = shortTempDates
+          .map((td, i) => ({ d: toDay(td), v: shortTempValues[i] }))
+          .filter((x) => x.d === dateStr && x.v !== '')
+          .map((x) => parseInt(x.v))
+          .filter((v) => !isNaN(v));
+        if (vals.length === 0) return { min: null, max: null };
+        return { min: String(Math.min(...vals)), max: String(Math.max(...vals)) };
+      };
 
-      // 週間予報から気温取得
-      const weekTempSeries = (json[1]?.timeSeries ?? []).find(
-        (t: any) => t.areas?.[0]?.tempsMax !== undefined
-      ) ?? null;
-      const tempDates: string[] = weekTempSeries?.timeDefines ?? [];
-      const rawMax: string[] = weekTempSeries?.areas[0]?.tempsMax ?? [];
-      const rawMin: string[] = weekTempSeries?.areas[0]?.tempsMin ?? [];
-
-      const dayLabels = ['今日', '明日', '明後日'];
-      const short: DayForecast[] = dates.map((d: string, i: number) => {
-        const dateStr = toDay(d);
-        const ti = tempDates.findIndex((td) => toDay(td) === dateStr);
-        const weekMax = ti >= 0 && rawMax[ti] !== '' ? rawMax[ti] : null;
-        const weekMin = ti >= 0 && rawMin[ti] !== '' ? rawMin[ti] : null;
-        const useTodayTemps = dateStr === todayDate || i === 0;
-        return {
-          date: d,
-          label: dayLabels[i],
-          weather: weathers[i] ?? '',
-          weatherCode: weatherCodes[i] ?? '100',
-          tempMax: weekMax ?? (useTodayTemps ? (todayTemps[1] ?? '--') : '--'),
-          tempMin: weekMin ?? (useTodayTemps ? (todayTemps[0] ?? '--') : '--'),
-          pop: getDayPop(dateStr),
-        };
-      });
-      setShortForecasts(short);
-
-      // ── 週間予報 ──
+      // ── 週間予報データ（短期の補完にも使用）──
       const wts = json[1]?.timeSeries ?? [];
       const wWeatherSeries = wts[0];
       const wDates: string[] = wWeatherSeries?.timeDefines ?? [];
       const wCodes: string[] = wWeatherSeries?.areas[0]?.weatherCodes ?? [];
       const wPops: string[] = wWeatherSeries?.areas[0]?.pops ?? [];
+      const weekTempSeries = (json[1]?.timeSeries ?? []).find(
+        (t: any) => t.areas?.[0]?.tempsMax !== undefined
+      ) ?? null;
       const wMax: string[] = weekTempSeries?.areas[0]?.tempsMax ?? [];
       const wMin: string[] = weekTempSeries?.areas[0]?.tempsMin ?? [];
+      const wTempDates: string[] = weekTempSeries?.timeDefines ?? [];
+
+      const getWeekPop = (dateStr: string) => {
+        const ti = wDates.findIndex((d) => toDay(d) === dateStr);
+        return ti >= 0 && wPops[ti] !== '' ? wPops[ti] : '--';
+      };
+      const getWeekTemp = (dateStr: string) => {
+        const ti = wTempDates.findIndex((d) => toDay(d) === dateStr);
+        if (ti < 0) return { min: null, max: null };
+        return {
+          min: wMin[ti] !== '' ? wMin[ti] : null,
+          max: wMax[ti] !== '' ? wMax[ti] : null,
+        };
+      };
+
+      const dayLabels = ['今日', '明日', '明後日'];
+      const short: DayForecast[] = dates.map((d: string, i: number) => {
+        const dateStr = toDay(d);
+        const shortTemp = getShortTemp(dateStr);
+        const weekTemp = getWeekTemp(dateStr);
+        const pop = getDayPop(dateStr) !== '--' ? getDayPop(dateStr) : getWeekPop(dateStr);
+        return {
+          date: d,
+          label: dayLabels[i],
+          weather: weathers[i] ?? '',
+          weatherCode: weatherCodes[i] ?? '100',
+          tempMax: shortTemp.max ?? weekTemp.max ?? '--',
+          tempMin: shortTemp.min ?? weekTemp.min ?? '--',
+          pop,
+        };
+      });
+      setShortForecasts(short);
 
       const week: DayForecast[] = wDates.map((d: string, i: number) => ({
         date: d,

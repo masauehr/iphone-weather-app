@@ -4,7 +4,7 @@
 React Native + Expo で作成したiPhone向け天気予報アプリ。
 気象庁API（JMA）からリアルタイムでデータを取得して表示する。
 
-- **ローカルパス**: `~/MyFirstApp/`
+- **ローカルパス**: `~/projects/mobile_app/`
 - **GitHubリポジトリ**: https://github.com/masauehr/iphone-weather-app
 - **公開URL（Web版）**: https://masauehr.github.io/iphone-weather-app/
 
@@ -14,7 +14,7 @@ React Native + Expo で作成したiPhone向け天気予報アプリ。
 
 ### 実機確認（Expo Go）
 ```bash
-cd ~/MyFirstApp
+cd ~/projects/mobile_app
 npx expo start
 ```
 - Expo Goアカウント作成済み → iPhoneのExpo Goアプリ「Projects」タブに自動表示される（QRコード不要）
@@ -43,7 +43,7 @@ npm run deploy
 - 短期予報（3日間）／週間予報（7日間）の切替表示
 - 対応地域：主要6都市クイック選択 ＋ 全47都道府県（「その他▼」モーダル）
 - 各日カード：複合天気絵文字・降水確率（☂）・最高/最低気温
-- 天気絵文字：時々→`//`、一時→`/` の区切り記号付き複合表示（例: ☁️//☂️）
+- 天気絵文字：時々→`//`、一時→`/`、のち→`→` の区切り記号付き複合表示（例: ☁️→☀️、☀️//⛅）
 - 雨アイコン: ☂️（傘）を使用
 - データソース：気象庁API `https://www.jma.go.jp/bosai/forecast/data/forecast/{code}.json`
 
@@ -68,9 +68,12 @@ json[1] — 週間予報（7日間）
 ```
 
 **気温取得の方針**（ハマりポイント）
-- 今日: `json[0].timeSeries[2].areas[0].temps` を使う
-- 明日以降: `json[1].timeSeries[1]` を日付照合（`iso.slice(0,10)`）で取得
-- 週間予報のindex[0]は今日分が空文字のため直接インデックスで取得しない
+- 今日・明日: `json[0].timeSeries[2]` を日付照合して同日の最小・最大を算出（`getShortTemp`）
+  - `timeSeries[2]` には今日・明日分のエントリが複数あり、min/maxで最低・最高を得る
+  - 週間予報のindex[0]（明日分）は空文字のため使用不可
+- 明後日以降: `json[1].timeSeries[1].tempsMax/tempsMin` を日付照合で取得（`getWeekTemp`）
+- 降水確率: 短期予報（`getDayPop`）で取れない日は週間予報（`getWeekPop`）でフォールバック
+- 日付照合は `iso.slice(0,10)` で統一
 
 ---
 
