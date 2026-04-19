@@ -24,6 +24,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="radar"
+        options={{
+          title: 'レーダー',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cloud.rain.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',
