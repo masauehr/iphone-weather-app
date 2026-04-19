@@ -26,7 +26,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="radar"
         options={{
-          title: 'レーダー',
+          title: '衛星/レーダー',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="cloud.rain.fill" color={color} />,
         }}
       />
