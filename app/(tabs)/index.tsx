@@ -12,20 +12,25 @@ import {
 
 type Area = { name: string; code: string };
 type Section = { title: string; data: Area[] };
+type SubArea = { name: string; code: string };
+type DayForecast = {
+  date: string; label: string; weather: string;
+  weatherCode: string; tempMax: string; tempMin: string; pop: string;
+};
 
-// area.json (jma_app_suite) の offices に準拠した地点リスト
+// area.json (jma_app_suite) の offices に準拠
 const AREA_SECTIONS: Section[] = [
   {
     title: '北海道',
     data: [
-      { name: '札幌', code: '016000' },   // 石狩・空知・後志地方
-      { name: '函館', code: '017000' },   // 渡島・檜山地方
-      { name: '旭川', code: '012000' },   // 上川・留萌地方
-      { name: '釧路', code: '014100' },   // 釧路・根室地方
-      { name: '帯広', code: '014030' },   // 十勝地方
-      { name: '網走', code: '013000' },   // 網走・北見・紋別地方
-      { name: '室蘭', code: '015000' },   // 胆振・日高地方
-      { name: '稚内', code: '011000' },   // 宗谷地方
+      { name: '札幌', code: '016000' },
+      { name: '函館', code: '017000' },
+      { name: '旭川', code: '012000' },
+      { name: '釧路', code: '014100' },
+      { name: '帯広', code: '014030' },
+      { name: '網走', code: '013000' },
+      { name: '室蘭', code: '015000' },
+      { name: '稚内', code: '011000' },
     ],
   },
   {
@@ -133,71 +138,42 @@ const DEFAULT_FAVORITES: Area[] = [
   { name: '大阪', code: '270000' },
 ];
 
+// ── 天気コード → 絵文字 ──────────────────────────────────────────────────────
 function weatherEmoji(code: string): string {
   const n = parseInt(code, 10);
   const map: Record<number, string> = {
-    100:'☀️',
-    101:'☀️//⛅',   102:'☀️/☂️',   103:'☀️//☂️',
-    104:'☀️/❄️',   105:'☀️//❄️',  106:'☀️/☂️❄️',
-    107:'☀️//☂️❄️',108:'☀️/⛈️',
-    110:'☀️→//⛅',  111:'☀️→⛅',   112:'☀️→/☂️',
-    113:'☀️→//☂️', 114:'☀️→☂️',   115:'☀️→/❄️',
-    116:'☀️→//❄️', 117:'☀️→❄️',   118:'☀️→☂️❄️',
-    119:'☀️→⛈️',
-    120:'☀️/☂️',   121:'☀️/☂️',   122:'☀️/☂️',
-    123:'☀️/⛈️',   124:'☀️/❄️',   125:'☀️/⛈️',
-    126:'☀️→☂️',   127:'☀️→☂️',   128:'☀️→☂️',
-    130:'🌫️☀️',   131:'☀️🌫️',   132:'☀️//⛅',
-    140:'☀️//⛈️',
+    100:'☀️', 101:'☀️//⛅', 102:'☀️/☂️', 103:'☀️//☂️',
+    104:'☀️/❄️', 105:'☀️//❄️', 106:'☀️/☂️❄️', 107:'☀️//☂️❄️', 108:'☀️/⛈️',
+    110:'☀️→//⛅', 111:'☀️→⛅', 112:'☀️→/☂️', 113:'☀️→//☂️', 114:'☀️→☂️',
+    115:'☀️→/❄️', 116:'☀️→//❄️', 117:'☀️→❄️', 118:'☀️→☂️❄️', 119:'☀️→⛈️',
+    120:'☀️/☂️', 121:'☀️/☂️', 122:'☀️/☂️', 123:'☀️/⛈️', 124:'☀️/❄️', 125:'☀️/⛈️',
+    126:'☀️→☂️', 127:'☀️→☂️', 128:'☀️→☂️',
+    130:'🌫️☀️', 131:'☀️🌫️', 132:'☀️//⛅', 140:'☀️//⛈️',
     160:'☀️/☂️❄️', 170:'☀️//☂️❄️', 181:'☀️→☂️❄️',
-    200:'☁️',
-    201:'☁️//☀️',   202:'☁️/☂️',   203:'☁️//☂️',
-    204:'☁️/❄️',   205:'☁️//❄️',  206:'☁️/☂️❄️',
-    207:'☁️//☂️❄️',208:'☁️/⛈️',   209:'🌫️',
-    210:'☁️→//☀️',  211:'☁️→☀️',   212:'☁️→/☂️',
-    213:'☁️→//☂️', 214:'☁️→☂️',   215:'☁️→/❄️',
-    216:'☁️→//❄️', 217:'☁️→❄️',   218:'☁️→☂️❄️',
-    219:'☁️→⛈️',
-    220:'☁️/☂️',   221:'☁️/☂️',   222:'☁️/☂️',
-    223:'☁️//☀️',
-    224:'☁️→☂️',   225:'☁️→☂️',   226:'☁️→☂️',
-    228:'☁️→❄️',   229:'☁️→❄️',   230:'☁️→❄️',
-    231:'☁️🌫️',   240:'☁️//⛈️',
-    250:'☁️//⛈️❄️', 260:'☁️/☂️❄️', 270:'☁️//☂️❄️',
-    281:'☁️→☂️❄️',
-    300:'☂️',
-    301:'☂️//☀️',   302:'☂️',      303:'☂️//❄️',
-    304:'☂️❄️',    306:'☂️',      308:'☂️💨',
-    309:'☂️/❄️',
-    311:'☂️→☀️',   313:'☂️→☁️',
-    314:'☂️→//❄️', 315:'☂️→❄️',
+    200:'☁️', 201:'☁️//☀️', 202:'☁️/☂️', 203:'☁️//☂️',
+    204:'☁️/❄️', 205:'☁️//❄️', 206:'☁️/☂️❄️', 207:'☁️//☂️❄️', 208:'☁️/⛈️', 209:'🌫️',
+    210:'☁️→//☀️', 211:'☁️→☀️', 212:'☁️→/☂️', 213:'☁️→//☂️', 214:'☁️→☂️',
+    215:'☁️→/❄️', 216:'☁️→//❄️', 217:'☁️→❄️', 218:'☁️→☂️❄️', 219:'☁️→⛈️',
+    220:'☁️/☂️', 221:'☁️/☂️', 222:'☁️/☂️', 223:'☁️//☀️',
+    224:'☁️→☂️', 225:'☁️→☂️', 226:'☁️→☂️',
+    228:'☁️→❄️', 229:'☁️→❄️', 230:'☁️→❄️', 231:'☁️🌫️', 240:'☁️//⛈️',
+    250:'☁️//⛈️❄️', 260:'☁️/☂️❄️', 270:'☁️//☂️❄️', 281:'☁️→☂️❄️',
+    300:'☂️', 301:'☂️//☀️', 302:'☂️', 303:'☂️//❄️',
+    304:'☂️❄️', 306:'☂️', 308:'☂️💨', 309:'☂️/❄️',
+    311:'☂️→☀️', 313:'☂️→☁️', 314:'☂️→//❄️', 315:'☂️→❄️',
     316:'☂️❄️→☀️', 317:'☂️❄️→☁️',
-    320:'☂️→☀️',   321:'☂️→☁️',   322:'☂️/❄️',
-    323:'☂️→☀️',   324:'☂️→☀️',   325:'☂️→☀️',
-    326:'☂️→❄️',   327:'☂️→❄️',   328:'☂️',
-    329:'☂️/❄️',   340:'❄️☂️',    350:'☂️⛈️',
-    361:'❄️☂️→☀️', 371:'❄️☂️→☁️',
-    400:'❄️',
-    401:'❄️//☀️',   402:'❄️',      403:'❄️//☂️',
-    405:'❄️',      406:'❄️💨',    407:'❄️🌀',
-    409:'❄️/☂️',
-    411:'❄️→☀️',   413:'❄️→☁️',   414:'❄️→☂️',
-    420:'❄️→☀️',   421:'❄️→☁️',   422:'❄️→☂️',
-    423:'❄️→☂️',   425:'❄️',
-    426:'❄️→/☂️',  427:'❄️/☂️',   450:'❄️⛈️',
+    320:'☂️→☀️', 321:'☂️→☁️', 322:'☂️/❄️',
+    323:'☂️→☀️', 324:'☂️→☀️', 325:'☂️→☀️',
+    326:'☂️→❄️', 327:'☂️→❄️', 328:'☂️', 329:'☂️/❄️',
+    340:'❄️☂️', 350:'☂️⛈️', 361:'❄️☂️→☀️', 371:'❄️☂️→☁️',
+    400:'❄️', 401:'❄️//☀️', 402:'❄️', 403:'❄️//☂️',
+    405:'❄️', 406:'❄️💨', 407:'❄️🌀', 409:'❄️/☂️',
+    411:'❄️→☀️', 413:'❄️→☁️', 414:'❄️→☂️',
+    420:'❄️→☀️', 421:'❄️→☁️', 422:'❄️→☂️', 423:'❄️→☂️', 425:'❄️',
+    426:'❄️→/☂️', 427:'❄️/☂️', 450:'❄️⛈️',
   };
   return map[n] ?? '🌈';
 }
-
-type DayForecast = {
-  date: string;
-  label: string;
-  weather: string;
-  weatherCode: string;
-  tempMax: string;
-  tempMin: string;
-  pop: string;
-};
 
 const toDay = (iso: string) => iso.slice(0, 10);
 
@@ -207,18 +183,125 @@ function formatDate(iso: string): string {
   return `${d.getMonth() + 1}/${d.getDate()}(${w[d.getDay()]})`;
 }
 
+// ── APIレスポンスから特定サブエリアの短期予報を構築 ──────────────────────────
+function buildShortForecast(json: any, aIdx: number): DayForecast[] {
+  const ts0 = json[0].timeSeries;
+  const cap = (arr: any[]) => Math.min(aIdx, arr.length - 1);
+
+  const wSeries = ts0[0];
+  const wArea   = wSeries.areas[cap(wSeries.areas)];
+  const dates   = wSeries.timeDefines.slice(0, 3);
+  const weathers     = wArea.weathers?.slice(0, 3) ?? [];
+  const weatherCodes = wArea.weatherCodes?.slice(0, 3) ?? [];
+
+  const popSeries = ts0[1];
+  const popArea   = popSeries?.areas[cap(popSeries?.areas ?? [wArea])];
+  const popDates  : string[] = popSeries?.timeDefines ?? [];
+  const rawPops   : string[] = popArea?.pops ?? [];
+  const getDayPop = (ds: string) => {
+    const vals = popDates
+      .map((td: string, i: number) => ({ d: toDay(td), v: rawPops[i] }))
+      .filter((x: any) => x.d === ds && x.v !== '')
+      .map((x: any) => parseInt(x.v));
+    return vals.length > 0 ? String(Math.max(...vals)) : '--';
+  };
+
+  const tempSeries = ts0[2];
+  const tempArea   = tempSeries?.areas[cap(tempSeries?.areas ?? [wArea])];
+  const tempDates  : string[] = tempSeries?.timeDefines ?? [];
+  const tempVals   : string[] = tempArea?.temps ?? [];
+  const getShortTemp = (ds: string) => {
+    const vals = tempDates
+      .map((td: string, i: number) => ({ d: toDay(td), v: tempVals[i] }))
+      .filter((x: any) => x.d === ds && x.v !== '')
+      .map((x: any) => parseInt(x.v))
+      .filter((v: number) => !isNaN(v));
+    if (!vals.length) return { min: null as string | null, max: null as string | null };
+    return { min: String(Math.min(...vals)), max: String(Math.max(...vals)) };
+  };
+
+  const wts = json[1]?.timeSeries ?? [];
+  const wWSeries = wts[0];
+  const wWArea   = wWSeries?.areas[cap(wWSeries?.areas ?? [wArea])];
+  const wDates   : string[] = wWSeries?.timeDefines ?? [];
+  const wPops    : string[] = wWArea?.pops ?? [];
+  const getWeekPop = (ds: string) => {
+    const ti = wDates.findIndex((d: string) => toDay(d) === ds);
+    return ti >= 0 && wPops[ti] !== '' ? wPops[ti] : '--';
+  };
+
+  const wTempSeries = wts.find((t: any) => t.areas?.[0]?.tempsMax !== undefined);
+  const wTempArea   = wTempSeries?.areas[cap(wTempSeries?.areas ?? [wArea])];
+  const wTempDates  : string[] = wTempSeries?.timeDefines ?? [];
+  const wMax : string[] = wTempArea?.tempsMax ?? [];
+  const wMin : string[] = wTempArea?.tempsMin ?? [];
+  const getWeekTemp = (ds: string) => {
+    const ti = wTempDates.findIndex((d: string) => toDay(d) === ds);
+    if (ti < 0) return { min: null as string | null, max: null as string | null };
+    return { min: wMin[ti] !== '' ? wMin[ti] : null, max: wMax[ti] !== '' ? wMax[ti] : null };
+  };
+
+  const dayLabels = ['今日', '明日', '明後日'];
+  return dates.map((d: string, i: number) => {
+    const ds = toDay(d);
+    const st = getShortTemp(ds);
+    const wt = getWeekTemp(ds);
+    const pop = getDayPop(ds) !== '--' ? getDayPop(ds) : getWeekPop(ds);
+    return {
+      date: d, label: dayLabels[i],
+      weather: weathers[i] ?? '', weatherCode: weatherCodes[i] ?? '100',
+      tempMax: st.max ?? wt.max ?? '--', tempMin: st.min ?? wt.min ?? '--', pop,
+    };
+  });
+}
+
+// ── APIレスポンスから特定サブエリアの週間予報を構築 ──────────────────────────
+function buildWeekForecast(json: any, aIdx: number): DayForecast[] {
+  const wts = json[1]?.timeSeries ?? [];
+  const wWSeries = wts[0];
+  if (!wWSeries) return [];
+  const cap = (arr: any[]) => Math.min(aIdx, arr.length - 1);
+
+  const wArea   = wWSeries.areas[cap(wWSeries.areas)];
+  const wDates  : string[] = wWSeries.timeDefines ?? [];
+  const wCodes  : string[] = wArea?.weatherCodes ?? [];
+  const wPops   : string[] = wArea?.pops ?? [];
+
+  const wTempSeries = wts.find((t: any) => t.areas?.[0]?.tempsMax !== undefined);
+  const wTempArea   = wTempSeries?.areas[cap(wTempSeries?.areas ?? [wArea])];
+  const wMax : string[] = wTempArea?.tempsMax ?? [];
+  const wMin : string[] = wTempArea?.tempsMin ?? [];
+
+  return wDates.map((d: string, i: number) => ({
+    date: d, label: formatDate(d), weather: '',
+    weatherCode: wCodes[i] ?? '100',
+    tempMax: wMax[i] && wMax[i] !== '' ? wMax[i] : '--',
+    tempMin: wMin[i] && wMin[i] !== '' ? wMin[i] : '--',
+    pop: wPops[i] && wPops[i] !== '' ? wPops[i] : '--',
+  }));
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 export default function WeatherScreen() {
-  const [favorites, setFavorites] = useState<Area[]>(DEFAULT_FAVORITES);
-  const [editMode, setEditMode] = useState(false);
+  const [favorites, setFavorites]     = useState<Area[]>(DEFAULT_FAVORITES);
+  const [editMode, setEditMode]       = useState(false);
   const [editingFavIdx, setEditingFavIdx] = useState<number | null>(null);
 
   const [selectedArea, setSelectedArea] = useState<Area>(DEFAULT_FAVORITES[0]);
-  const [shortForecasts, setShortForecasts] = useState<DayForecast[]>([]);
-  const [weekForecasts, setWeekForecasts] = useState<DayForecast[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState<'short' | 'week'>('short');
+  const [subAreas, setSubAreas]         = useState<SubArea[]>([]);
+  const [selectedSubIdx, setSelectedSubIdx] = useState(0);
+  const [allShort, setAllShort] = useState<DayForecast[][]>([]);
+  const [allWeek,  setAllWeek]  = useState<DayForecast[][]>([]);
+
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState('');
+  const [viewMode, setViewMode]   = useState<'short' | 'week'>('short');
   const [modalVisible, setModalVisible] = useState(false);
+
+  // 表示中のサブエリアの予報
+  const shortForecasts = allShort[selectedSubIdx] ?? [];
+  const weekForecasts  = allWeek[selectedSubIdx]  ?? [];
+  const forecasts      = viewMode === 'short' ? shortForecasts : weekForecasts;
 
   useEffect(() => {
     (async () => {
@@ -233,7 +316,6 @@ export default function WeatherScreen() {
           if (Array.isArray(parsed) && parsed.length === 3) loaded = parsed;
         }
         setFavorites(loaded);
-
         let area = loaded[0];
         if (lastCode) {
           const found = ALL_AREAS.find((a) => a.code === lastCode);
@@ -254,6 +336,7 @@ export default function WeatherScreen() {
 
   async function selectArea(area: Area) {
     setSelectedArea(area);
+    setSelectedSubIdx(0);
     try { await AsyncStorage.setItem('lastArea', area.code); } catch {}
     fetchWeather(area.code);
   }
@@ -261,95 +344,26 @@ export default function WeatherScreen() {
   async function fetchWeather(code: string) {
     setLoading(true);
     setError('');
+    setSubAreas([]);
+    setAllShort([]);
+    setAllWeek([]);
     try {
-      const res = await fetch(
-        `https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`
-      );
+      const res  = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`);
       const json = await res.json();
 
-      const ts0 = json[0].timeSeries;
-      const weatherSeries = ts0[0];
-      const dates = weatherSeries.timeDefines.slice(0, 3);
-      const weathers: string[] = weatherSeries.areas[0].weathers.slice(0, 3);
-      const weatherCodes: string[] = weatherSeries.areas[0].weatherCodes.slice(0, 3);
-
-      const popSeries = ts0[1];
-      const popDates: string[] = popSeries?.timeDefines ?? [];
-      const rawPops: string[] = popSeries?.areas[0]?.pops ?? [];
-      const getDayPop = (dateStr: string) => {
-        const vals = popDates
-          .map((td, i) => ({ d: toDay(td), v: rawPops[i] }))
-          .filter((x) => x.d === dateStr && x.v !== '')
-          .map((x) => parseInt(x.v));
-        return vals.length > 0 ? String(Math.max(...vals)) : '--';
-      };
-
-      const shortTempDates: string[] = ts0[2]?.timeDefines ?? [];
-      const shortTempValues: string[] = ts0[2]?.areas[0]?.temps ?? [];
-      const getShortTemp = (dateStr: string) => {
-        const vals = shortTempDates
-          .map((td, i) => ({ d: toDay(td), v: shortTempValues[i] }))
-          .filter((x) => x.d === dateStr && x.v !== '')
-          .map((x) => parseInt(x.v))
-          .filter((v) => !isNaN(v));
-        if (vals.length === 0) return { min: null, max: null };
-        return { min: String(Math.min(...vals)), max: String(Math.max(...vals)) };
-      };
-
-      const wts = json[1]?.timeSeries ?? [];
-      const wWeatherSeries = wts[0];
-      const wDates: string[] = wWeatherSeries?.timeDefines ?? [];
-      const wCodes: string[] = wWeatherSeries?.areas[0]?.weatherCodes ?? [];
-      const wPops: string[] = wWeatherSeries?.areas[0]?.pops ?? [];
-      const weekTempSeries = (json[1]?.timeSeries ?? []).find(
-        (t: any) => t.areas?.[0]?.tempsMax !== undefined
-      ) ?? null;
-      const wMax: string[] = weekTempSeries?.areas[0]?.tempsMax ?? [];
-      const wMin: string[] = weekTempSeries?.areas[0]?.tempsMin ?? [];
-      const wTempDates: string[] = weekTempSeries?.timeDefines ?? [];
-
-      const getWeekPop = (dateStr: string) => {
-        const ti = wDates.findIndex((d) => toDay(d) === dateStr);
-        return ti >= 0 && wPops[ti] !== '' ? wPops[ti] : '--';
-      };
-      const getWeekTemp = (dateStr: string) => {
-        const ti = wTempDates.findIndex((d) => toDay(d) === dateStr);
-        if (ti < 0) return { min: null, max: null };
-        return {
-          min: wMin[ti] !== '' ? wMin[ti] : null,
-          max: wMax[ti] !== '' ? wMax[ti] : null,
-        };
-      };
-
-      const dayLabels = ['今日', '明日', '明後日'];
-      const short: DayForecast[] = dates.map((d: string, i: number) => {
-        const dateStr = toDay(d);
-        const shortTemp = getShortTemp(dateStr);
-        const weekTemp = getWeekTemp(dateStr);
-        const pop = getDayPop(dateStr) !== '--' ? getDayPop(dateStr) : getWeekPop(dateStr);
-        return {
-          date: d,
-          label: dayLabels[i],
-          weather: weathers[i] ?? '',
-          weatherCode: weatherCodes[i] ?? '100',
-          tempMax: shortTemp.max ?? weekTemp.max ?? '--',
-          tempMin: shortTemp.min ?? weekTemp.min ?? '--',
-          pop,
-        };
-      });
-      setShortForecasts(short);
-
-      const week: DayForecast[] = wDates.map((d: string, i: number) => ({
-        date: d,
-        label: formatDate(d),
-        weather: '',
-        weatherCode: wCodes[i] ?? '100',
-        tempMax: wMax[i] && wMax[i] !== '' ? wMax[i] : '--',
-        tempMin: wMin[i] && wMin[i] !== '' ? wMin[i] : '--',
-        pop: wPops[i] && wPops[i] !== '' ? wPops[i] : '--',
+      // timeSeries[0].areas がサブエリアの一覧
+      const areas0: any[] = json[0]?.timeSeries?.[0]?.areas ?? [];
+      const subs: SubArea[] = areas0.map((a: any) => ({
+        name: a.area.name,
+        code: a.area.code,
       }));
-      setWeekForecasts(week);
+      setSubAreas(subs);
 
+      // 全サブエリア分を一括処理（追加ネットワーク不要）
+      const shorts = subs.map((_, i) => buildShortForecast(json, i));
+      const weeks  = subs.map((_, i) => buildWeekForecast(json, i));
+      setAllShort(shorts);
+      setAllWeek(weeks);
     } catch {
       setError('天気情報の取得に失敗しました');
     } finally {
@@ -358,12 +372,8 @@ export default function WeatherScreen() {
   }
 
   function handleFavPress(fav: Area, idx: number) {
-    if (editMode) {
-      setEditingFavIdx(idx);
-      setModalVisible(true);
-    } else {
-      selectArea(fav);
-    }
+    if (editMode) { setEditingFavIdx(idx); setModalVisible(true); }
+    else selectArea(fav);
   }
 
   function handleModalSelect(area: Area) {
@@ -372,24 +382,17 @@ export default function WeatherScreen() {
       next[editingFavIdx] = area;
       saveFavorites(next);
       setEditingFavIdx(null);
-      setModalVisible(false);
     } else {
       selectArea(area);
-      setModalVisible(false);
     }
-  }
-
-  function closeModal() {
     setModalVisible(false);
-    setEditingFavIdx(null);
   }
 
-  const forecasts = viewMode === 'short' ? shortForecasts : weekForecasts;
   const isFavArea = favorites.some((f) => f.code === selectedArea.code);
 
   return (
     <View style={styles.container}>
-      {/* タイトル + 更新ボタン */}
+      {/* タイトル + 更新 */}
       <View style={styles.titleRow}>
         <Text style={styles.title}>🌤️ 天気予報</Text>
         <TouchableOpacity
@@ -401,18 +404,14 @@ export default function WeatherScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* お気に入り + 編集 + その他 */}
+      {/* お気に入り + ✎ + その他▼ */}
       <View style={styles.areaRow}>
         {favorites.map((fav, idx) => {
           const isActive = !editMode && fav.code === selectedArea.code;
           return (
             <TouchableOpacity
               key={idx}
-              style={[
-                styles.areaButton,
-                isActive && styles.areaButtonActive,
-                editMode && styles.areaButtonEdit,
-              ]}
+              style={[styles.areaButton, isActive && styles.areaButtonActive, editMode && styles.areaButtonEdit]}
               onPress={() => handleFavPress(fav, idx)}
             >
               <Text style={isActive ? styles.areaTextActive : styles.areaText}>
@@ -421,16 +420,12 @@ export default function WeatherScreen() {
             </TouchableOpacity>
           );
         })}
-
         <TouchableOpacity
           style={[styles.areaButton, editMode && styles.areaButtonDone]}
           onPress={() => setEditMode(!editMode)}
         >
-          <Text style={[styles.areaText, editMode && { color: '#fff' }]}>
-            {editMode ? '完了' : '✎'}
-          </Text>
+          <Text style={[styles.areaText, editMode && { color: '#fff' }]}>{editMode ? '完了' : '✎'}</Text>
         </TouchableOpacity>
-
         <TouchableOpacity
           style={[styles.areaButton, !isFavArea && !editMode && styles.areaButtonActive]}
           onPress={() => { setEditingFavIdx(null); setModalVisible(true); }}
@@ -441,19 +436,37 @@ export default function WeatherScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* サブエリア選択（複数エリアのofficeでのみ表示）*/}
+      {subAreas.length > 1 && (
+        <View style={styles.subAreaRow}>
+          {subAreas.map((sa, idx) => (
+            <TouchableOpacity
+              key={sa.code}
+              style={[styles.subAreaButton, idx === selectedSubIdx && styles.subAreaButtonActive]}
+              onPress={() => setSelectedSubIdx(idx)}
+            >
+              <Text style={idx === selectedSubIdx ? styles.subAreaTextActive : styles.subAreaText}
+                    numberOfLines={1} adjustsFontSizeToFit>
+                {sa.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       {/* 短期/週間 切替 */}
       <View style={styles.toggleRow}>
         <TouchableOpacity
           style={[styles.toggleButton, viewMode === 'short' && styles.toggleButtonActive]}
           onPress={() => setViewMode('short')}
         >
-          <Text style={viewMode === 'short' ? styles.toggleTextActive : styles.toggleText}>短期予報（3日）</Text>
+          <Text style={viewMode === 'short' ? styles.toggleTextActive : styles.toggleText}>短期（3日）</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleButton, viewMode === 'week' && styles.toggleButtonActive]}
           onPress={() => setViewMode('week')}
         >
-          <Text style={viewMode === 'week' ? styles.toggleTextActive : styles.toggleText}>週間予報（7日）</Text>
+          <Text style={viewMode === 'week' ? styles.toggleTextActive : styles.toggleText}>週間（7日）</Text>
         </TouchableOpacity>
       </View>
 
@@ -467,14 +480,16 @@ export default function WeatherScreen() {
             <View key={i} style={[styles.card, isToday && styles.cardToday]}>
               <View style={styles.cardLeft}>
                 <Text style={[styles.cardLabel, isToday && styles.cardLabelToday]}>{f.label}</Text>
-                <Text style={[styles.cardDate, isToday && styles.cardDateToday]}>{formatDate(f.date)}</Text>
+                <Text style={[styles.cardDate,  isToday && styles.cardDateToday]}>{formatDate(f.date)}</Text>
                 {viewMode === 'short' && f.weather !== '' && (
                   <Text style={[styles.cardWeather, isToday && styles.cardWeatherToday]} numberOfLines={2}>
                     {f.weather}
                   </Text>
                 )}
               </View>
-              <Text style={styles.cardEmoji} numberOfLines={1} adjustsFontSizeToFit>{weatherEmoji(f.weatherCode)}</Text>
+              <Text style={styles.cardEmoji} numberOfLines={1} adjustsFontSizeToFit>
+                {weatherEmoji(f.weatherCode)}
+              </Text>
               <View style={styles.cardRight}>
                 <Text style={styles.popText}>☂ {f.pop !== '--' ? f.pop + '%' : '--'}</Text>
                 <Text style={styles.tempMax}>▲{f.tempMax}°</Text>
@@ -486,7 +501,7 @@ export default function WeatherScreen() {
         <Text style={styles.source}>出典: 気象庁</Text>
       </ScrollView>
 
-      {/* 地点選択モーダル（地域セクション形式）*/}
+      {/* 地点選択モーダル（地域セクション付き）*/}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
@@ -504,14 +519,10 @@ export default function WeatherScreen() {
                         style={styles.prefCell}
                         onPress={() => handleModalSelect(item)}
                       >
-                        <View style={[
-                          styles.prefButton,
-                          item.code === selectedArea.code && styles.prefButtonActive,
-                        ]}>
+                        <View style={[styles.prefButton, item.code === selectedArea.code && styles.prefButtonActive]}>
                           <Text
                             style={[styles.prefText, item.code === selectedArea.code && styles.prefTextActive]}
-                            numberOfLines={1}
-                            adjustsFontSizeToFit
+                            numberOfLines={1} adjustsFontSizeToFit
                           >
                             {item.name}
                           </Text>
@@ -522,7 +533,9 @@ export default function WeatherScreen() {
                 </View>
               ))}
             </ScrollView>
-            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => {
+              setModalVisible(false); setEditingFavIdx(null);
+            }}>
               <Text style={styles.closeText}>閉じる</Text>
             </TouchableOpacity>
           </View>
@@ -532,146 +545,61 @@ export default function WeatherScreen() {
   );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#e8f4fd',
-    paddingTop: 60,
-    paddingHorizontal: 12,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#1a3a5c',
-    flex: 1,
-  },
-  refreshButton: {
-    position: 'absolute',
-    right: 0,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: '#4a90e2',
-    borderRadius: 16,
-  },
-  refreshText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  areaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 12,
-  },
-  areaButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#b0cde8',
-  },
-  areaButtonActive: { backgroundColor: '#4a90e2', borderColor: '#4a90e2' },
-  areaButtonEdit: { borderColor: '#e67e22', borderWidth: 1.5 },
-  areaButtonDone: { backgroundColor: '#e67e22', borderColor: '#e67e22' },
-  areaText: { color: '#000', fontWeight: '600', fontSize: 12 },
-  areaTextActive: { color: '#fff', fontWeight: '600', fontSize: 12 },
-  toggleRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    borderRadius: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#4a90e2',
-  },
-  toggleButton: { flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: '#fff' },
-  toggleButtonActive: { backgroundColor: '#4a90e2' },
-  toggleText: { color: '#4a90e2', fontWeight: '600', fontSize: 13 },
-  toggleTextActive: { color: '#fff', fontWeight: '600', fontSize: 13 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardToday: { backgroundColor: '#4a90e2' },
-  cardLeft: { flex: 2 },
-  cardLabel: { fontSize: 15, fontWeight: 'bold', color: '#222' },
-  cardLabelToday: { color: '#fff' },
-  cardDate: { fontSize: 11, color: '#888', marginTop: 2 },
-  cardDateToday: { color: '#cde' },
-  cardWeather: { fontSize: 11, color: '#555', marginTop: 4, flexShrink: 1 },
-  cardWeatherToday: { color: '#def' },
-  cardEmoji: { fontSize: 22, flex: 1.5, textAlign: 'center', minWidth: 0 },
-  cardRight: { flex: 2, alignItems: 'flex-end' },
-  popText: { fontSize: 12, color: '#3498db', marginBottom: 2 },
-  tempMax: { fontSize: 14, fontWeight: 'bold', color: '#e74c3c' },
-  tempMin: { fontSize: 14, fontWeight: 'bold', color: '#3498db' },
-  error: { color: 'red', textAlign: 'center', marginTop: 20 },
-  source: { textAlign: 'center', fontSize: 11, color: '#aaa', marginVertical: 12 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalBox: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#1a3a5c',
-  },
-  sectionHeader: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#555',
-    backgroundColor: '#dde8f4',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginTop: 8,
-    marginBottom: 2,
-    borderRadius: 4,
-  },
-  prefGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  prefCell: {
-    width: '25%',
-    padding: 3,
-  },
-  prefButton: {
-    borderRadius: 8,
-    paddingVertical: 8,
-    backgroundColor: '#f0f4f8',
-    alignItems: 'center',
-  },
-  prefButtonActive: { backgroundColor: '#4a90e2' },
-  prefText: { fontSize: 12, color: '#333' },
-  prefTextActive: { fontSize: 12, color: '#fff', fontWeight: 'bold' },
-  closeButton: {
-    marginTop: 12,
-    backgroundColor: '#4a90e2',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  closeText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  container: { flex:1, backgroundColor:'#e8f4fd', paddingTop:60, paddingHorizontal:12 },
+  titleRow: { flexDirection:'row', alignItems:'center', justifyContent:'center', marginBottom:12 },
+  title: { fontSize:22, fontWeight:'bold', textAlign:'center', color:'#1a3a5c', flex:1 },
+  refreshButton: { position:'absolute', right:0, paddingHorizontal:10, paddingVertical:4, backgroundColor:'#4a90e2', borderRadius:16 },
+  refreshText: { color:'#fff', fontSize:18, fontWeight:'bold' },
+
+  areaRow: { flexDirection:'row', flexWrap:'wrap', gap:6, marginBottom:8 },
+  areaButton: { paddingHorizontal:10, paddingVertical:6, borderRadius:16, backgroundColor:'#fff', borderWidth:1, borderColor:'#b0cde8' },
+  areaButtonActive: { backgroundColor:'#4a90e2', borderColor:'#4a90e2' },
+  areaButtonEdit:   { borderColor:'#e67e22', borderWidth:1.5 },
+  areaButtonDone:   { backgroundColor:'#e67e22', borderColor:'#e67e22' },
+  areaText:       { color:'#000', fontWeight:'600', fontSize:12 },
+  areaTextActive: { color:'#fff', fontWeight:'600', fontSize:12 },
+
+  subAreaRow: { flexDirection:'row', flexWrap:'wrap', gap:4, marginBottom:8 },
+  subAreaButton: { paddingHorizontal:8, paddingVertical:4, borderRadius:12, backgroundColor:'#dce8f5', borderWidth:1, borderColor:'#9cb8d8' },
+  subAreaButtonActive: { backgroundColor:'#1a6bbd', borderColor:'#1a6bbd' },
+  subAreaText:       { color:'#1a3a5c', fontSize:11, fontWeight:'600' },
+  subAreaTextActive: { color:'#fff', fontSize:11, fontWeight:'600' },
+
+  toggleRow: { flexDirection:'row', marginBottom:10, borderRadius:10, overflow:'hidden', borderWidth:1, borderColor:'#4a90e2' },
+  toggleButton: { flex:1, paddingVertical:7, alignItems:'center', backgroundColor:'#fff' },
+  toggleButtonActive: { backgroundColor:'#4a90e2' },
+  toggleText:       { color:'#4a90e2', fontWeight:'600', fontSize:13 },
+  toggleTextActive: { color:'#fff',    fontWeight:'600', fontSize:13 },
+
+  card: { backgroundColor:'#fff', borderRadius:14, padding:14, marginBottom:8, flexDirection:'row', alignItems:'center', shadowColor:'#000', shadowOpacity:0.05, shadowRadius:4, elevation:2 },
+  cardToday: { backgroundColor:'#4a90e2' },
+  cardLeft:  { flex:2 },
+  cardLabel: { fontSize:15, fontWeight:'bold', color:'#222' },
+  cardLabelToday: { color:'#fff' },
+  cardDate:  { fontSize:11, color:'#888', marginTop:2 },
+  cardDateToday: { color:'#cde' },
+  cardWeather: { fontSize:11, color:'#555', marginTop:4, flexShrink:1 },
+  cardWeatherToday: { color:'#def' },
+  cardEmoji: { fontSize:22, flex:1.5, textAlign:'center', minWidth:0 },
+  cardRight: { flex:2, alignItems:'flex-end' },
+  popText:  { fontSize:12, color:'#3498db', marginBottom:2 },
+  tempMax:  { fontSize:14, fontWeight:'bold', color:'#e74c3c' },
+  tempMin:  { fontSize:14, fontWeight:'bold', color:'#3498db' },
+  error:    { color:'red', textAlign:'center', marginTop:20 },
+  source:   { textAlign:'center', fontSize:11, color:'#aaa', marginVertical:12 },
+
+  modalOverlay: { flex:1, backgroundColor:'rgba(0,0,0,0.5)', justifyContent:'flex-end' },
+  modalBox: { backgroundColor:'#fff', borderTopLeftRadius:20, borderTopRightRadius:20, padding:16, maxHeight:'80%' },
+  modalTitle: { fontSize:16, fontWeight:'bold', textAlign:'center', marginBottom:10, color:'#1a3a5c' },
+  sectionHeader: { fontSize:11, fontWeight:'bold', color:'#555', backgroundColor:'#dde8f4', paddingHorizontal:8, paddingVertical:3, marginTop:8, marginBottom:2, borderRadius:4 },
+  prefGrid: { flexDirection:'row', flexWrap:'wrap' },
+  prefCell: { width:'25%', padding:3 },
+  prefButton: { borderRadius:8, paddingVertical:8, backgroundColor:'#f0f4f8', alignItems:'center' },
+  prefButtonActive: { backgroundColor:'#4a90e2' },
+  prefText:       { fontSize:12, color:'#333' },
+  prefTextActive: { fontSize:12, color:'#fff', fontWeight:'bold' },
+  closeButton: { marginTop:12, backgroundColor:'#4a90e2', borderRadius:10, paddingVertical:12, alignItems:'center' },
+  closeText: { color:'#fff', fontWeight:'bold', fontSize:15 },
 });
