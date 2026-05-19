@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Modal,
   ScrollView,
   StyleSheet,
@@ -12,84 +11,126 @@ import {
 } from 'react-native';
 
 type Area = { name: string; code: string };
+type Section = { title: string; data: Area[] };
 
-const DEFAULT_FAVORITES: Area[] = [
-  { name: '東京', code: '130000' },
-  { name: '大阪', code: '270000' },
-  { name: '名古屋', code: '230000' },
+// area.json (jma_app_suite) の offices に準拠した地点リスト
+const AREA_SECTIONS: Section[] = [
+  {
+    title: '北海道',
+    data: [
+      { name: '札幌', code: '016000' },   // 石狩・空知・後志地方
+      { name: '函館', code: '017000' },   // 渡島・檜山地方
+      { name: '旭川', code: '012000' },   // 上川・留萌地方
+      { name: '釧路', code: '014100' },   // 釧路・根室地方
+      { name: '帯広', code: '014030' },   // 十勝地方
+      { name: '網走', code: '013000' },   // 網走・北見・紋別地方
+      { name: '室蘭', code: '015000' },   // 胆振・日高地方
+      { name: '稚内', code: '011000' },   // 宗谷地方
+    ],
+  },
+  {
+    title: '東北',
+    data: [
+      { name: '青森', code: '020000' },
+      { name: '岩手', code: '030000' },
+      { name: '宮城', code: '040000' },
+      { name: '秋田', code: '050000' },
+      { name: '山形', code: '060000' },
+      { name: '福島', code: '070000' },
+    ],
+  },
+  {
+    title: '関東甲信',
+    data: [
+      { name: '茨城', code: '080000' },
+      { name: '栃木', code: '090000' },
+      { name: '群馬', code: '100000' },
+      { name: '埼玉', code: '110000' },
+      { name: '千葉', code: '120000' },
+      { name: '東京', code: '130000' },
+      { name: '神奈川', code: '140000' },
+      { name: '山梨', code: '190000' },
+      { name: '長野', code: '200000' },
+    ],
+  },
+  {
+    title: '北陸',
+    data: [
+      { name: '新潟', code: '150000' },
+      { name: '富山', code: '160000' },
+      { name: '石川', code: '170000' },
+      { name: '福井', code: '180000' },
+    ],
+  },
+  {
+    title: '東海',
+    data: [
+      { name: '岐阜', code: '210000' },
+      { name: '静岡', code: '220000' },
+      { name: '愛知', code: '230000' },
+      { name: '三重', code: '240000' },
+    ],
+  },
+  {
+    title: '近畿',
+    data: [
+      { name: '滋賀', code: '250000' },
+      { name: '京都', code: '260000' },
+      { name: '大阪', code: '270000' },
+      { name: '兵庫', code: '280000' },
+      { name: '奈良', code: '290000' },
+      { name: '和歌山', code: '300000' },
+    ],
+  },
+  {
+    title: '中国',
+    data: [
+      { name: '鳥取', code: '310000' },
+      { name: '島根', code: '320000' },
+      { name: '岡山', code: '330000' },
+      { name: '広島', code: '340000' },
+      { name: '山口', code: '350000' },
+    ],
+  },
+  {
+    title: '四国',
+    data: [
+      { name: '徳島', code: '360000' },
+      { name: '香川', code: '370000' },
+      { name: '愛媛', code: '380000' },
+      { name: '高知', code: '390000' },
+    ],
+  },
+  {
+    title: '九州',
+    data: [
+      { name: '福岡', code: '400000' },
+      { name: '佐賀', code: '410000' },
+      { name: '長崎', code: '420000' },
+      { name: '熊本', code: '430000' },
+      { name: '大分', code: '440000' },
+      { name: '宮崎', code: '450000' },
+      { name: '鹿児島', code: '460100' },
+      { name: '奄美', code: '460040' },
+    ],
+  },
+  {
+    title: '沖縄',
+    data: [
+      { name: '沖縄本島', code: '471000' },
+      { name: '大東島', code: '472000' },
+      { name: '宮古島', code: '473000' },
+      { name: '八重山', code: '474000' },
+    ],
+  },
 ];
 
-const ALL_AREAS: Area[] = [
-  // 北海道
-  { name: '札幌', code: '016000' },
-  { name: '函館', code: '017000' },
-  { name: '旭川', code: '012000' },
-  { name: '釧路', code: '014020' },
-  { name: '帯広', code: '014010' },
-  { name: '網走', code: '013000' },
-  { name: '室蘭', code: '015010' },
-  { name: '稚内', code: '011000' },
-  // 東北
-  { name: '青森', code: '020000' },
-  { name: '岩手', code: '030000' },
-  { name: '宮城', code: '040000' },
-  { name: '秋田', code: '050000' },
-  { name: '山形', code: '060000' },
-  { name: '福島', code: '070000' },
-  // 関東
-  { name: '茨城', code: '080000' },
-  { name: '栃木', code: '090000' },
-  { name: '群馬', code: '100000' },
-  { name: '埼玉', code: '110000' },
-  { name: '千葉', code: '120000' },
-  { name: '東京', code: '130000' },
-  { name: '神奈川', code: '140000' },
-  // 甲信越・北陸
-  { name: '新潟', code: '150000' },
-  { name: '富山', code: '160000' },
-  { name: '石川', code: '170000' },
-  { name: '福井', code: '180000' },
-  { name: '山梨', code: '190000' },
-  { name: '長野', code: '200000' },
-  // 東海
-  { name: '岐阜', code: '210000' },
-  { name: '静岡', code: '220000' },
-  { name: '愛知', code: '230000' },
-  { name: '三重', code: '240000' },
-  // 近畿
-  { name: '滋賀', code: '250000' },
-  { name: '京都', code: '260000' },
-  { name: '大阪', code: '270000' },
-  { name: '兵庫', code: '280000' },
-  { name: '奈良', code: '290000' },
-  { name: '和歌山', code: '300000' },
-  // 中国
-  { name: '鳥取', code: '310000' },
-  { name: '島根', code: '320000' },
-  { name: '岡山', code: '330000' },
-  { name: '広島', code: '340000' },
-  { name: '山口', code: '350000' },
-  // 四国
-  { name: '徳島', code: '360000' },
-  { name: '香川', code: '370000' },
-  { name: '愛媛', code: '380000' },
-  { name: '高知', code: '390000' },
-  // 九州
-  { name: '福岡', code: '400000' },
-  { name: '佐賀', code: '410000' },
-  { name: '長崎', code: '420000' },
-  { name: '熊本', code: '430000' },
-  { name: '大分', code: '440000' },
-  { name: '宮崎', code: '450000' },
-  { name: '鹿児島', code: '460100' },
-  { name: '奄美', code: '460040' },
-  // 沖縄
+const ALL_AREAS: Area[] = AREA_SECTIONS.flatMap((s) => s.data);
+
+const DEFAULT_FAVORITES: Area[] = [
   { name: '沖縄本島', code: '471000' },
-  { name: '久米島', code: '472000' },
-  { name: '南大東島', code: '473000' },
-  { name: '宮古島', code: '474000' },
-  { name: '八重山', code: '475000' },
-  { name: '与那国島', code: '476000' },
+  { name: '東京', code: '130000' },
+  { name: '大阪', code: '270000' },
 ];
 
 function weatherEmoji(code: string): string {
@@ -179,8 +220,6 @@ export default function WeatherScreen() {
   const [viewMode, setViewMode] = useState<'short' | 'week'>('short');
   const [modalVisible, setModalVisible] = useState(false);
 
-  const initializedRef = useRef(false);
-
   useEffect(() => {
     (async () => {
       try {
@@ -188,14 +227,14 @@ export default function WeatherScreen() {
           AsyncStorage.getItem('favorites'),
           AsyncStorage.getItem('lastArea'),
         ]);
-        let loaded: Area[] = DEFAULT_FAVORITES;
+        let loaded = DEFAULT_FAVORITES;
         if (favStr) {
           const parsed = JSON.parse(favStr);
           if (Array.isArray(parsed) && parsed.length === 3) loaded = parsed;
         }
         setFavorites(loaded);
 
-        let area: Area = loaded[0];
+        let area = loaded[0];
         if (lastCode) {
           const found = ALL_AREAS.find((a) => a.code === lastCode);
           if (found) area = found;
@@ -205,7 +244,6 @@ export default function WeatherScreen() {
       } catch {
         fetchWeather(DEFAULT_FAVORITES[0].code);
       }
-      initializedRef.current = true;
     })();
   }, []);
 
@@ -341,9 +379,9 @@ export default function WeatherScreen() {
     }
   }
 
-  function openOtherModal() {
+  function closeModal() {
+    setModalVisible(false);
     setEditingFavIdx(null);
-    setModalVisible(true);
   }
 
   const forecasts = viewMode === 'short' ? shortForecasts : weekForecasts;
@@ -367,20 +405,18 @@ export default function WeatherScreen() {
       <View style={styles.areaRow}>
         {favorites.map((fav, idx) => {
           const isActive = !editMode && fav.code === selectedArea.code;
-          const isEditSlot = editMode;
           return (
             <TouchableOpacity
               key={idx}
               style={[
                 styles.areaButton,
                 isActive && styles.areaButtonActive,
-                isEditSlot && styles.areaButtonEdit,
+                editMode && styles.areaButtonEdit,
               ]}
               onPress={() => handleFavPress(fav, idx)}
             >
               <Text style={isActive ? styles.areaTextActive : styles.areaText}>
-                {fav.name}
-                {isEditSlot && <Text style={styles.editPin}> ✎</Text>}
+                {fav.name}{editMode ? ' ✎' : ''}
               </Text>
             </TouchableOpacity>
           );
@@ -396,15 +432,10 @@ export default function WeatherScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.areaButton,
-            !isFavArea && !editMode && styles.areaButtonActive,
-          ]}
-          onPress={openOtherModal}
+          style={[styles.areaButton, !isFavArea && !editMode && styles.areaButtonActive]}
+          onPress={() => { setEditingFavIdx(null); setModalVisible(true); }}
         >
-          <Text style={
-            !isFavArea && !editMode ? styles.areaTextActive : styles.areaText
-          }>
+          <Text style={!isFavArea && !editMode ? styles.areaTextActive : styles.areaText}>
             {!isFavArea ? selectedArea.name + ' ▼' : 'その他▼'}
           </Text>
         </TouchableOpacity>
@@ -455,40 +486,43 @@ export default function WeatherScreen() {
         <Text style={styles.source}>出典: 気象庁</Text>
       </ScrollView>
 
-      {/* 地点選択モーダル */}
+      {/* 地点選択モーダル（地域セクション形式）*/}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>
-              {editingFavIdx !== null
-                ? `お気に入り${editingFavIdx + 1}を変更`
-                : '地点を選択'}
+              {editingFavIdx !== null ? `お気に入り${editingFavIdx + 1}を変更` : '地点を選択'}
             </Text>
-            <FlatList
-              data={ALL_AREAS}
-              keyExtractor={(item) => item.code}
-              numColumns={4}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.prefButton,
-                    item.code === selectedArea.code && styles.prefButtonActive,
-                  ]}
-                  onPress={() => handleModalSelect(item)}
-                >
-                  <Text style={[
-                    styles.prefText,
-                    item.code === selectedArea.code && styles.prefTextActive,
-                  ]}>
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity style={styles.closeButton} onPress={() => {
-              setModalVisible(false);
-              setEditingFavIdx(null);
-            }}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {AREA_SECTIONS.map((section) => (
+                <View key={section.title}>
+                  <Text style={styles.sectionHeader}>{section.title}</Text>
+                  <View style={styles.prefGrid}>
+                    {section.data.map((item) => (
+                      <TouchableOpacity
+                        key={item.code}
+                        style={styles.prefCell}
+                        onPress={() => handleModalSelect(item)}
+                      >
+                        <View style={[
+                          styles.prefButton,
+                          item.code === selectedArea.code && styles.prefButtonActive,
+                        ]}>
+                          <Text
+                            style={[styles.prefText, item.code === selectedArea.code && styles.prefTextActive]}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                          >
+                            {item.name}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
               <Text style={styles.closeText}>閉じる</Text>
             </TouchableOpacity>
           </View>
@@ -541,21 +575,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#b0cde8',
   },
-  areaButtonActive: {
-    backgroundColor: '#4a90e2',
-    borderColor: '#4a90e2',
-  },
-  areaButtonEdit: {
-    borderColor: '#e67e22',
-    borderWidth: 1.5,
-  },
-  areaButtonDone: {
-    backgroundColor: '#e67e22',
-    borderColor: '#e67e22',
-  },
+  areaButtonActive: { backgroundColor: '#4a90e2', borderColor: '#4a90e2' },
+  areaButtonEdit: { borderColor: '#e67e22', borderWidth: 1.5 },
+  areaButtonDone: { backgroundColor: '#e67e22', borderColor: '#e67e22' },
   areaText: { color: '#000', fontWeight: '600', fontSize: 12 },
   areaTextActive: { color: '#fff', fontWeight: '600', fontSize: 12 },
-  editPin: { fontSize: 10, color: '#e67e22' },
   toggleRow: {
     flexDirection: 'row',
     marginBottom: 12,
@@ -564,12 +588,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4a90e2',
   },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
+  toggleButton: { flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: '#fff' },
   toggleButtonActive: { backgroundColor: '#4a90e2' },
   toggleText: { color: '#4a90e2', fontWeight: '600', fontSize: 13 },
   toggleTextActive: { color: '#fff', fontWeight: '600', fontSize: 13 },
@@ -609,21 +628,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '75%',
+    padding: 16,
+    maxHeight: '80%',
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 14,
+    marginBottom: 10,
     color: '#1a3a5c',
   },
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#555',
+    backgroundColor: '#dde8f4',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 8,
+    marginBottom: 2,
+    borderRadius: 4,
+  },
+  prefGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  prefCell: {
+    width: '25%',
+    padding: 3,
+  },
   prefButton: {
-    flex: 1,
-    margin: 3,
-    paddingVertical: 8,
     borderRadius: 8,
+    paddingVertical: 8,
     backgroundColor: '#f0f4f8',
     alignItems: 'center',
   },
@@ -631,7 +667,7 @@ const styles = StyleSheet.create({
   prefText: { fontSize: 12, color: '#333' },
   prefTextActive: { fontSize: 12, color: '#fff', fontWeight: 'bold' },
   closeButton: {
-    marginTop: 14,
+    marginTop: 12,
     backgroundColor: '#4a90e2',
     borderRadius: 10,
     paddingVertical: 12,
