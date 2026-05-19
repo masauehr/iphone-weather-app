@@ -78,8 +78,8 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
   </div>
   <div class="ctrl-row">
     <div class="btn-group">
-      <button id="t1h" class="active" onclick="setTimeRange(1)">1時間</button>
-      <button id="t2h" onclick="setTimeRange(2)">2時間</button>
+      <button id="t1h" onclick="setTimeRange(1)">1時間</button>
+      <button id="t2h" class="active" onclick="setTimeRange(2)">2時間</button>
       <button id="t3h" onclick="setTimeRange(3)">3時間</button>
     </div>
     <span class="sep">|</span>
@@ -208,7 +208,7 @@ var latestSatTime=null,latestRadarTime=null;
 var currentArea='jp',currentBand='ETC',displayMode='both';
 var _wasPlaying=false;
 var currentNativeMax=10;
-var timeRangeHours=1;
+var timeRangeHours=2;
 var historicalOffsetMin=0;
 function isHistoricalMode(){return historicalOffsetMin>0;}
 
