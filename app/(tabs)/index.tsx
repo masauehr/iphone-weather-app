@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,23 +11,32 @@ import {
   View,
 } from 'react-native';
 
-const MAIN_AREAS = [
+type Area = { name: string; code: string };
+
+const DEFAULT_FAVORITES: Area[] = [
   { name: '東京', code: '130000' },
   { name: '大阪', code: '270000' },
   { name: '名古屋', code: '230000' },
-  { name: '札幌', code: '016000' },
-  { name: '福岡', code: '400000' },
-  { name: '那覇', code: '471000' },
 ];
 
-const ALL_AREAS = [
-  { name: '北海道', code: '016000' },
+const ALL_AREAS: Area[] = [
+  // 北海道
+  { name: '札幌', code: '016000' },
+  { name: '函館', code: '017000' },
+  { name: '旭川', code: '012000' },
+  { name: '釧路', code: '014020' },
+  { name: '帯広', code: '014010' },
+  { name: '網走', code: '013000' },
+  { name: '室蘭', code: '015010' },
+  { name: '稚内', code: '011000' },
+  // 東北
   { name: '青森', code: '020000' },
   { name: '岩手', code: '030000' },
   { name: '宮城', code: '040000' },
   { name: '秋田', code: '050000' },
   { name: '山形', code: '060000' },
   { name: '福島', code: '070000' },
+  // 関東
   { name: '茨城', code: '080000' },
   { name: '栃木', code: '090000' },
   { name: '群馬', code: '100000' },
@@ -34,31 +44,37 @@ const ALL_AREAS = [
   { name: '千葉', code: '120000' },
   { name: '東京', code: '130000' },
   { name: '神奈川', code: '140000' },
+  // 甲信越・北陸
   { name: '新潟', code: '150000' },
   { name: '富山', code: '160000' },
   { name: '石川', code: '170000' },
   { name: '福井', code: '180000' },
   { name: '山梨', code: '190000' },
   { name: '長野', code: '200000' },
+  // 東海
   { name: '岐阜', code: '210000' },
   { name: '静岡', code: '220000' },
   { name: '愛知', code: '230000' },
   { name: '三重', code: '240000' },
+  // 近畿
   { name: '滋賀', code: '250000' },
   { name: '京都', code: '260000' },
   { name: '大阪', code: '270000' },
   { name: '兵庫', code: '280000' },
   { name: '奈良', code: '290000' },
   { name: '和歌山', code: '300000' },
+  // 中国
   { name: '鳥取', code: '310000' },
   { name: '島根', code: '320000' },
   { name: '岡山', code: '330000' },
   { name: '広島', code: '340000' },
   { name: '山口', code: '350000' },
+  // 四国
   { name: '徳島', code: '360000' },
   { name: '香川', code: '370000' },
   { name: '愛媛', code: '380000' },
   { name: '高知', code: '390000' },
+  // 九州
   { name: '福岡', code: '400000' },
   { name: '佐賀', code: '410000' },
   { name: '長崎', code: '420000' },
@@ -66,96 +82,68 @@ const ALL_AREAS = [
   { name: '大分', code: '440000' },
   { name: '宮崎', code: '450000' },
   { name: '鹿児島', code: '460100' },
-  { name: '沖縄', code: '471000' },
+  { name: '奄美', code: '460040' },
+  // 沖縄
+  { name: '沖縄本島', code: '471000' },
+  { name: '久米島', code: '472000' },
+  { name: '南大東島', code: '473000' },
+  { name: '宮古島', code: '474000' },
+  { name: '八重山', code: '475000' },
+  { name: '与那国島', code: '476000' },
 ];
 
-// ☂️→☂️ に統一
 function weatherEmoji(code: string): string {
   const n = parseInt(code, 10);
   const map: Record<number, string> = {
-    // 晴れ系
     100:'☀️',
-    101:'☀️//⛅',   // 時々くもり
-    102:'☀️/☂️',   // 一時雨
-    103:'☀️//☂️',  // 時々雨
-    104:'☀️/❄️',   // 一時雪
-    105:'☀️//❄️',  // 時々雪
-    106:'☀️/☂️❄️', // 一時雨か雪
-    107:'☀️//☂️❄️',// 時々雨か雪
-    108:'☀️/⛈️',   // 一時雷雨
-    110:'☀️→//⛅',  // のち時々くもり
-    111:'☀️→⛅',   // のちくもり
-    112:'☀️→/☂️',  // のち一時雨
-    113:'☀️→//☂️', // のち時々雨
-    114:'☀️→☂️',   // のち雨
-    115:'☀️→/❄️',  // のち一時雪
-    116:'☀️→//❄️', // のち時々雪
-    117:'☀️→❄️',   // のち雪
-    118:'☀️→☂️❄️', // のち雨か雪
-    119:'☀️→⛈️',   // のち雷雨
-    120:'☀️/☂️',   // 一時雨（朝夕）
-    121:'☀️/☂️',   // 一時雨（朝）
-    122:'☀️/☂️',   // 一時雨（夕）
-    123:'☀️/⛈️',   // 一時雷雨
-    124:'☀️/❄️',   // 一時雪
-    125:'☀️/⛈️',   // 一時雷雨（午後）
-    126:'☀️→☂️',   127:'☀️→☂️', 128:'☀️→☂️',  // 昼/夕/夜から雨
-    130:'🌫️☀️',   131:'☀️🌫️', 132:'☀️//⛅',
-    140:'☀️//⛈️',  // 時々雷雨
-    160:'☀️/☂️❄️', 170:'☀️//☂️❄️', 181:'☀️→☂️❄️', // のち雨か雪
-    // くもり系
+    101:'☀️//⛅',   102:'☀️/☂️',   103:'☀️//☂️',
+    104:'☀️/❄️',   105:'☀️//❄️',  106:'☀️/☂️❄️',
+    107:'☀️//☂️❄️',108:'☀️/⛈️',
+    110:'☀️→//⛅',  111:'☀️→⛅',   112:'☀️→/☂️',
+    113:'☀️→//☂️', 114:'☀️→☂️',   115:'☀️→/❄️',
+    116:'☀️→//❄️', 117:'☀️→❄️',   118:'☀️→☂️❄️',
+    119:'☀️→⛈️',
+    120:'☀️/☂️',   121:'☀️/☂️',   122:'☀️/☂️',
+    123:'☀️/⛈️',   124:'☀️/❄️',   125:'☀️/⛈️',
+    126:'☀️→☂️',   127:'☀️→☂️',   128:'☀️→☂️',
+    130:'🌫️☀️',   131:'☀️🌫️',   132:'☀️//⛅',
+    140:'☀️//⛈️',
+    160:'☀️/☂️❄️', 170:'☀️//☂️❄️', 181:'☀️→☂️❄️',
     200:'☁️',
-    201:'☁️//☀️',   // 時々晴れ
-    202:'☁️/☂️',   // 一時雨
-    203:'☁️//☂️',  // 時々雨
-    204:'☁️/❄️',   // 一時雪
-    205:'☁️//❄️',  // 時々雪
-    206:'☁️/☂️❄️', // 一時雨か雪
-    207:'☁️//☂️❄️',// 時々雨か雪
-    208:'☁️/⛈️',   // 一時雷雨
-    209:'🌫️',
-    210:'☁️→//☀️',  // のち時々晴れ
-    211:'☁️→☀️',   // のち晴れ
-    212:'☁️→/☂️',  // のち一時雨
-    213:'☁️→//☂️', // のち時々雨
-    214:'☁️→☂️',  215:'☁️→/❄️', 216:'☁️→//❄️', // のち雨/一時雪/時々雪
-    217:'☁️→❄️',  218:'☁️→☂️❄️', 219:'☁️→⛈️',  // のち雪/雨か雪/雷雨
-    220:'☁️/☂️',   221:'☁️/☂️',  222:'☁️/☂️',
-    223:'☁️//☀️',   // 時々晴れ
-    224:'☁️→☂️',  225:'☁️→☂️',  226:'☁️→☂️',   // 昼/夕/夜から雨
-    228:'☁️→❄️',  229:'☁️→❄️',  230:'☁️→❄️',  231:'☁️🌫️', // のち雪
-    240:'☁️//⛈️',  // 時々雷雨
-    250:'☁️//⛈️❄️', 260:'☁️/☂️❄️', 270:'☁️//☂️❄️', 281:'☁️→☂️❄️', // のち雨か雪
-    // 雨系
+    201:'☁️//☀️',   202:'☁️/☂️',   203:'☁️//☂️',
+    204:'☁️/❄️',   205:'☁️//❄️',  206:'☁️/☂️❄️',
+    207:'☁️//☂️❄️',208:'☁️/⛈️',   209:'🌫️',
+    210:'☁️→//☀️',  211:'☁️→☀️',   212:'☁️→/☂️',
+    213:'☁️→//☂️', 214:'☁️→☂️',   215:'☁️→/❄️',
+    216:'☁️→//❄️', 217:'☁️→❄️',   218:'☁️→☂️❄️',
+    219:'☁️→⛈️',
+    220:'☁️/☂️',   221:'☁️/☂️',   222:'☁️/☂️',
+    223:'☁️//☀️',
+    224:'☁️→☂️',   225:'☁️→☂️',   226:'☁️→☂️',
+    228:'☁️→❄️',   229:'☁️→❄️',   230:'☁️→❄️',
+    231:'☁️🌫️',   240:'☁️//⛈️',
+    250:'☁️//⛈️❄️', 260:'☁️/☂️❄️', 270:'☁️//☂️❄️',
+    281:'☁️→☂️❄️',
     300:'☂️',
-    301:'☂️//☀️',  // 時々晴れ
-    302:'☂️',      // 時々止む
-    303:'☂️//❄️',  // 時々雪
-    304:'☂️❄️',   306:'☂️',    308:'☂️💨',
-    309:'☂️/❄️',   // 一時雪
-    311:'☂️→☀️',  313:'☂️→☁️',  // のち晴れ/くもり
-    314:'☂️→//❄️', // のち時々雪
-    315:'☂️→❄️',  316:'☂️❄️→☀️', 317:'☂️❄️→☁️', // のち雪/雨か雪のち晴れ/くもり
-    320:'☂️→☀️',  321:'☂️→☁️',  // のち晴れ/くもり（夕/夜）
-    322:'☂️/❄️',   // 一時雪（朝晩）
-    323:'☂️→☀️',  324:'☂️→☀️',  325:'☂️→☀️',  // 昼/夕/夜晴れ
-    326:'☂️→❄️',  327:'☂️→❄️',  328:'☂️',
-    329:'☂️/❄️',   // 一時みぞれ
-    340:'❄️☂️',   350:'☂️⛈️',
-    361:'❄️☂️→☀️', 371:'❄️☂️→☁️', // 雪か雨のち晴れ/くもり
-    // 雪系
+    301:'☂️//☀️',   302:'☂️',      303:'☂️//❄️',
+    304:'☂️❄️',    306:'☂️',      308:'☂️💨',
+    309:'☂️/❄️',
+    311:'☂️→☀️',   313:'☂️→☁️',
+    314:'☂️→//❄️', 315:'☂️→❄️',
+    316:'☂️❄️→☀️', 317:'☂️❄️→☁️',
+    320:'☂️→☀️',   321:'☂️→☁️',   322:'☂️/❄️',
+    323:'☂️→☀️',   324:'☂️→☀️',   325:'☂️→☀️',
+    326:'☂️→❄️',   327:'☂️→❄️',   328:'☂️',
+    329:'☂️/❄️',   340:'❄️☂️',    350:'☂️⛈️',
+    361:'❄️☂️→☀️', 371:'❄️☂️→☁️',
     400:'❄️',
-    401:'❄️//☀️',  // 時々晴れ
-    402:'❄️',      // 時々止む
-    403:'❄️//☂️',  // 時々雨
-    405:'❄️',      406:'❄️💨',  407:'❄️🌀',
-    409:'❄️/☂️',   // 一時雨
-    411:'❄️→☀️',  413:'❄️→☁️',  414:'❄️→☂️',  // のち晴れ/くもり/雨
-    420:'❄️→☀️',  421:'❄️→☁️',  422:'❄️→☂️',  423:'❄️→☂️', // のち系（夕/夜）
-    425:'❄️',
-    426:'❄️→/☂️',  // のちみぞれ
-    427:'❄️/☂️',   // 一時みぞれ
-    450:'❄️⛈️',
+    401:'❄️//☀️',   402:'❄️',      403:'❄️//☂️',
+    405:'❄️',      406:'❄️💨',    407:'❄️🌀',
+    409:'❄️/☂️',
+    411:'❄️→☀️',   413:'❄️→☁️',   414:'❄️→☂️',
+    420:'❄️→☀️',   421:'❄️→☁️',   422:'❄️→☂️',
+    423:'❄️→☂️',   425:'❄️',
+    426:'❄️→/☂️',  427:'❄️/☂️',   450:'❄️⛈️',
   };
   return map[n] ?? '🌈';
 }
@@ -179,7 +167,11 @@ function formatDate(iso: string): string {
 }
 
 export default function WeatherScreen() {
-  const [selectedArea, setSelectedArea] = useState(MAIN_AREAS[0]);
+  const [favorites, setFavorites] = useState<Area[]>(DEFAULT_FAVORITES);
+  const [editMode, setEditMode] = useState(false);
+  const [editingFavIdx, setEditingFavIdx] = useState<number | null>(null);
+
+  const [selectedArea, setSelectedArea] = useState<Area>(DEFAULT_FAVORITES[0]);
   const [shortForecasts, setShortForecasts] = useState<DayForecast[]>([]);
   const [weekForecasts, setWeekForecasts] = useState<DayForecast[]>([]);
   const [loading, setLoading] = useState(false);
@@ -187,9 +179,46 @@ export default function WeatherScreen() {
   const [viewMode, setViewMode] = useState<'short' | 'week'>('short');
   const [modalVisible, setModalVisible] = useState(false);
 
+  const initializedRef = useRef(false);
+
   useEffect(() => {
-    fetchWeather(selectedArea.code);
-  }, [selectedArea]);
+    (async () => {
+      try {
+        const [favStr, lastCode] = await Promise.all([
+          AsyncStorage.getItem('favorites'),
+          AsyncStorage.getItem('lastArea'),
+        ]);
+        let loaded: Area[] = DEFAULT_FAVORITES;
+        if (favStr) {
+          const parsed = JSON.parse(favStr);
+          if (Array.isArray(parsed) && parsed.length === 3) loaded = parsed;
+        }
+        setFavorites(loaded);
+
+        let area: Area = loaded[0];
+        if (lastCode) {
+          const found = ALL_AREAS.find((a) => a.code === lastCode);
+          if (found) area = found;
+        }
+        setSelectedArea(area);
+        fetchWeather(area.code);
+      } catch {
+        fetchWeather(DEFAULT_FAVORITES[0].code);
+      }
+      initializedRef.current = true;
+    })();
+  }, []);
+
+  async function saveFavorites(favs: Area[]) {
+    setFavorites(favs);
+    try { await AsyncStorage.setItem('favorites', JSON.stringify(favs)); } catch {}
+  }
+
+  async function selectArea(area: Area) {
+    setSelectedArea(area);
+    try { await AsyncStorage.setItem('lastArea', area.code); } catch {}
+    fetchWeather(area.code);
+  }
 
   async function fetchWeather(code: string) {
     setLoading(true);
@@ -200,14 +229,12 @@ export default function WeatherScreen() {
       );
       const json = await res.json();
 
-      // ── 短期予報 ──
       const ts0 = json[0].timeSeries;
       const weatherSeries = ts0[0];
       const dates = weatherSeries.timeDefines.slice(0, 3);
       const weathers: string[] = weatherSeries.areas[0].weathers.slice(0, 3);
       const weatherCodes: string[] = weatherSeries.areas[0].weatherCodes.slice(0, 3);
 
-      // 短期降水確率: 時間帯ごとの最大値を日別に集計
       const popSeries = ts0[1];
       const popDates: string[] = popSeries?.timeDefines ?? [];
       const rawPops: string[] = popSeries?.areas[0]?.pops ?? [];
@@ -219,7 +246,6 @@ export default function WeatherScreen() {
         return vals.length > 0 ? String(Math.max(...vals)) : '--';
       };
 
-      // 短期予報の気温系列（今日・明日分）から日付照合で最高・最低を取得
       const shortTempDates: string[] = ts0[2]?.timeDefines ?? [];
       const shortTempValues: string[] = ts0[2]?.areas[0]?.temps ?? [];
       const getShortTemp = (dateStr: string) => {
@@ -232,7 +258,6 @@ export default function WeatherScreen() {
         return { min: String(Math.min(...vals)), max: String(Math.max(...vals)) };
       };
 
-      // ── 週間予報データ（短期の補完にも使用）──
       const wts = json[1]?.timeSeries ?? [];
       const wWeatherSeries = wts[0];
       const wDates: string[] = wWeatherSeries?.timeDefines ?? [];
@@ -287,48 +312,100 @@ export default function WeatherScreen() {
       }));
       setWeekForecasts(week);
 
-    } catch (e) {
+    } catch {
       setError('天気情報の取得に失敗しました');
     } finally {
       setLoading(false);
     }
   }
 
+  function handleFavPress(fav: Area, idx: number) {
+    if (editMode) {
+      setEditingFavIdx(idx);
+      setModalVisible(true);
+    } else {
+      selectArea(fav);
+    }
+  }
+
+  function handleModalSelect(area: Area) {
+    if (editingFavIdx !== null) {
+      const next = [...favorites];
+      next[editingFavIdx] = area;
+      saveFavorites(next);
+      setEditingFavIdx(null);
+      setModalVisible(false);
+    } else {
+      selectArea(area);
+      setModalVisible(false);
+    }
+  }
+
+  function openOtherModal() {
+    setEditingFavIdx(null);
+    setModalVisible(true);
+  }
+
   const forecasts = viewMode === 'short' ? shortForecasts : weekForecasts;
+  const isFavArea = favorites.some((f) => f.code === selectedArea.code);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🌤️ 天気予報</Text>
+      {/* タイトル + 更新ボタン */}
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>🌤️ 天気予報</Text>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={() => fetchWeather(selectedArea.code)}
+          disabled={loading}
+        >
+          <Text style={styles.refreshText}>{loading ? '…' : '↻'}</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* エリア選択 */}
+      {/* お気に入り + 編集 + その他 */}
       <View style={styles.areaRow}>
-        {MAIN_AREAS.map((item) => (
-          <TouchableOpacity
-            key={item.code}
-            style={[
-              styles.areaButton,
-              item.code === selectedArea.code && styles.areaButtonActive,
-            ]}
-            onPress={() => setSelectedArea(item)}
-          >
-            <Text style={item.code === selectedArea.code ? styles.areaTextActive : styles.areaText}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {favorites.map((fav, idx) => {
+          const isActive = !editMode && fav.code === selectedArea.code;
+          const isEditSlot = editMode;
+          return (
+            <TouchableOpacity
+              key={idx}
+              style={[
+                styles.areaButton,
+                isActive && styles.areaButtonActive,
+                isEditSlot && styles.areaButtonEdit,
+              ]}
+              onPress={() => handleFavPress(fav, idx)}
+            >
+              <Text style={isActive ? styles.areaTextActive : styles.areaText}>
+                {fav.name}
+                {isEditSlot && <Text style={styles.editPin}> ✎</Text>}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+
+        <TouchableOpacity
+          style={[styles.areaButton, editMode && styles.areaButtonDone]}
+          onPress={() => setEditMode(!editMode)}
+        >
+          <Text style={[styles.areaText, editMode && { color: '#fff' }]}>
+            {editMode ? '完了' : '✎'}
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.areaButton,
-            !MAIN_AREAS.find((a) => a.code === selectedArea.code) && styles.areaButtonActive,
+            !isFavArea && !editMode && styles.areaButtonActive,
           ]}
-          onPress={() => setModalVisible(true)}
+          onPress={openOtherModal}
         >
           <Text style={
-            !MAIN_AREAS.find((a) => a.code === selectedArea.code)
-              ? styles.areaTextActive
-              : styles.areaText
+            !isFavArea && !editMode ? styles.areaTextActive : styles.areaText
           }>
-            {MAIN_AREAS.find((a) => a.code === selectedArea.code) ? 'その他▼' : selectedArea.name + ' ▼'}
+            {!isFavArea ? selectedArea.name + ' ▼' : 'その他▼'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -349,7 +426,6 @@ export default function WeatherScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* 天気カード */}
       {loading && <ActivityIndicator size="large" color="#4a90e2" style={{ marginTop: 30 }} />}
       {error !== '' && <Text style={styles.error}>{error}</Text>}
 
@@ -379,11 +455,15 @@ export default function WeatherScreen() {
         <Text style={styles.source}>出典: 気象庁</Text>
       </ScrollView>
 
-      {/* 都道府県選択モーダル */}
+      {/* 地点選択モーダル */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>都道府県を選択</Text>
+            <Text style={styles.modalTitle}>
+              {editingFavIdx !== null
+                ? `お気に入り${editingFavIdx + 1}を変更`
+                : '地点を選択'}
+            </Text>
             <FlatList
               data={ALL_AREAS}
               keyExtractor={(item) => item.code}
@@ -394,10 +474,7 @@ export default function WeatherScreen() {
                     styles.prefButton,
                     item.code === selectedArea.code && styles.prefButtonActive,
                   ]}
-                  onPress={() => {
-                    setSelectedArea(item);
-                    setModalVisible(false);
-                  }}
+                  onPress={() => handleModalSelect(item)}
                 >
                   <Text style={[
                     styles.prefText,
@@ -408,7 +485,10 @@ export default function WeatherScreen() {
                 </TouchableOpacity>
               )}
             />
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => {
+              setModalVisible(false);
+              setEditingFavIdx(null);
+            }}>
               <Text style={styles.closeText}>閉じる</Text>
             </TouchableOpacity>
           </View>
@@ -425,13 +505,28 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 12,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 12,
     color: '#1a3a5c',
+    flex: 1,
   },
+  refreshButton: {
+    position: 'absolute',
+    right: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#4a90e2',
+    borderRadius: 16,
+  },
+  refreshText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   areaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -450,8 +545,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#4a90e2',
     borderColor: '#4a90e2',
   },
+  areaButtonEdit: {
+    borderColor: '#e67e22',
+    borderWidth: 1.5,
+  },
+  areaButtonDone: {
+    backgroundColor: '#e67e22',
+    borderColor: '#e67e22',
+  },
   areaText: { color: '#000', fontWeight: '600', fontSize: 12 },
   areaTextActive: { color: '#fff', fontWeight: '600', fontSize: 12 },
+  editPin: { fontSize: 10, color: '#e67e22' },
   toggleRow: {
     flexDirection: 'row',
     marginBottom: 12,
