@@ -34,6 +34,13 @@ button:disabled{opacity:0.35;border-color:#555}
 #loadStatus{font-size:10px;color:#aaa;min-width:120px}
 .sep{color:#555;font-size:10px}
 select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0;border-radius:4px;font-size:11px}
+#legendBtn.active{background:#4a90e2;color:#fff;border-color:#4a90e2}
+#legendPanel{position:fixed;bottom:60px;left:6px;z-index:900;background:rgba(10,30,60,0.93);border:1px solid #4a90e2;border-radius:8px;padding:6px 8px;display:none}
+.leg-title{font-size:11px;font-weight:bold;color:#90caf9;display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.leg-unit{font-size:9px;color:#aaa;text-align:right;margin-bottom:2px}
+.leg-row{display:flex;align-items:center;gap:5px;margin-bottom:1px}
+.leg-sw{width:22px;height:13px;flex-shrink:0;border:1px solid rgba(255,255,255,0.2)}
+.leg-lb{font-size:11px;color:#e0e0e0;min-width:24px}
 </style>
 </head>
 <body>
@@ -75,6 +82,7 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
       <option value="3">最速</option>
     </select>
     <span id="autoStatus">🔄 AUTO</span>
+    <button id="legendBtn" onclick="toggleLegend()" title="降水強度凡例">凡</button>
   </div>
   <div class="ctrl-row">
     <div class="btn-group">
@@ -106,6 +114,22 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
     <span id="loadStatus"></span>
     <div class="load-bar"><div id="loadBarFill" class="load-bar-fill"></div></div>
   </div>
+</div>
+
+<!-- 降水強度凡例パネル（凡ボタンで表示） -->
+<div id="legendPanel">
+  <div class="leg-title">降水強度
+    <button onclick="toggleLegend()" style="padding:0 4px;border:none;background:none;color:#aaa;font-size:13px;cursor:pointer;line-height:1">✕</button>
+  </div>
+  <div class="leg-unit">mm/h</div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(180,0,104)"></div><span class="leg-lb">≥80</span></div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(255,40,0)"></div><span class="leg-lb">50</span></div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(255,153,0)"></div><span class="leg-lb">30</span></div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(255,245,0)"></div><span class="leg-lb">20</span></div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(0,65,255)"></div><span class="leg-lb">10</span></div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(33,140,255)"></div><span class="leg-lb">5</span></div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(160,210,255)"></div><span class="leg-lb">1</span></div>
+  <div class="leg-row"><div class="leg-sw" style="background:rgb(242,242,255)"></div><span class="leg-lb">&lt;1</span></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -649,6 +673,14 @@ window.goNow=function(){
   clearTimeout(autoTimerId);
   buildFrames(true);  /* ビュー位置を維持したまま現在に戻る */
   scheduleAuto();updateAutoUI();
+};
+
+window.toggleLegend=function(){
+  var panel=document.getElementById('legendPanel');
+  var btn=document.getElementById('legendBtn');
+  var shown=panel.style.display!=='none';
+  panel.style.display=shown?'none':'block';
+  btn.className=shown?'':'active';
 };
 
 window.onPlay=play;
