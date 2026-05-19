@@ -84,9 +84,9 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
     </div>
     <span class="sep">|</span>
     <div class="btn-group">
+      <button onclick="stepBack(300)">◀5h</button>
       <button onclick="stepBack(60)">◀1h</button>
-      <button onclick="stepBack(30)">◀30m</button>
-      <button id="btnFwd" onclick="stepForward(30)" style="display:none">30m▶</button>
+      <button id="btnFwd" onclick="stepForward(60)" style="display:none">1h▶</button>
     </div>
     <button id="btnNow" onclick="goNow()" style="display:none;background:#c62828;border-color:#e53935;padding:4px 8px">▶現在</button>
     <span id="histLabel" style="font-size:10px;color:#ffb74d;margin-left:2px"></span>
@@ -114,7 +114,7 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
 'use strict';
 
 /* ── 定数 ── */
-/* FRAME_COUNT は廃止 — timeRangeHours で動的計算 */
+var FIXED_FRAME_COUNT = 12; /* フレーム数固定 — ステップ間隔で時間範囲を調整（レイヤ数一定でメモリ安全）*/
 var LOAD_TIMEOUT   = 10000;
 var PROBE_TIMEOUT  = 5000;
 var SPEEDS         = [600,300,150,80];
@@ -514,20 +514,23 @@ function buildFrames(preserveView){
   elLabel.textContent='0/0';
 
   var lead=isHistoricalMode()?0:LEAD_SEC;
-  var radarCount=Math.max(6,Math.round(timeRangeHours*60/(RADAR_INT/60)));
-  var satCount=Math.max(6,Math.round(timeRangeHours*60/(params.interval/60)));
+  /* フレーム数固定・ステップ間隔を時間範囲に合わせて伸縮 → 総レイヤ数を12+12に保つ */
+  var radarFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*RADAR_INT)));
+  var radarStepSec=radarFactor*RADAR_INT;
+  var satFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*params.interval)));
+  var satStepSec=satFactor*params.interval;
 
   radarFrames=[];
-  var bt=getHistoricalBaseTime(lead,RADAR_INT);
+  var bt=getHistoricalBaseTime(lead,radarStepSec);
   latestRadarTime=bt;
-  for(var j=radarCount-1;j>=0;j--)
-    radarFrames.push({time:new Date(bt.getTime()-j*RADAR_INT*1000)});
+  for(var j=FIXED_FRAME_COUNT-1;j>=0;j--)
+    radarFrames.push({time:new Date(bt.getTime()-j*radarStepSec*1000)});
 
-  var satBt=getHistoricalBaseTime(lead,params.interval);
+  var satBt=getHistoricalBaseTime(lead,satStepSec);
   latestSatTime=satBt;
   var cands=[];
-  for(var i=satCount-1;i>=0;i--)
-    cands.push({time:new Date(satBt.getTime()-i*params.interval*1000),
+  for(var i=FIXED_FRAME_COUNT-1;i>=0;i--)
+    cands.push({time:new Date(satBt.getTime()-i*satStepSec*1000),
                 area:currentArea,nativeZoom:params.nativeZoom});
 
   setLoadUI(0,cands.length,'衛星確認中 0/'+cands.length);
@@ -551,9 +554,11 @@ function autoLoop(){
   if(isLoading){scheduleAuto();return;}
 
   var params=AREA_PARAMS[currentArea];
-  var newSat=getBaseTime(LEAD_SEC,params.interval);
+  var satFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*params.interval)));
+  var newSat=getBaseTime(LEAD_SEC,satFactor*params.interval);
   var satChanged=!latestSatTime||newSat.getTime()!==latestSatTime.getTime();
-  var newR=getBaseTime(LEAD_SEC,RADAR_INT);
+  var radarFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*RADAR_INT)));
+  var newR=getBaseTime(LEAD_SEC,radarFactor*RADAR_INT);
   var radarChanged=!latestRadarTime||newR.getTime()!==latestRadarTime.getTime();
   if(satChanged||radarChanged)buildFrames(true);
   scheduleAuto();
@@ -642,7 +647,7 @@ window.goNow=function(){
   pauseAt=0;latestSatTime=null;latestRadarTime=null;
   updateHistoricalUI();
   clearTimeout(autoTimerId);
-  buildFrames(false);
+  buildFrames(true);  /* ビュー位置を維持したまま現在に戻る */
   scheduleAuto();updateAutoUI();
 };
 
