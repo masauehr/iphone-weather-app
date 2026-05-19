@@ -1,3 +1,7 @@
+import japanCoastline from '@/assets/geodata/japan_coastline.json';
+
+const _coastlineJson = JSON.stringify(japanCoastline);
+
 export const radarHtml = `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -72,6 +76,21 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
     </select>
     <span id="autoStatus">🔄 AUTO</span>
   </div>
+  <div class="ctrl-row">
+    <div class="btn-group">
+      <button id="t1h" class="active" onclick="setTimeRange(1)">1時間</button>
+      <button id="t2h" onclick="setTimeRange(2)">2時間</button>
+      <button id="t3h" onclick="setTimeRange(3)">3時間</button>
+    </div>
+    <span class="sep">|</span>
+    <div class="btn-group">
+      <button onclick="stepBack(60)">◀1h</button>
+      <button onclick="stepBack(30)">◀30m</button>
+      <button id="btnFwd" onclick="stepForward(30)" style="display:none">30m▶</button>
+    </div>
+    <button id="btnNow" onclick="goNow()" style="display:none;background:#c62828;border-color:#e53935;padding:4px 8px">▶現在</button>
+    <span id="histLabel" style="font-size:10px;color:#ffb74d;margin-left:2px"></span>
+  </div>
 </div>
 
 <div id="map"></div>
@@ -95,7 +114,7 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
 'use strict';
 
 /* ── 定数 ── */
-var FRAME_COUNT    = 12;
+/* FRAME_COUNT は廃止 — timeRangeHours で動的計算 */
 var LOAD_TIMEOUT   = 10000;
 var PROBE_TIMEOUT  = 5000;
 var SPEEDS         = [600,300,150,80];
@@ -124,6 +143,14 @@ function fmtUtc(d){
 }
 function getBaseTime(leadSec,intervalSec){
   var t=Date.now()-leadSec*1000;
+  t=t-(t%(intervalSec*1000));
+  var d=new Date(t);
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate(),
+    d.getHours(),d.getMinutes(),d.getSeconds());
+}
+/* 過去モード対応: historicalOffsetMin>0 なら offset分だけ過去に遡る */
+function getHistoricalBaseTime(leadSec,intervalSec){
+  var t=Date.now()-(isHistoricalMode()?historicalOffsetMin*60000:leadSec*1000);
   t=t-(t%(intervalSec*1000));
   var d=new Date(t);
   return new Date(d.getFullYear(),d.getMonth(),d.getDate(),
@@ -164,16 +191,11 @@ var osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18,attribution:'© OpenStreetMap contributors'
 });
 
-/* ── 海岸線（Natural Earth 50m）をCDNから非同期ロード ── */
-fetch('https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_coastline.geojson')
-  .then(function(r){return r.json();})
-  .then(function(data){
-    L.geoJSON(data,{
-      pane:'coastPane',
-      style:{color:'#00cc44',weight:1.2,opacity:0.85,fill:false}
-    }).addTo(map);
-  })
-  .catch(function(){});  /* オフライン時はサイレント失敗 */
+/* ── 海岸線（日本周辺・高精度・インライン埋め込み）── */
+L.geoJSON(${_coastlineJson},{
+  pane:'coastPane',
+  style:{color:'#00cc44',weight:1.2,opacity:0.85,fill:false}
+}).addTo(map);
 
 /* ── 状態変数 ── */
 var satFrames=[],radarFrames=[];
@@ -186,6 +208,9 @@ var latestSatTime=null,latestRadarTime=null;
 var currentArea='jp',currentBand='ETC',displayMode='both';
 var _wasPlaying=false;
 var currentNativeMax=10;
+var timeRangeHours=1;
+var historicalOffsetMin=0;
+function isHistoricalMode(){return historicalOffsetMin>0;}
 
 /* ── 表示位置の保存/復元（localStorage）── */
 function saveState(){
@@ -299,6 +324,9 @@ function clearLoadUI(){elFill.style.width='0%';elStatus.textContent='';}
 
 /* ── 自動更新インジケーター ── */
 function updateAutoUI(){
+  if(isHistoricalMode()){
+    elAuto.textContent='⏮ 過去';elAuto.className='paused';return;
+  }
   if(pauseAt>0&&Date.now()-pauseAt<PAUSE_DURATION){
     var rem=Math.ceil((PAUSE_DURATION-(Date.now()-pauseAt))/60000);
     elAuto.textContent='⏸ PAUSE '+rem+'分';elAuto.className='paused';
@@ -485,16 +513,20 @@ function buildFrames(preserveView){
   elSlider.min='0';elSlider.max='0';elSlider.value='0';
   elLabel.textContent='0/0';
 
+  var lead=isHistoricalMode()?0:LEAD_SEC;
+  var radarCount=Math.max(6,Math.round(timeRangeHours*60/(RADAR_INT/60)));
+  var satCount=Math.max(6,Math.round(timeRangeHours*60/(params.interval/60)));
+
   radarFrames=[];
-  var bt=getBaseTime(LEAD_SEC,RADAR_INT);
+  var bt=getHistoricalBaseTime(lead,RADAR_INT);
   latestRadarTime=bt;
-  for(var j=FRAME_COUNT-1;j>=0;j--)
+  for(var j=radarCount-1;j>=0;j--)
     radarFrames.push({time:new Date(bt.getTime()-j*RADAR_INT*1000)});
 
-  var satBt=getBaseTime(LEAD_SEC,params.interval);
+  var satBt=getHistoricalBaseTime(lead,params.interval);
   latestSatTime=satBt;
   var cands=[];
-  for(var i=FRAME_COUNT-1;i>=0;i--)
+  for(var i=satCount-1;i>=0;i--)
     cands.push({time:new Date(satBt.getTime()-i*params.interval*1000),
                 area:currentArea,nativeZoom:params.nativeZoom});
 
@@ -512,6 +544,7 @@ function buildFrames(preserveView){
 
 /* ── 自動更新ループ ── */
 function autoLoop(){
+  if(isHistoricalMode()){scheduleAuto();return;}  /* 過去モード中は自動更新しない */
   updateAutoUI();
   if(pauseAt>0&&Date.now()-pauseAt<PAUSE_DURATION){scheduleAuto();return;}
   if(pauseAt>0){pauseAt=0;updateAutoUI();}
@@ -561,9 +594,56 @@ window.toggleOsm=function(on){
 };
 
 window.onBuild=function(){
+  if(!isHistoricalMode()){
+    pauseAt=0;latestSatTime=null;latestRadarTime=null;
+    clearTimeout(autoTimerId);scheduleAuto();
+  }
+  buildFrames(false);updateAutoUI();
+};
+
+/* ── 時間範囲・過去モード UI更新 ── */
+function updateHistoricalUI(){
+  var btnNow=document.getElementById('btnNow');
+  var btnFwd=document.getElementById('btnFwd');
+  var histLabel=document.getElementById('histLabel');
+  if(isHistoricalMode()){
+    btnNow.style.display='';btnFwd.style.display='';
+    var h=Math.floor(historicalOffsetMin/60),m=historicalOffsetMin%60;
+    histLabel.textContent=(h>0?h+'時間':'')+(m>0?m+'分':'')+'前';
+  }else{
+    btnNow.style.display='none';btnFwd.style.display='none';
+    histLabel.textContent='';
+  }
+  updateAutoUI();
+}
+
+window.setTimeRange=function(h){
+  timeRangeHours=h;
+  ['1','2','3'].forEach(function(x){
+    document.getElementById('t'+x+'h').className=parseInt(x)===h?'active':'';
+  });
+  buildFrames(true);
+};
+
+window.stepBack=function(min){
+  historicalOffsetMin+=min;
+  updateHistoricalUI();
+  buildFrames(true);
+};
+
+window.stepForward=function(min){
+  historicalOffsetMin=Math.max(0,historicalOffsetMin-min);
+  updateHistoricalUI();
+  buildFrames(true);
+};
+
+window.goNow=function(){
+  historicalOffsetMin=0;
   pauseAt=0;latestSatTime=null;latestRadarTime=null;
+  updateHistoricalUI();
   clearTimeout(autoTimerId);
-  buildFrames(false);scheduleAuto();updateAutoUI();
+  buildFrames(false);
+  scheduleAuto();updateAutoUI();
 };
 
 window.onPlay=play;
