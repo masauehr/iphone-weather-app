@@ -479,11 +479,14 @@ function applyLegend(type){
       wrap.innerHTML = svgText;
       var svg = wrap.querySelector('svg');
       if(svg){ svg.style.width='224px'; svg.style.height='auto'; }
-      /* fill未指定 or 黒系テキストを白に変更 */
+      /* 「高」のみ白（暗い背景のため）、危険度・低などは黒のまま */
       wrap.querySelectorAll('text').forEach(function(t){
+        var content = (t.textContent || '').trim();
         var f = t.getAttribute('fill');
-        if(!f || f==='black' || f==='#000' || f==='#000000'){
-          t.setAttribute('fill','white');
+        if(content === '高'){
+          if(!f || f==='black' || f==='#000' || f==='#000000'){
+            t.setAttribute('fill','white');
+          }
         }
       });
     })
