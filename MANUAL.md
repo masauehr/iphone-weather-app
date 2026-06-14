@@ -594,6 +594,28 @@ var satStepSec = satFactor * params.interval;
 
 常に24枚固定でiOSのメモリ制限内に収まる。
 
+### 8-4. レーダーフレームのprobe（存在確認）
+
+JMAのnowcデータ（降水レーダー）はサーバー上に**60〜70分程度しか保持されない**。
+そのため1時間レンジでも最古フレームが約72分前となり、前半フレームのタイルが404になる。
+
+| 時間範囲 | 最古フレーム | 存在しないフレーム数の目安 |
+|---------|-----------|----------------------|
+| 1時間 | 約72分前 | 1〜2枚 |
+| 2時間 | 約132分前 | 4〜5枚 |
+| 3時間 | 約192分前 | 6〜8枚 |
+
+これを放置すると「前半フレームでレーダーが静止して見える」問題が発生する（`closestRadar()` が常に最古の有効フレームを返し続けるため）。
+
+対策として、衛星（`probe()`）と同様に `probeRadar()` で候補フレームを事前確認し、
+有効フレームのみを `radarFrames` に格納してからロードを開始する。
+
+```javascript
+// 衛星・レーダーを並行probeし、両方完了後にロード開始
+probe(currentArea, currentBand, satCands, function(valid){ validSat=valid; satDone=true; tryLoadAll(); });
+probeRadar(radarCands, function(valid){ validRadar=valid; radarDone=true; tryLoadAll(); });
+```
+
 ### 8-4. 過去データ再生
 
 ```javascript
@@ -834,6 +856,18 @@ fs.rmSync('dist/.git', { recursive: true, force: true });
 
 ## 12. 改修履歴
 
+### 2026-06 レーダーprobe修正
+
+#### レーダー・衛星タブ
+
+| 改修 | 内容 |
+|------|------|
+| レーダーフレームprobe導入 | 衛星と同様にレーダーも `probeRadar()` で事前存在確認するよう変更 |
+| 前半フレーム静止バグ修正 | JMAのnowcデータは約60〜70分しか保持されないため、1時間・3時間レンジで前半フレームが空になる問題を修正 |
+| 並行probe | 衛星・レーダーのprobeを並行実行して待ち時間を短縮 |
+
+---
+
 ### 2026-05 今回の改修内容
 
 #### レーダー・衛星タブ
@@ -862,4 +896,4 @@ fs.rmSync('dist/.git', { recursive: true, force: true });
 
 ---
 
-*最終更新: 2026-05*
+*最終更新: 2026-06*
