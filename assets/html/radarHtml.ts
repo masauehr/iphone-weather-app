@@ -481,6 +481,33 @@ function probe(area,band,candidates,onDone){
   });
 }
 
+/* ── レーダープローブ（nowcデータの存在確認）── */
+function probeRadar(candidates,onDone){
+  var total=candidates.length,resolved=0,valid=[];
+  function finish(){
+    valid.sort(function(a,b){return a.time-b.time;});
+    onDone(valid);
+  }
+  var p=PROBE['jp'];
+  candidates.forEach(function(f){
+    var ymdhms=fmtUtc(f.time);
+    var url='https://www.jma.go.jp/bosai/jmatile/data/nowc/'+
+      ymdhms+'/none/'+ymdhms+'/surf/hrpns/'+
+      p.zoom+'/'+p.x+'/'+p.y+'.png';
+    var img=new Image(),done=false;
+    function resolve(ok){
+      if(done)return;done=true;
+      if(ok)valid.push(f);
+      resolved++;
+      if(resolved===total)finish();
+    }
+    img.onload=function(){resolve(true);};
+    img.onerror=function(){resolve(false);};
+    setTimeout(function(){resolve(false);},PROBE_TIMEOUT);
+    img.src=url;
+  });
+}
+
 /* ── フェーズ2: 全レイヤープリロード ── */
 function loadAll(band,area){
   var needRadar=true;
@@ -544,29 +571,36 @@ function buildFrames(preserveView){
   var satFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*params.interval)));
   var satStepSec=satFactor*params.interval;
 
-  radarFrames=[];
   var bt=getHistoricalBaseTime(lead,radarStepSec);
   latestRadarTime=bt;
+  var radarCands=[];
   for(var j=FIXED_FRAME_COUNT-1;j>=0;j--)
-    radarFrames.push({time:new Date(bt.getTime()-j*radarStepSec*1000)});
+    radarCands.push({time:new Date(bt.getTime()-j*radarStepSec*1000)});
 
   var satBt=getHistoricalBaseTime(lead,satStepSec);
   latestSatTime=satBt;
-  var cands=[];
+  var satCands=[];
   for(var i=FIXED_FRAME_COUNT-1;i>=0;i--)
-    cands.push({time:new Date(satBt.getTime()-i*satStepSec*1000),
+    satCands.push({time:new Date(satBt.getTime()-i*satStepSec*1000),
                 area:currentArea,nativeZoom:params.nativeZoom});
 
-  setLoadUI(0,cands.length,'衛星確認中 0/'+cands.length);
+  setLoadUI(0,satCands.length+radarCands.length,'確認中…');
 
-  probe(currentArea,currentBand,cands,function(valid){
-    satFrames=valid;
+  /* 衛星・レーダーを並行probeし、両方完了したらロード開始 */
+  var satDone=false,radarDone=false,validSat=[],validRadar=[];
+  function tryLoadAll(){
+    if(!satDone||!radarDone)return;
+    satFrames=validSat;
+    radarFrames=validRadar;
     if(!satFrames.length){
       isLoading=false;elStatus.textContent='有効な衛星フレームなし';return;
     }
-    elStatus.textContent='有効 '+satFrames.length+'/'+cands.length+'  読込中…';
+    elStatus.textContent='衛星'+satFrames.length+'/'+satCands.length+
+      ' レーダー'+radarFrames.length+'/'+radarCands.length+'  読込中…';
     loadAll(currentBand,currentArea);
-  });
+  }
+  probe(currentArea,currentBand,satCands,function(valid){validSat=valid;satDone=true;tryLoadAll();});
+  probeRadar(radarCands,function(valid){validRadar=valid;radarDone=true;tryLoadAll();});
 }
 
 /* ── 自動更新ループ ── */
