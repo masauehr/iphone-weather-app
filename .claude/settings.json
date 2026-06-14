@@ -7,7 +7,10 @@
       "Bash(git -C /Users/masahiro/projects/pc_docs push origin main)",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "Bash(git -C /Users/masahiro/projects/mobile_app add .claude/settings.json MANUAL.md)"
+      "Bash(git -C /Users/masahiro/projects/mobile_app add .claude/settings.json MANUAL.md)",
+      "Bash(git -C /Users/masahiro/projects/pc_docs add manuals/automation/iphone-weather-app.md)",
+      "Bash(git -C /Users/masahiro/projects/pc_docs commit -m ' *)",
+      "Bash(git -C /Users/masahiro/projects/mobile_app ls-files assets/geodata/)"
     ]
   },
   "hooks": {
