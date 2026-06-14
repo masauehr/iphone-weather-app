@@ -85,7 +85,7 @@ button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
     <span id="legTitle">凡例</span>
     <button onclick="toggleLegend()" style="padding:0 4px;border:none;background:none;color:#aaa;font-size:13px;cursor:pointer;line-height:1">✕</button>
   </div>
-  <img id="legImg" class="leg-img" src="" alt="凡例"/>
+  <div id="legSvgWrap" style="width:224px;overflow:hidden"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -215,9 +215,12 @@ function makeTileLayer(type, ymdhms){
     minZoom:4, maxZoom:14, opacity:0,
     updateWhenIdle:false, keepBuffer:4, pane:pane
   });
-  if(type==='radar'){
-    l.on('tileload',function(e){ e.tile.style.imageRendering='pixelated'; });
-  }
+  /* tileload ごとに opacity を再適用（radarHtml.ts と同じパターン） */
+  l.on('tileload', function(e){
+    if(type==='radar') e.tile.style.imageRendering='pixelated';
+    reapplyOpacity();
+  });
+  l.on('load', function(){ reapplyOpacity(); });
   return l;
 }
 
@@ -388,7 +391,27 @@ function updateLegendType(){
 function applyLegend(type){
   if(!LEGEND[type]) return;
   document.getElementById('legTitle').textContent = LEGEND[type].name;
-  document.getElementById('legImg').src           = LEGEND[type].url;
+  /* SVGをfetchしてDOM挿入し、黒テキストを白に変換 */
+  fetch(LEGEND[type].url)
+    .then(function(r){ return r.text(); })
+    .then(function(svgText){
+      var wrap = document.getElementById('legSvgWrap');
+      wrap.innerHTML = svgText;
+      var svg = wrap.querySelector('svg');
+      if(svg){ svg.style.width='224px'; svg.style.height='auto'; }
+      /* fill未指定 or 黒系テキストを白に変更 */
+      wrap.querySelectorAll('text').forEach(function(t){
+        var f = t.getAttribute('fill');
+        if(!f || f==='black' || f==='#000' || f==='#000000'){
+          t.setAttribute('fill','white');
+        }
+      });
+    })
+    .catch(function(){
+      /* fetch失敗時はimgにフォールバック */
+      document.getElementById('legSvgWrap').innerHTML =
+        '<img src="'+LEGEND[type].url+'" style="width:224px;height:auto"/>';
+    });
 }
 
 window.toggleLegend = function(){
