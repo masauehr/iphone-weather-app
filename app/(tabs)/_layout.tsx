@@ -3,6 +3,7 @@ import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { KikikuruTabIcon } from '@/components/ui/KikikuruTabIcon';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -34,7 +35,7 @@ export default function TabLayout() {
         name="kikikuru"
         options={{
           title: 'キキクル',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="exclamationmark.triangle.fill" color={color} />,
+          tabBarIcon: ({ focused }) => <KikikuruTabIcon focused={focused} />,
         }}
       />
       <Tabs.Screen

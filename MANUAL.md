@@ -15,9 +15,10 @@
 7. [iPhone版→Web版の変換の仕組み](#7-iphone版web版の変換の仕組み)
 8. [レーダービューアの技術詳細](#8-レーダービューアの技術詳細)
 9. [天気予報画面の技術詳細](#9-天気予報画面の技術詳細)
-10. [JMA API 構造メモ](#10-jma-api-構造メモ)
-11. [GitHub Pages デプロイ手順](#11-github-pages-デプロイ手順)
-12. [改修履歴](#12-改修履歴)
+10. [キキクルビューアの技術詳細](#10-キキクルビューアの技術詳細)
+11. [JMA API 構造メモ](#11-jma-api-構造メモ)
+12. [GitHub Pages デプロイ手順](#12-github-pages-デプロイ手順)
+13. [改修履歴](#13-改修履歴)
 
 ---
 
@@ -744,7 +745,136 @@ function getShortTemp(json: any, aIdx: number, dateStr: string): {max: string, m
 
 ---
 
-## 10. JMA API 構造メモ
+## 10. キキクルビューアの技術詳細
+
+### 10-1. アーキテクチャ概要
+
+キキクルタブはレーダー・衛星タブと同じアーキテクチャ（Leaflet HTML を WebView/iframe に閉じ込める方式）で実装している。
+
+```
+kikikuruHtml.ts（Leaflet HTML・純粋なJavaScript）
+        │
+        ├─── kikikuru.native.tsx → WebView でHTML文字列を読み込む（iPhone/Android）
+        └─── kikikuru.tsx        → <iframe> でHTML文字列を読み込む（Web）
+```
+
+### 10-2. JMA キキクルタイルURL一覧
+
+| 種類 | URL パターン | 時刻依存 |
+|------|-------------|---------|
+| 大雨キキクル（rain_mesh） | `bosai/jmatile/data/risk/{ymdhms}/none/{ymdhms}/surf/rain_mesh/{z}/{x}/{y}.png` | ✅ |
+| 土砂キキクル（land） | `bosai/jmatile/data/risk/{ymdhms}/none/{ymdhms}/surf/land/{z}/{x}/{y}.png` | ✅ |
+| 浸水キキクル（inund） | `bosai/jmatile/data/risk/{ymdhms}/none/{ymdhms}/surf/inund/{z}/{x}/{y}.png` | ✅ |
+| 洪水危険度PBF（flood） | `bosai/jmatile/data/risk/{ymdhms}/none/{ymdhms}/surf/flood/{z}/{x}/{y}.pbf` | ✅ |
+| 全河川背景PNG（静的） | `bosai/jmatile/data/map/none/none/none/surf/flood/{z}/{x}/{y}.png` | ❌（時刻なし） |
+| 降水レーダー（nowc） | `bosai/jmatile/data/nowc/{ymdhms}/none/{ymdhms}/surf/hrpns/{z}/{x}/{y}.png` | ✅ |
+
+- `{ymdhms}` : `yyyyMMddHHmmss` 形式、10分刻み
+- flood PBFのnativeZoom: 4〜11 / rain_mesh・land・inund PNGのnativeZoom: 4〜13
+
+### 10-3. 洪水キキクルの2層構造（最重要）
+
+JMA公式サイトのキキクルビューアは、洪水キキクルを **2レイヤーを重ねて** 表現している。
+
+| 層 | 役割 | レイヤー種類 | 表示内容 |
+|----|------|------------|---------|
+| 第1層（z=204） | 全河川の背景 | PNG ラスタータイル（時刻なし） | 全河川を水色で常時表示 |
+| 第2層（z=205） | 危険度の色付き | PBF ベクタータイル（時刻あり） | 危険度1〜4の河川だけ上書き着色 |
+
+**なぜPBFだけでは全河川が表示されないか**:
+JMAのflood PBFには「危険度データが存在する河川」しか含まれていない。危険度0（問題なし）の河川はPBF自体に入っていないため、PBFのみ描画すると一部しか現れない。
+この2層構造は `web/webapp/kikikuruViewer/js/image_util2.js` の165行目（`river_channel`エントリ）を参照して発見した。
+
+危険度ごとの配色は以下の通り（JMA仕様準拠）:
+
+| level（PBFプロパティ） | 色 |
+|---------------------|-----|
+| 未設定（level=0） | 水色（第1層PNG） |
+| 1 | 黄（`#f2e700`） |
+| 2 | 赤（`#ff2800`） |
+| 3 | 紫（`#aa00aa`） |
+| 4 | 黒（`#0c000c`） |
+
+### 10-4. Leaflet ペイン構成（z-index 設計）
+
+```javascript
+// CartoDB tilePane のデフォルト z=200 より大きい値を割り当てる
+map.createPane('rainPane');      map.getPane('rainPane').style.zIndex      = 201; // 大雨
+map.createPane('landPane');      map.getPane('landPane').style.zIndex      = 202; // 土砂
+map.createPane('inundPane');     map.getPane('inundPane').style.zIndex     = 203; // 浸水
+map.createPane('floodBasePane'); map.getPane('floodBasePane').style.zIndex = 204; // 静的河川PNG
+map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205; // 危険度PBF
+map.createPane('radarPane');     map.getPane('radarPane').style.zIndex     = 350; // レーダー
+map.createPane('coastPane');     map.getPane('coastPane').style.zIndex     = 600; // 海岸線（最前面）
+```
+
+### 10-5. ベースマップ（国土地理院淡色地図）
+
+当初は CartoDB 暗色地図を使用していたが、「地図全体ではなく地図だけの明るさを調整したい」という要件に対応するため **国土地理院淡色地図** （`cyberjapandata.gsi.go.jp/xyz/pale/`）に変更した。
+
+背景色を `#1a1a2e`（濃紺）に固定し、地図タイルのopacityを3段階で切り替えることで、地図の明度だけを調整できる。
+
+```javascript
+var BASE_CHIRIIN   = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
+var BASE_OPACITIES = [0.2, 0.55, 0.9];  // 地図暗 / 地図中 / 地図明
+var BASE_LABELS    = ['地図暗', '地図中', '地図明'];
+// opacity が低いほど濃紺背景が透けて暗く見える
+```
+
+### 10-6. 時間範囲選択・過去データ再生
+
+レーダー・衛星タブと同方式で実装した。
+
+- **時間範囲選択**: 1時間 / 2時間（デフォルト）/ 3時間
+- **フレーム数**: `timeRangeHours × 6`（10分間隔固定）→ 6/12/18フレーム
+- **過去モード変数**: `historicalOffsetMin`（0 = 現在、正値 = 現在から遡る分数）
+
+| ボタン | 動作 |
+|--------|------|
+| ◀6h | 6時間前へ（`historicalOffsetMin += 360`） |
+| ◀1h | 1時間前へ（`historicalOffsetMin += 60`） |
+| 1h▶ | 1時間後へ（`historicalOffsetMin = Math.max(0, …-60)`） |
+| ▶現在 | 現在に戻る（`historicalOffsetMin = 0`、ボタン非表示） |
+
+過去モード中は自動更新（10分ごとの `buildFrames` 再構築）をスキップする。
+
+### 10-7. 試行錯誤の記録（ハマりポイント）
+
+#### ① VectorGrid の `setOpacity()` が効かない
+
+Leaflet.VectorGrid には `setOpacity()` メソッドが存在しないか動作しない。
+
+- **失敗**: `floodLayer.setOpacity(0)` → 無効
+- **解決**: `map.removeLayer(layer)` / `layer.addTo(map)` で着脱制御に統一
+
+#### ② VectorGrid 2インスタンス同時ロードで描画競合
+
+当初「level=0河川（水色）用VectorGrid」と「危険度色VectorGrid」の2インスタンスが同一PBF URLを読み込む実装にしていた。
+
+- **症状**: 「全河川が表示されていない」（一部の河川が消える）
+- **原因**: 同じPBFへの2重リクエストでタイル描画が競合する
+- **解決**: level=0専用インスタンスを廃止し、静的PNG（第1層）を背景に採用。PBFは1インスタンスのみ
+
+#### ③ CSSペインのopacityがWebView内で効かない
+
+`map.getPane('floodBasePane').style.opacity = '0.3'` をJSから設定したが、WebView環境では期待通りに動作しなかった（表示が消えた）。
+
+- **解決**: paneのCSS opacityは使わず、addTo/removeLayerによる着脱に統一
+
+#### ④ 洪水PBFが「全河川が表示されていない」ように見える
+
+- **原因**: JMAのflood PBFには危険度データのある河川しか含まれない（❸ 参照）
+- **発見**: `web/webapp/kikikuruViewer/js/image_util2.js` 165行目に静的PNG URLが記録されていた
+- **解決**: 時刻なし静的PNG（`…/map/none/none/none/surf/flood/…`）を第1層として追加
+
+#### ⑤ 洪水レイヤーON/OFF切替の同期漏れ
+
+- `riverBaseLayer`（静的PNG）と `floodBaseLayer`（PBF）の2レイヤーは必ず同期して着脱する
+- `visible['flood']` を直接変更する箇所（個別トグルボタン・`inundFloodMode` ボタン）の両方で `updateRiverBaseLayer()` と `updateFloodBaseLayer()` を呼ぶこと
+
+---
+
+## 11. JMA API 構造メモ
 
 ### 天気予報 API
 
@@ -808,7 +938,7 @@ https://www.jma.go.jp/bosai/himawari/data/satimg/{time}/fd/{type}/{z}/{x}/{y}.jp
 
 ---
 
-## 11. GitHub Pages デプロイ手順
+## 12. GitHub Pages デプロイ手順
 
 ### deploy.js の処理フロー
 
@@ -886,7 +1016,23 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 
 ---
 
-## 12. 改修履歴
+## 13. 改修履歴
+
+### 2026-06 キキクルビューアタブ追加
+
+#### キキクルタブ（新規）
+
+| 改修 | 内容 |
+|------|------|
+| タブ新規追加 | `kikikuru.tsx / kikikuru.native.tsx / kikikuruHtml.ts` を作成。`_layout.tsx` に3枚目タブとして登録 |
+| 大雨・土砂・浸水・洪水レイヤー | JMAキキクルの4種レイヤー（rain_mesh/land/inund/flood）を個別トグル |
+| 浸水+洪水同時モード | 1ボタンで浸水・洪水を同時ON/OFFする `inundFloodMode` 実装 |
+| 洪水2層構造 | 静的PNG（全河川背景）＋動的PBF（危険度色）の2層構造を実装（JMA公式ビューアと同方式） |
+| ベースマップ変更 | CartoDB暗色 → 国土地理院淡色地図（opacity 3段階切替: 地図暗/地図中/地図明） |
+| 時間範囲選択 | 1時間/2時間（デフォルト）/3時間 切替 |
+| 過去データ再生 | ◀6h/◀1h/1h▶/▶現在 ボタンで過去キキクル閲覧 |
+| レーダー重ね合わせ | キキクル画像に降水レーダーを重ねるオプション |
+| 位置記憶 | localStorage（`kikikuruState` キー）で最後の地図位置を保存・復元 |
 
 ### 2026-06 レーダーprobe修正
 
@@ -928,4 +1074,4 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 
 ---
 
-*最終更新: 2026-06*
+*最終更新: 2026-06（キキクルビューアタブ追加）*
