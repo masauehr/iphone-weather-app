@@ -872,6 +872,51 @@ Leaflet.VectorGrid には `setOpacity()` メソッドが存在しないか動作
 - `riverBaseLayer`（静的PNG）と `floodBaseLayer`（PBF）の2レイヤーは必ず同期して着脱する
 - `visible['flood']` を直接変更する箇所（個別トグルボタン・`inundFloodMode` ボタン）の両方で `updateRiverBaseLayer()` と `updateFloodBaseLayer()` を呼ぶこと
 
+### 10-8. タブアイコン（PNG画像方式）
+
+React Native の `View` 組み合わせによるカスタム描画から、Python（PIL）で生成した PNG 画像方式に変更した。
+
+```
+assets/images/kikikuru-icon.png  （84×84px RGBA・3x Retina 対応）
+```
+
+生成内容:
+- グレーの地図背景（角丸10px）
+- 黄色の洪水リスクゾーン
+- 赤の高危険区域
+- 水色の幹川（polygon で斜め）
+- 水色の支川（上から合流）
+
+`KikikuruTabIcon.tsx` で `require()` して `<Image>` に渡す。`focused` props で opacity（1.0/0.45）を切り替えることでアクティブ/非アクティブを表現。
+
+### 10-9. 凡例SVGの文字色処理
+
+JMA提供の凡例SVG（`legend_jp_normal_*.svg`）はもともと黒字テキストで構成されている。
+背景が暗い（黒・紫・赤）箇所では黒字が見えないため、SVG取得後にJavaScriptでテキスト色を変換している。
+
+```javascript
+wrap.querySelectorAll('text').forEach(function(t){
+  var content = (t.textContent || '').trim();
+  var f = t.getAttribute('fill');
+  // 黄・白背景上の「危険度」「低」は黒字のまま
+  var isDark = (content === '低' ||
+                content === '危険度' ||
+                content === '危' || content === '険' || content === '度');
+  if(isDark){
+    t.setAttribute('fill', '#000000');
+  } else if(!f || f==='black' || f==='#000' || f==='#000000'){
+    t.setAttribute('fill', 'white');  // それ以外は白字に変換
+  }
+});
+```
+
+| テキスト | 背景色 | 文字色 |
+|---------|--------|--------|
+| 高 | 暗い紺 | 白 |
+| 危険度（各文字） | 黒〜黄のグラデーション | **黒**（黄・白部分で視認性確保） |
+| 低 | 黄・白 | **黒** |
+| その他ラベル | 黒・紫・赤 | 白 |
+
 ---
 
 ## 11. JMA API 構造メモ
@@ -1033,6 +1078,14 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 | 過去データ再生 | ◀6h/◀1h/1h▶/▶現在 ボタンで過去キキクル閲覧 |
 | レーダー重ね合わせ | キキクル画像に降水レーダーを重ねるオプション |
 | 位置記憶 | localStorage（`kikikuruState` キー）で最後の地図位置を保存・復元 |
+| タブアイコン変更 | View描画 → 地図風PNG画像（`assets/images/kikikuru-icon.png`・84×84px・Python生成）に切り替え |
+| 凡例文字色修正 | JMA SVG凡例の「危険度」「低」を黒字固定（黄・白背景での視認性向上）、「高」他は白字 |
+
+#### 全タブ共通
+
+| 改修 | 内容 |
+|------|------|
+| Homeタブのラベル変更 | "Home" → "天気予報"（`_layout.tsx` の `title` プロパティ変更） |
 
 ### 2026-06 レーダーprobe修正
 
