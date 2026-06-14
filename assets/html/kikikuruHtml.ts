@@ -214,12 +214,25 @@ function updateRiverBaseLayer(){
 
 /* 危険度PBFレイヤー（洪水ON時のみ表示） */
 var floodBaseLayer = null;
+var floodFrameTimer = null;
 
-function updateFloodBaseLayer(){
+/* flood PBFを指定ymdhmsに即時切替（buildFrames/toggle/zoomendから呼ぶ） */
+function applyFloodToYmdhms(ymdhms){
+  clearTimeout(floodFrameTimer); floodFrameTimer = null;
   if(floodBaseLayer){ map.removeLayer(floodBaseLayer); floodBaseLayer=null; }
-  if(!visible['flood'] || !frames.length) return;
-  floodBaseLayer = makeFloodBaseVectorLayer(frames[frames.length-1].ymdhms);
+  if(!visible['flood'] || !ymdhms) return;
+  floodBaseLayer = makeFloodBaseVectorLayer(ymdhms);
   floodBaseLayer.addTo(map);
+}
+/* アニメーション中の高速切替を抑制するデバウンス付き版（showFrameから呼ぶ） */
+function scheduleFloodToFrame(ymdhms){
+  clearTimeout(floodFrameTimer);
+  floodFrameTimer = setTimeout(function(){ applyFloodToYmdhms(ymdhms); }, 400);
+}
+function updateFloodBaseLayer(){
+  /* currentIdxが有効ならそのフレームを、未初期化なら最終フレームを使用 */
+  var idx = (currentIdx >= 0 && currentIdx < frames.length) ? currentIdx : frames.length - 1;
+  applyFloodToYmdhms(frames.length ? frames[idx].ymdhms : null);
 }
 
 /* タイプ別設定 */
@@ -352,6 +365,8 @@ function showFrame(idx){
   elSlider.value = String(idx);
   elLabel.textContent = (idx+1)+'/'+frames.length;
   elTime.textContent = fmtLocal(frames[idx].time);
+  /* flood PBFを表示フレームに同期（400msデバウンスで高速切替を抑制） */
+  if(visible['flood']){ scheduleFloodToFrame(frames[idx].ymdhms); }
 }
 
 /* ── 再生制御 ── */
