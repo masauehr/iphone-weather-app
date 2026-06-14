@@ -1,7 +1,7 @@
 # iPhone天気予報アプリ
 
-React Native + Expo で作成したiPhone向け天気予報アプリ。
-気象庁API（JMA）からリアルタイムデータを取得して予報・レーダーを表示する。
+React Native + Expo で作成したiPhone向け気象アプリ。
+気象庁API（JMA）からリアルタイムデータを取得して予報・レーダー・キキクル危険度を表示する。
 
 - **公開URL（Web版）**: https://masauehr.github.io/iphone-weather-app/
 - **GitHubリポジトリ**: https://github.com/masauehr/iphone-weather-app
@@ -36,6 +36,20 @@ React Native + Expo で作成したiPhone向け天気予報アプリ。
 | 凡例表示 | [凡例]ボタンで降水強度カラースケールをオン/オフ |
 | インタラクティブマップ | ピンチズーム・ドラッグ対応（Leaflet） |
 
+### キキクルタブ
+| 機能 | 内容 |
+|------|------|
+| 大雨キキクル | 大雨による危険度を格子状に色表示（rain_mesh） |
+| 土砂キキクル | 土砂災害の危険度マップ（land） |
+| 浸水キキクル | 短時間強雨による浸水危険度（inund） |
+| 洪水キキクル | 河川の洪水危険度（PBFベクター＋静的PNG 2層構造） |
+| 浸水+洪水同時切替 | 1ボタンで浸水・洪水を同時ON/OFF |
+| レーダー重ね合わせ | 降水レーダーをキキクル上に重ねて表示 |
+| アニメーション時間 | 1時間 / **2時間（デフォルト）** / 3時間 |
+| 過去データ再生 | [◀6h][◀1h][1h▶][▶現在] で過去の危険度履歴を参照 |
+| ベースマップ明度 | 地図暗 / 地図中 / 地図明 の3段階切替（国土地理院淡色地図） |
+| 位置記憶 | 最後の地図位置・ズームを自動復元 |
+
 ---
 
 ## 起動方法
@@ -67,12 +81,17 @@ npm run deploy
 ```
 app/
 └── (tabs)/
-    ├── index.tsx          ← 天気予報メイン画面
-    ├── radar.tsx          ← レーダー画面（Web版・iframe）
-    └── radar.native.tsx   ← レーダー画面（iPhone版・WebView）
+    ├── index.tsx            ← 天気予報メイン画面
+    ├── radar.tsx            ← レーダー画面（Web版・iframe）
+    ├── radar.native.tsx     ← レーダー画面（iPhone版・WebView）
+    ├── kikikuru.tsx         ← キキクル画面（Web版・iframe）
+    └── kikikuru.native.tsx  ← キキクル画面（iPhone版・WebView）
 assets/
-└── html/
-    └── radarHtml.ts       ← レーダー/衛星ビューアHTML（Leaflet組み込み）
+├── html/
+│   ├── radarHtml.ts         ← レーダー/衛星ビューアHTML（Leaflet組み込み）
+│   └── kikikuruHtml.ts      ← キキクルビューアHTML（Leaflet組み込み）
+└── images/
+    └── kikikuru-icon.png    ← キキクルタブアイコン（84×84px・Python生成）
 CLAUDE.md                  ← Claude Code用プロジェクト説明
 MANUAL.md                  ← 技術マニュアル（本ファイルからリンク）
 deploy.js                  ← GitHub Pagesデプロイスクリプト（カスタム）
