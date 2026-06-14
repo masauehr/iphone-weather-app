@@ -97,13 +97,9 @@ button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
 var LEAD_SEC     = 11 * 60;
 var INTERVAL_SEC = 10 * 60;
 var FRAME_COUNT  = 6;
-var PROBE_TIMEOUT = 5000;
 var LOAD_TIMEOUT  = 10000;
 var SPEEDS = [600, 300, 150];
 var AUTO_INTERVAL = 10 * 60 * 1000;
-
-/* プローブタイル（東京付近 zoom=6） */
-var PROBE = { z: 6, x: 56, y: 25 };
 
 /* 凡例定義 */
 var LEGEND = {
@@ -185,13 +181,6 @@ function radarUrl(ymdhms){
   return 'https://www.jma.go.jp/bosai/jmatile/data/nowc/'+
     ymdhms+'/none/'+ymdhms+'/surf/hrpns/{z}/{x}/{y}.png';
 }
-/* rain_meshで存在確認（デフォルト表示レイヤー） */
-function probeUrl(ymdhms){
-  return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+
-    ymdhms+'/none/'+ymdhms+'/surf/rain_mesh/'+
-    PROBE.z+'/'+PROBE.x+'/'+PROBE.y+'.png';
-}
-
 /* ── DOM ── */
 var elTime   = document.getElementById('timeDisp');
 var elSlider = document.getElementById('frameSlider');
@@ -270,83 +259,54 @@ function play(){
 }
 function pause(){ playing=false; clearTimeout(timerId); timerId=null; }
 
-/* ── プローブ（rain_meshで存在確認） ── */
-function probeFrames(candidates, onDone){
-  var total=candidates.length, resolved=0, valid=[];
-  function finish(){
-    valid.sort(function(a,b){ return a.time-b.time; });
-    onDone(valid);
-  }
-  candidates.forEach(function(f){
-    var img=new Image(), done=false;
-    function resolve(ok){
-      if(done) return; done=true;
-      if(ok) valid.push(f);
-      resolved++;
-      setLoadUI(resolved, total, '確認中 '+resolved+'/'+total);
-      if(resolved===total) finish();
-    }
-    img.onload  = function(){ resolve(true); };
-    img.onerror = function(){ resolve(false); };
-    setTimeout(function(){ resolve(false); }, PROBE_TIMEOUT);
-    img.src = probeUrl(f.ymdhms);
-  });
-}
-
-/* ── 全レイヤーロード ── */
-function loadAll(){
-  if(!frames.length){ isLoading=false; elStatus.textContent='フレームなし'; return; }
-  var types = Object.keys(layers);
-  var total = frames.length * types.length;
-  elSlider.max = String(frames.length-1);
-  setLoadUI(0, total);
-
-  types.forEach(function(t){ layers[t] = new Array(frames.length).fill(null); });
-
-  var loaded=0;
-  function onReady(){
-    loaded++;
-    setLoadUI(loaded, total);
-    if(loaded===total){
-      setTimeout(function(){
-        isLoading=false; clearLoadUI();
-        showFrame(frames.length-1);
-        play();
-      }, 300);
-    }
-  }
-
-  frames.forEach(function(f,i){
-    types.forEach(function(t){
-      var l = makeTileLayer(t, f.ymdhms);
-      l.addTo(map);
-      layers[t][i] = l;
-      var n=false;
-      l.on('load', function(){ if(!n){n=true; onReady();} });
-      setTimeout(function(){ if(!n){n=true; onReady();} }, LOAD_TIMEOUT);
-    });
-  });
-}
-
-/* ── フレーム構築 ── */
+/* ── フレーム構築（probeなし・即時表示）── */
 function buildFrames(){
   if(isLoading) return;
   isLoading=true; pause(); cleanup();
-  elSlider.min='0'; elSlider.max='0'; elSlider.value='0';
-  elLabel.textContent='0/0';
 
   var bt = getBaseTime(LEAD_SEC, INTERVAL_SEC);
   latestBaseTime = bt;
 
-  var candidates=[];
-  for(var i=FRAME_COUNT-1; i>=0; i--){
+  /* フレームを直接生成（probeスキップ: opacity:0レイヤーはloadが発火しないため） */
+  var i;
+  for(i=FRAME_COUNT-1; i>=0; i--){
     var t = new Date(bt.getTime() - i*INTERVAL_SEC*1000);
-    candidates.push({ time:t, ymdhms:fmtUtc(t) });
+    frames.push({ time:t, ymdhms:fmtUtc(t) });
   }
-  setLoadUI(0, candidates.length, '確認中…');
-  probeFrames(candidates, function(valid){
-    frames = valid;
-    loadAll();
+
+  var types = Object.keys(layers);
+  elSlider.min='0';
+  elSlider.max=String(frames.length-1);
+  elSlider.value=String(frames.length-1);
+  elLabel.textContent=frames.length+'/'+frames.length;
+
+  /* 各タイプの配列を初期化してレイヤーをmap追加 */
+  types.forEach(function(tp){ layers[tp]=new Array(frames.length).fill(null); });
+  frames.forEach(function(f,fi){
+    types.forEach(function(tp){
+      var l=makeTileLayer(tp, f.ymdhms);
+      l.addTo(map);
+      layers[tp][fi]=l;
+    });
+  });
+
+  /* currentIdxを確定させてからtileloadでreapplyOpacityが効くようにする */
+  isLoading=false;
+  showFrame(frames.length-1);
+  elStatus.textContent='';
+
+  /* 全フレームのプリロード完了後に再生開始 */
+  var total=frames.length*types.length, loaded=0;
+  function onLoad(){
+    loaded++;
+    if(loaded===total){ clearLoadUI(); play(); }
+  }
+  frames.forEach(function(f,fi){
+    types.forEach(function(tp){
+      var l=layers[tp][fi], n=false;
+      l.on('load', function(){ if(!n){n=true;onLoad();} });
+      setTimeout(function(){ if(!n){n=true;onLoad();} }, LOAD_TIMEOUT);
+    });
   });
 }
 
