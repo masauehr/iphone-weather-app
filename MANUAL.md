@@ -872,6 +872,13 @@ Leaflet.VectorGrid には `setOpacity()` メソッドが存在しないか動作
 - `riverBaseLayer`（静的PNG）と `floodBaseLayer`（PBF）の2レイヤーは必ず同期して着脱する
 - `visible['flood']` を直接変更する箇所（個別トグルボタン・`inundFloodMode` ボタン）の両方で `updateRiverBaseLayer()` と `updateFloodBaseLayer()` を呼ぶこと
 
+#### ⑥ 洪水PBFがアニメーションフレームと同期しない
+
+- **症状**: スライダーを動かしても洪水危険度の色が変わらない。動画時間範囲（1h/2h/3h）を切り替えると変化するが、同じ時刻を指していても時間帯によって色が異なって見えた
+- **原因**: `updateFloodBaseLayer()` が常に `frames[frames.length-1].ymdhms`（最終フレームの固定タイムスタンプ）でVectorGridを生成していた。`showFrame()` 内でPNG系レイヤーの `reapplyOpacity()` しか呼んでおらず、flood PBFの時刻が更新されなかった
+- **解決**: `showFrame()` に `scheduleFloodToFrame(frames[idx].ymdhms)` を追加し、表示フレームのymdhmsでflood VectorGridを再生成するようにした。400msデバウンス（`floodFrameTimer`）を挟んで高速スライダー操作時の過剰リクエストを抑制
+- **備考**: 間引きは行っていない。フレームは常に10分間隔固定で、1h=6枚・2h=12枚・3h=18枚
+
 ### 10-8. タブアイコン（PNG画像方式）
 
 React Native の `View` 組み合わせによるカスタム描画から、Python（PIL）で生成した PNG 画像方式に変更した。
@@ -1080,6 +1087,7 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 | 位置記憶 | localStorage（`kikikuruState` キー）で最後の地図位置を保存・復元 |
 | タブアイコン変更 | View描画 → 地図風PNG画像（`assets/images/kikikuru-icon.png`・84×84px・Python生成）に切り替え |
 | 凡例文字色修正 | JMA SVG凡例の「危険度」「低」を黒字固定（黄・白背景での視認性向上）、「高」他は白字 |
+| 洪水PBFフレーム同期修正 | `showFrame()` 内で `scheduleFloodToFrame(ymdhms)` を呼ぶよう変更。アニメーションフレームと洪水危険度色が一致しなかった問題を修正（400msデバウンス付き） |
 
 #### 全タブ共通
 
