@@ -852,6 +852,38 @@ fs.rmSync('dist/.git', { recursive: true, force: true });
 | `_expo/` が無視される | GitHub PagesのJekyll処理がアンダースコアフォルダをスキップ | `.nojekyll` を dist に追加 |
 | フォントが404 | `gh-pages` npmパッケージがnode_modulesを除外 | カスタム `deploy.js` でgit直接pushに変更 |
 
+### 自動デプロイフック（Claude Code）
+
+`.claude/settings.json` の `PostToolUse` フックにより、**`git push` 実行後に自動的に `npm run deploy` が走る**。
+Claude Code でコードを修正・push するだけでWebアプリが自動更新される。
+
+```json
+// .claude/settings.json（抜粋）
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "if": "Bash(git *)",
+        "command": "cmd=$(jq -r '.tool_input.command'); if echo \"$cmd\" | grep -qE 'git( -C [^ ]+)? push' && echo \"$cmd\" | grep -qv 'gh-pages' && echo \"$cmd\" | grep -qv 'pc_docs'; then cd /Users/masahiro/projects/mobile_app && npm run deploy 2>&1; fi",
+        "timeout": 180,
+        "statusMessage": "Webアプリをデプロイ中..."
+      }]
+    }]
+  }
+}
+```
+
+**フィルタリングルール**
+
+| git pushコマンド | 自動デプロイ |
+|-----------------|------------|
+| `git push origin main`（mobile_app内） | 実行 ✅ |
+| `git -C .../mobile_app push origin main` | 実行 ✅ |
+| `git -C .../pc_docs push origin main` | スキップ（別リポジトリ） ⏭ |
+| `git push -f ... gh-pages`（deploy.js内部） | スキップ（ループ防止） ⏭ |
+
 ---
 
 ## 12. 改修履歴

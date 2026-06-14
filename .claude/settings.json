@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/masahiro/projects/mobile_app log --oneline -5)",
+      "Bash(git -C /Users/masahiro/projects/mobile_app commit -m ' *)",
+      "Bash(git -C /Users/masahiro/projects/mobile_app push origin main)",
+      "Bash(git -C /Users/masahiro/projects/pc_docs push origin main)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(git -C /Users/masahiro/projects/mobile_app add .claude/settings.json MANUAL.md)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -qE 'git( -C [^ ]+)? push' && echo \"$cmd\" | grep -qv 'gh-pages' && echo \"$cmd\" | grep -qv 'pc_docs'; then cd /Users/masahiro/projects/mobile_app && npm run deploy 2>&1; fi",
+            "if": "Bash(git *)",
+            "timeout": 180,
+            "statusMessage": "Webアプリをデプロイ中 (npm run deploy)..."
+          }
+        ]
+      }
+    ]
+  }
+}
