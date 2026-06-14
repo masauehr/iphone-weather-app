@@ -19,9 +19,10 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;background:#1
 .ctrl-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 button{padding:4px 8px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0;border-radius:4px;font-size:11px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 button.active{background:#4a90e2;color:#fff;border-color:#4a90e2}
+button.act-rain{background:#9933cc;border-color:#cc55ff;color:#fff}
 button.act-land{background:#cc3300;border-color:#ff5533;color:#fff}
 button.act-inund{background:#0066bb;border-color:#0099ff;color:#fff}
-button.act-flood{background:#7733aa;border-color:#aa44dd;color:#fff}
+button.act-flood{background:#337722;border-color:#55aa33;color:#fff}
 button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
 .sep{color:#555;font-size:10px}
 #map{flex:1;background:#000;touch-action:none}
@@ -47,12 +48,12 @@ button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
 
 <div id="controls">
   <div class="ctrl-row">
-    <span style="font-size:10px;color:#aaa">キキクル:</span>
-    <button id="btnLand"  class="act-land"  onclick="toggleLayer('land')">土砂</button>
-    <button id="btnInund"                   onclick="toggleLayer('inund')">浸水</button>
-    <button id="btnFlood"                   onclick="toggleLayer('flood_mesh')">洪水</button>
+    <button id="btnRain"  class="act-rain" onclick="toggleLayer('rain_mesh')">大雨</button>
+    <button id="btnLand"                   onclick="toggleLayer('land')">土砂</button>
+    <button id="btnInund"                  onclick="toggleLayer('inund')">浸水</button>
+    <button id="btnFlood"                  onclick="toggleLayer('flood_mesh')">洪水</button>
     <span class="sep">|</span>
-    <button id="btnRadar"                   onclick="toggleLayer('radar')">雨雲</button>
+    <button id="btnRadar"                  onclick="toggleLayer('radar')">雨雲</button>
     <span class="sep">|</span>
     <select id="speedSel" onchange="onSpeedChange(this.value)" style="padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0;border-radius:4px;font-size:11px">
       <option value="0">遅い</option>
@@ -104,8 +105,9 @@ var AUTO_INTERVAL = 10 * 60 * 1000;
 /* プローブタイル（東京付近 zoom=6） */
 var PROBE = { z: 6, x: 56, y: 25 };
 
-/* レイヤー情報 */
+/* 凡例定義 */
 var LEGEND = {
+  rain_mesh:  { url: 'https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_heavyrain.svg', name: '大雨キキクル' },
   land:       { url: 'https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_land.svg',      name: '土砂キキクル' },
   inund:      { url: 'https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_inund.svg',     name: '浸水キキクル' },
   flood_mesh: { url: 'https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_floodmesh.svg', name: '洪水キキクル(メッシュ)' }
@@ -125,7 +127,6 @@ function getBaseTime(leadSec, intervalSec){
   var t = Date.now() - leadSec*1000;
   t = t - (t % (intervalSec*1000));
   var d = new Date(t);
-  /* UTC日時のまま Date オブジェクトを再構成 */
   return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),
     d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()));
 }
@@ -142,7 +143,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',{
   maxZoom:19, subdomains:['a','b','c','d'], attribution:'© CartoDB'
 }).addTo(map);
 
-/* ペイン定義（土砂→浸水→洪水→レーダー→海岸線の順） */
+/* ペイン定義（大雨→土砂→浸水→洪水→レーダー→海岸線の順） */
+map.createPane('rainPane');      map.getPane('rainPane').style.zIndex      = 190;
 map.createPane('landPane');      map.getPane('landPane').style.zIndex      = 200;
 map.createPane('inundPane');     map.getPane('inundPane').style.zIndex     = 210;
 map.createPane('floodPane');     map.getPane('floodPane').style.zIndex     = 220;
@@ -157,22 +159,22 @@ L.geoJSON(${_coastlineJson},{
 }).addTo(map);
 
 /* ── 状態 ── */
-var frames = [];      /* { time, ymdhms } */
-var layers = { land:[], inund:[], flood_mesh:[], radar:[] };
+var frames = [];
+var layers = { rain_mesh:[], land:[], inund:[], flood_mesh:[], radar:[] };
 var currentIdx = -1;
 var timerId = null, playing = false, speedIdx = 1;
 var isLoading = false;
 var autoTimerId = null;
 var latestBaseTime = null;
 
-/* 各レイヤーの表示ON/OFF（初期: 土砂のみON） */
-var visible = { land:true, inund:false, flood_mesh:false, radar:false };
+/* 各レイヤーの表示ON/OFF（初期: 大雨のみON） */
+var visible = { rain_mesh:true, land:false, inund:false, flood_mesh:false, radar:false };
 
-/* ペイン対応 */
-var PANE = { land:'landPane', inund:'inundPane', flood_mesh:'floodPane', radar:'radarPane' };
-
-/* opacity */
-var OPACITY = { land:0.8, inund:0.8, flood_mesh:0.8, radar:0.65 };
+/* タイプ別設定 */
+var PANE    = { rain_mesh:'rainPane', land:'landPane', inund:'inundPane', flood_mesh:'floodPane', radar:'radarPane' };
+var OPACITY = { rain_mesh:0.8, land:0.8, inund:0.8, flood_mesh:0.8, radar:0.65 };
+/* rain_meshはmaxNativeZoom=11（気象庁仕様）、その他は10 */
+var NATIVE_MAX = { rain_mesh:11, land:10, inund:10, flood_mesh:10, radar:10 };
 
 /* ── URL ── */
 function riskUrl(type, ymdhms){
@@ -183,10 +185,10 @@ function radarUrl(ymdhms){
   return 'https://www.jma.go.jp/bosai/jmatile/data/nowc/'+
     ymdhms+'/none/'+ymdhms+'/surf/hrpns/{z}/{x}/{y}.png';
 }
+/* rain_meshで存在確認（デフォルト表示レイヤー） */
 function probeUrl(ymdhms){
-  /* 土砂タイルの存在確認（zoom=6, x=56, y=25: 東京付近）*/
   return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+
-    ymdhms+'/none/'+ymdhms+'/surf/land/'+
+    ymdhms+'/none/'+ymdhms+'/surf/rain_mesh/'+
     PROBE.z+'/'+PROBE.x+'/'+PROBE.y+'.png';
 }
 
@@ -205,10 +207,11 @@ function clearLoadUI(){ elFill.style.width='0%'; elStatus.textContent=''; }
 
 /* ── レイヤー作成 ── */
 function makeTileLayer(type, ymdhms){
-  var url  = (type==='radar') ? radarUrl(ymdhms) : riskUrl(type, ymdhms);
-  var pane = PANE[type];
+  var url    = (type==='radar') ? radarUrl(ymdhms) : riskUrl(type, ymdhms);
+  var pane   = PANE[type];
+  var nMax   = NATIVE_MAX[type];
   var l = L.tileLayer(url,{
-    minNativeZoom:4, maxNativeZoom:10,
+    minNativeZoom:4, maxNativeZoom:nMax,
     minZoom:4, maxZoom:14, opacity:0,
     updateWhenIdle:false, keepBuffer:4, pane:pane
   });
@@ -235,7 +238,6 @@ function reapplyOpacity(){
   types.forEach(function(t){
     var arr = layers[t];
     if(!arr.length) return;
-    /* 現フレームのみ表示、他は非表示 */
     for(var i=0;i<arr.length;i++){
       if(!arr[i]) continue;
       arr[i].setOpacity( (i===currentIdx && visible[t]) ? OPACITY[t] : 0 );
@@ -265,7 +267,7 @@ function play(){
 }
 function pause(){ playing=false; clearTimeout(timerId); timerId=null; }
 
-/* ── プローブ（土砂タイルの存在確認でフレームを絞り込む）── */
+/* ── プローブ（rain_meshで存在確認） ── */
 function probeFrames(candidates, onDone){
   var total=candidates.length, resolved=0, valid=[];
   function finish(){
@@ -356,27 +358,25 @@ function scheduleAuto(){
 }
 
 /* ── レイヤーON/OFF ── */
-var BTN_IDS   = { land:'btnLand', inund:'btnInund', flood_mesh:'btnFlood', radar:'btnRadar' };
-var BTN_CLASS = { land:'act-land', inund:'act-inund', flood_mesh:'act-flood', radar:'act-radar' };
+var BTN_IDS   = { rain_mesh:'btnRain', land:'btnLand', inund:'btnInund', flood_mesh:'btnFlood', radar:'btnRadar' };
+var BTN_CLASS = { rain_mesh:'act-rain', land:'act-land', inund:'act-inund', flood_mesh:'act-flood', radar:'act-radar' };
 
 window.toggleLayer = function(type){
   visible[type] = !visible[type];
   var btn = document.getElementById(BTN_IDS[type]);
   btn.className = visible[type] ? BTN_CLASS[type] : '';
-  /* 現フレームのopacityを即時更新 */
   if(currentIdx>=0 && layers[type] && layers[type][currentIdx]){
     layers[type][currentIdx].setOpacity( visible[type] ? OPACITY[type] : 0 );
   }
-  /* 凡例表示タイプを更新 */
   updateLegendType();
 };
 
 /* ── 凡例 ── */
 var legendShown=false;
-var legendType='land';
+var legendType='rain_mesh';
 
 function updateLegendType(){
-  var order=['land','inund','flood_mesh'];
+  var order=['rain_mesh','land','inund','flood_mesh'];
   for(var i=0;i<order.length;i++){
     if(visible[order[i]] && LEGEND[order[i]]){
       legendType=order[i];
@@ -421,12 +421,8 @@ window.onSpeedChange = function(v){
 };
 
 /* ズーム後にopacity再適用 */
-map.on('zoomend', function(){
-  setTimeout(reapplyOpacity, 200);
-});
-map.on('moveend', function(){
-  setTimeout(reapplyOpacity, 100);
-});
+map.on('zoomend', function(){ setTimeout(reapplyOpacity, 200); });
+map.on('moveend', function(){ setTimeout(reapplyOpacity, 100); });
 
 /* ── 初期化 ── */
 (function(){
