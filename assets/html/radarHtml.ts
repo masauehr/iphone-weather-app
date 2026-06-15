@@ -879,12 +879,22 @@ function renderAmedas(data){
   var cfg=AMEDAS_TYPES[amedasKind];
   if(!cfg) return;
 
+  /* ズームアウト時の間引き: 格子セルごとに1点のみ表示 */
+  var THIN={6:1.0,7:0.5,8:0.2};
+  var gridDeg=THIN[z]||0;
+  var usedCells={};
+
   for(var code in data){
     var st=amedasStations[code];
     if(!st) continue;
     var lat=st.lat[0]+st.lat[1]/60;
     var lon=st.lon[0]+st.lon[1]/60;
     if(lat<sw.lat-0.1||lat>ne.lat+0.1||lon<sw.lng-0.1||lon>ne.lng+0.1) continue;
+    if(gridDeg>0){
+      var cell=Math.floor(lat/gridDeg)+'_'+Math.floor(lon/gridDeg);
+      if(usedCells[cell]) continue;
+      usedCells[cell]=1;
+    }
     var d=data[code];
     var html='',ax=0,ay=0;
 
