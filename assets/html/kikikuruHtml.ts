@@ -613,6 +613,10 @@ function rebuildLayersAtZoom(){
   });
   currentIdx = savedIdx;
   reapplyOpacity();
+  /* flood VectorGrid もズーム後に再生成（rebuildLayersAtZoomはfloodを管理しないため） */
+  if(visible['flood'] && frames.length && currentIdx >= 0){
+    applyFloodToYmdhms(frames[currentIdx].ymdhms);
+  }
   if(_wasPlaying) play();
   return true;
 }
@@ -645,9 +649,12 @@ window.toggleInundFlood = function(){
 map.on('zoomstart', function(){ _wasPlaying=playing; pause(); });
 map.on('zoomend', function(){
   saveState();
-  /* flood VectorGrid は線幅更新のため redraw */
-  if(floodBaseLayer) floodBaseLayer.redraw();
+  /* rebuildLayersAtZoom内でflood再生成も行う */
   if(rebuildLayersAtZoom()) return;
+  /* nativeMax変化なし: flood VectorGridのみ再生成（redrawは不安定なため） */
+  if(visible['flood'] && frames.length && currentIdx >= 0){
+    applyFloodToYmdhms(frames[currentIdx].ymdhms);
+  }
   reapplyOpacity();
   setTimeout(function(){ reapplyOpacity(); if(_wasPlaying) play(); }, 300);
 });
