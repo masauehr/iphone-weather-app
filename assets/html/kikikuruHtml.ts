@@ -1,4 +1,5 @@
 import japanCoastline from '@/assets/geodata/japan_coastline.json';
+import { vectorGridBundledJs } from './vectorgridJs';
 
 const _coastlineJson = JSON.stringify(japanCoastline);
 
@@ -102,7 +103,7 @@ button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
+<script>${vectorGridBundledJs}</script>
 <script>
 (function(){
 'use strict';
