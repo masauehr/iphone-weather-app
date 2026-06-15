@@ -216,18 +216,27 @@ function updateRiverBaseLayer(){
 var floodBaseLayer = null;
 var floodFrameTimer = null;
 
-/* flood PBFを指定ymdhmsに即時切替（buildFrames/toggle/zoomendから呼ぶ） */
+/* flood PBFを指定ymdhmsに切替（タイル読込中も旧レイヤーを残してちらつきを防ぐ） */
 function applyFloodToYmdhms(ymdhms){
   clearTimeout(floodFrameTimer); floodFrameTimer = null;
-  if(floodBaseLayer){ map.removeLayer(floodBaseLayer); floodBaseLayer=null; }
-  if(!visible['flood'] || !ymdhms) return;
-  floodBaseLayer = makeFloodBaseVectorLayer(ymdhms);
-  floodBaseLayer.addTo(map);
+  if(!visible['flood'] || !ymdhms){
+    if(floodBaseLayer){ map.removeLayer(floodBaseLayer); floodBaseLayer=null; }
+    return;
+  }
+  /* 新レイヤーを先にmapに追加し、旧レイヤーは500ms後に削除（ブランク回避） */
+  var newLayer = makeFloodBaseVectorLayer(ymdhms);
+  newLayer.addTo(map);
+  var oldLayer = floodBaseLayer;
+  floodBaseLayer = newLayer;
+  if(oldLayer){
+    setTimeout(function(){ if(map.hasLayer(oldLayer)) map.removeLayer(oldLayer); }, 500);
+  }
 }
-/* アニメーション中の高速切替を抑制するデバウンス付き版（showFrameから呼ぶ） */
+/* アニメーション中は再生成しない（playing中は1400msデバウンス、一時停止中は50ms） */
 function scheduleFloodToFrame(ymdhms){
   clearTimeout(floodFrameTimer);
-  floodFrameTimer = setTimeout(function(){ applyFloodToYmdhms(ymdhms); }, 400);
+  var delay = playing ? 1400 : 50;
+  floodFrameTimer = setTimeout(function(){ applyFloodToYmdhms(ymdhms); }, delay);
 }
 function updateFloodBaseLayer(){
   /* currentIdxが有効ならそのフレームを、未初期化なら最終フレームを使用 */
@@ -646,8 +655,8 @@ window.toggleInundFlood = function(){
 map.on('zoomstart', function(){ _wasPlaying=playing; pause(); });
 map.on('zoomend', function(){
   saveState();
-  /* flood VectorGrid はズーム時に再生成しない（GridLayer内蔵タイル管理に委ねる）
-     → rebuildLayersAtZoom内でも再生成しない。どちらも同様 */
+  /* ズーム後に発火予定の再生成タイマーをキャンセル（zoom中のちらつき防止） */
+  clearTimeout(floodFrameTimer); floodFrameTimer = null;
   if(rebuildLayersAtZoom()) return;
   reapplyOpacity();
   setTimeout(function(){ reapplyOpacity(); if(_wasPlaying) play(); }, 300);
