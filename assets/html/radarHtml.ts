@@ -903,7 +903,7 @@ function renderAmedas(data){
           '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="28" viewBox="0 0 12 20"'+
           ' style="transform-origin:center;transform:rotate('+rot+'deg);display:block;margin:auto">'+
           '<polygon points="6,0 0,20 6,15 12,20" stroke="'+arrowStroke+'" stroke-width="1.5" fill="'+c+'"/></svg>'+
-          '<div style="font-size:11px;font-weight:bold;color:'+c+';text-shadow:'+textSh+';line-height:1">'+spd.toFixed(0)+'</div>'+
+          '<div style="font-size:13px;font-weight:bold;color:'+c+';text-shadow:'+textSh+';line-height:1">'+spd.toFixed(0)+'</div>'+
           '</div>';
         ax=9;ay=14;
       }else{
