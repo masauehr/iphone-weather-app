@@ -613,10 +613,7 @@ function rebuildLayersAtZoom(){
   });
   currentIdx = savedIdx;
   reapplyOpacity();
-  /* flood VectorGrid もズーム後に再生成（rebuildLayersAtZoomはfloodを管理しないため） */
-  if(visible['flood'] && frames.length && currentIdx >= 0){
-    applyFloodToYmdhms(frames[currentIdx].ymdhms);
-  }
+  /* flood VectorGrid はズーム時に再生成しない（GridLayer内蔵のタイル管理に任せる） */
   if(_wasPlaying) play();
   return true;
 }
@@ -649,12 +646,9 @@ window.toggleInundFlood = function(){
 map.on('zoomstart', function(){ _wasPlaying=playing; pause(); });
 map.on('zoomend', function(){
   saveState();
-  /* rebuildLayersAtZoom内でflood再生成も行う */
+  /* flood VectorGrid はズーム時に再生成しない（GridLayer内蔵タイル管理に委ねる）
+     → rebuildLayersAtZoom内でも再生成しない。どちらも同様 */
   if(rebuildLayersAtZoom()) return;
-  /* nativeMax変化なし: flood VectorGridのみ再生成（redrawは不安定なため） */
-  if(visible['flood'] && frames.length && currentIdx >= 0){
-    applyFloodToYmdhms(frames[currentIdx].ymdhms);
-  }
   reapplyOpacity();
   setTimeout(function(){ reapplyOpacity(); if(_wasPlaying) play(); }, 300);
 });
@@ -666,9 +660,15 @@ map.on('moveend', function(){ saveState(); setTimeout(reapplyOpacity, 100); });
   if(s&&s.lat!=null&&s.zoom!=null) map.setView([s.lat,s.lng],s.zoom);
   buildFrames();
   scheduleAuto();
-  /* 安全網: 2秒ごとに現フレームのopacityを確認・修正 */
+  /* 安全網: 2秒ごとに現フレームのopacityを確認・修正。
+     flood VectorGrid が誤って消えた場合も再生成する */
   setInterval(function(){
     if(!isLoading && currentIdx>=0) reapplyOpacity();
+    if(!isLoading && visible['flood'] && frames.length && currentIdx>=0){
+      if(!floodBaseLayer || !map.hasLayer(floodBaseLayer)){
+        applyFloodToYmdhms(frames[currentIdx].ymdhms);
+      }
+    }
   }, 2000);
 })();
 
