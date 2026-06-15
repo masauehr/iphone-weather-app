@@ -104,8 +104,16 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
     <select id="amedasKind" onchange="onAmedasKindChange()">
       <option value="wind">矢羽（風）</option>
       <option value="temp">気温</option>
-      <option value="precip1h">1h雨量</option>
-      <option value="precip10m">10分雨量</option>
+      <option value="dewPoint">露点温度</option>
+      <option value="humidity">湿度</option>
+      <option value="normalPressure">気圧</option>
+      <option value="precipitation10m">10分雨量</option>
+      <option value="precipitation1h">1h雨量</option>
+      <option value="precipitation3h">3h雨量</option>
+      <option value="precipitation24h">24h雨量</option>
+      <option value="snow1h">1h降雪</option>
+      <option value="snow6h">6h降雪</option>
+      <option value="snow24h">24h降雪</option>
     </select>
     <span id="amedasStatus" style="font-size:10px;color:#aaa;margin-left:4px"></span>
   </div>
@@ -736,7 +744,7 @@ window.toggleLegend=function(){
 /* ══════════════════════════════════════════════
    アメダス オーバーレイ
    ══════════════════════════════════════════════ */
-var amedasOn=false;
+var amedasOn=true;
 var amedasKind='wind';
 var amedasStations=null;
 var amedasDataCache={};
@@ -749,6 +757,95 @@ var AMEDAS_CACHE_MAX=30;
 /* 風向コード(1-16)→矢印回転角（SVG上向き基準 + 270° = 吹先方向） */
 var WIND_ROTATE=[0,202.5,225,247.5,270,292.5,315,337.5,0,22.5,45,67.5,90,112.5,135,157.5,180];
 
+/* 青系カラー(暗い青)→白縁取り、それ以外→黒縁取り */
+var BLUE_FILL={'rgb(0,32,128)':1,'rgb(0,65,255)':1,'rgb(0,150,255)':1,
+  'rgb(33,140,255)':1,'rgb(0,114,154)':1,'rgb(0,75,150)':1,'rgb(1,31,125)':1};
+function outlineColor(c){return BLUE_FILL[c]?'#fff':'#000';}
+
+/* カラースケール定義（JMA配色準拠） */
+var AMEDAS_SCALES={
+  wind:{th:[0,5,10,15,20,25],
+    cl:['rgb(242,242,255)','rgb(0,65,255)','rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)']},
+  temp:{th:[-50,-5,0,5,10,15,20,25,30,35],
+    cl:['rgb(0,32,128)','rgb(0,65,255)','rgb(0,150,255)','rgb(185,235,255)','rgb(255,255,240)',
+        'rgb(255,255,150)','rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)']},
+  precip_10m:{th:[0,1,3,5,10,15,20,30],
+    cl:['rgb(242,242,255)','rgb(160,210,255)','rgb(33,140,255)','rgb(0,65,255)',
+        'rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)']},
+  precip_1h:{th:[0,1,5,10,20,30,50,80],
+    cl:['rgb(242,242,255)','rgb(160,210,255)','rgb(33,140,255)','rgb(0,65,255)',
+        'rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)']},
+  precip_3h:{th:[0,20,40,60,80,100,120,150],
+    cl:['rgb(242,242,255)','rgb(160,210,255)','rgb(33,140,255)','rgb(0,65,255)',
+        'rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)']},
+  precip_24h:{th:[0,50,80,100,150,200,250,300],
+    cl:['rgb(242,242,255)','rgb(160,210,255)','rgb(33,140,255)','rgb(0,65,255)',
+        'rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)']},
+  humidity:{th:[0,10,20,30,40,50,60,70,80,90,100],
+    cl:['rgb(84,6,0)','rgb(118,17,0)','rgb(171,74,1)','rgb(231,135,7)',
+        'rgb(255,200,70)','rgb(255,255,240)','rgb(128,248,231)',
+        'rgb(31,194,211)','rgb(0,114,154)','rgb(0,75,150)','rgb(1,31,125)']},
+  pressure:{th:[800,988,992,996,1000,1004,1008,1012,1016,1020,1024],
+    cl:['rgb(84,6,0)','rgb(118,17,0)','rgb(171,74,1)','rgb(231,135,7)',
+        'rgb(255,200,70)','rgb(255,255,240)','rgb(128,248,231)',
+        'rgb(31,194,211)','rgb(0,114,154)','rgb(0,75,150)','rgb(1,31,125)']},
+  snow:{th:[0,1,5,10,15,20,30,50],
+    cl:['rgb(242,242,255)','rgb(160,210,255)','rgb(33,140,255)','rgb(0,65,255)',
+        'rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)']}
+};
+function amedasColor(scaleName,val){
+  var s=AMEDAS_SCALES[scaleName]||AMEDAS_SCALES.precip_1h;
+  var c=s.cl[0];
+  for(var i=0;i<s.th.length;i++){if(val>=s.th[i])c=s.cl[i];}
+  return c;
+}
+
+/* AMeDAS種別設定 */
+var AMEDAS_TYPES={
+  wind:{isArrow:true,scale:'wind',
+    getDir:function(d){return d.windDirection?d.windDirection[0]:0;},
+    getVal:function(d){return d.wind?d.wind[0]:null;},
+    fmt:function(v){return v.toFixed(0);}},
+  temp:{scale:'temp',
+    getVal:function(d){return d.temp?d.temp[0]:null;},
+    fmt:function(v){return v.toFixed(1);}},
+  dewPoint:{scale:'temp',
+    getVal:function(d){
+      var t=d.temp?d.temp[0]:null,rh=d.humidity?d.humidity[0]:null;
+      if(t==null||rh==null||rh<=0)return null;
+      var g=Math.log(rh/100)+17.62*t/(243.12+t);
+      return 243.12*g/(17.62-g);
+    },
+    fmt:function(v){return v.toFixed(1);}},
+  humidity:{scale:'humidity',
+    getVal:function(d){return d.humidity?d.humidity[0]:null;},
+    fmt:function(v){return v.toFixed(0);}},
+  normalPressure:{scale:'pressure',
+    getVal:function(d){return d.normalPressure?d.normalPressure[0]:null;},
+    fmt:function(v){return v.toFixed(0);}},
+  precipitation10m:{scale:'precip_10m',
+    getVal:function(d){return d.precipitation10m?d.precipitation10m[0]:null;},
+    fmt:function(v){return v.toFixed(1);}},
+  precipitation1h:{scale:'precip_1h',
+    getVal:function(d){return d.precipitation1h?d.precipitation1h[0]:null;},
+    fmt:function(v){return v.toFixed(1);}},
+  precipitation3h:{scale:'precip_3h',
+    getVal:function(d){return d.precipitation3h?d.precipitation3h[0]:null;},
+    fmt:function(v){return v.toFixed(1);}},
+  precipitation24h:{scale:'precip_24h',
+    getVal:function(d){return d.precipitation24h?d.precipitation24h[0]:null;},
+    fmt:function(v){return v.toFixed(1);}},
+  snow1h:{scale:'snow',
+    getVal:function(d){return d.snow1h?d.snow1h[0]:null;},
+    fmt:function(v){return v.toFixed(0);}},
+  snow6h:{scale:'snow',
+    getVal:function(d){return d.snow6h?d.snow6h[0]:null;},
+    fmt:function(v){return v.toFixed(0);}},
+  snow24h:{scale:'snow',
+    getVal:function(d){return d.snow24h?d.snow24h[0]:null;},
+    fmt:function(v){return v.toFixed(0);}}
+};
+
 /* フレーム時刻(Date) → アメダスURL用JST文字列(10分丸め) */
 function fmtJst(d){
   var t=d.getTime()+9*3600*1000;
@@ -758,29 +855,13 @@ function fmtJst(d){
     pad2(j.getUTCHours())+pad2(j.getUTCMinutes())+'00';
 }
 
-/* 観測値→カラー（JMA配色準拠） */
-function amedasColor(kind,val){
-  var th,cl;
-  if(kind==='wind'){
-    th=[0,5,10,15,20,25];
-    cl=['rgb(242,242,255)','rgb(0,65,255)','rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)'];
-  }else if(kind==='temp'){
-    th=[-50,-5,0,5,10,15,20,25,30,35];
-    cl=['rgb(0,32,128)','rgb(0,65,255)','rgb(0,150,255)','rgb(185,235,255)','rgb(255,255,240)',
-        'rgb(255,255,150)','rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)'];
-  }else{
-    th=[0,1,5,10,20,30,50,80];
-    cl=['rgb(242,242,255)','rgb(160,210,255)','rgb(33,140,255)','rgb(0,65,255)',
-        'rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)'];
-  }
-  var c=cl[0];
-  for(var i=0;i<th.length;i++){if(val>=th[i])c=cl[i];}
-  return c;
-}
-
+/* テキストラベルHTML（青系→白縁取り、それ以外→黒縁取り） */
 function styledText(txt,color){
-  return '<div style="font-size:11px;font-weight:bold;color:'+color+
-    ';text-shadow:-1px 0 #fff,0 1px #fff,1px 0 #fff,0 -1px #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff;white-space:nowrap;line-height:1.1">'+txt+'</div>';
+  var oc=outlineColor(color);
+  var sh='-1px 0 '+oc+',0 1px '+oc+',1px 0 '+oc+',0 -1px '+oc+
+         ',-1px -1px 0 '+oc+',1px -1px 0 '+oc+',-1px 1px 0 '+oc+',1px 1px 0 '+oc;
+  return '<div style="font-size:13px;font-weight:bold;color:'+color+
+    ';text-shadow:'+sh+';white-space:nowrap;line-height:1.1">'+txt+'</div>';
 }
 
 function clearAmedasMarkers(){
@@ -792,10 +873,12 @@ function renderAmedas(data){
   clearAmedasMarkers();
   if(!amedasStations||!data) return;
   var z=map.getZoom();
-  if(z<6){document.getElementById('amedasStatus').textContent='ズーム7以上で表示';return;}
+  if(z<6){document.getElementById('amedasStatus').textContent='ズーム6以上で表示';return;}
   document.getElementById('amedasStatus').textContent='';
   var b=map.getBounds(),sw=b.getSouthWest(),ne=b.getNorthEast();
-  var count=0;
+  var cfg=AMEDAS_TYPES[amedasKind];
+  if(!cfg) return;
+
   for(var code in data){
     var st=amedasStations[code];
     if(!st) continue;
@@ -805,48 +888,49 @@ function renderAmedas(data){
     var d=data[code];
     var html='',ax=0,ay=0;
 
-    if(amedasKind==='wind'){
-      var spd=d.wind?d.wind[0]:null;
-      var dir=d.windDirection?d.windDirection[0]:0;
+    if(cfg.isArrow){
+      /* 矢羽（風向風速） */
+      var spd=cfg.getVal(d);
+      var dir=cfg.getDir(d);
       if(spd===null||spd===undefined) continue;
-      var c=amedasColor('wind',spd);
+      var c=amedasColor(cfg.scale,spd);
+      var arrowStroke=BLUE_FILL[c]?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.85)';
+      var textOc=outlineColor(c);
+      var textSh='-1px 0 '+textOc+',0 1px '+textOc+',1px 0 '+textOc+',0 -1px '+textOc;
       if(dir>0&&dir<=16){
         var rot=WIND_ROTATE[dir];
         html='<div style="text-align:center;pointer-events:none">'+
-          '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="22" viewBox="0 0 12 20"'+
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="28" viewBox="0 0 12 20"'+
           ' style="transform-origin:center;transform:rotate('+rot+'deg);display:block;margin:auto">'+
-          '<polygon points="6,0 0,20 6,15 12,20" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" fill="'+c+'"/></svg>'+
-          styledText(spd.toFixed(0),c)+'</div>';
-        ax=7;ay=11;
+          '<polygon points="6,0 0,20 6,15 12,20" stroke="'+arrowStroke+'" stroke-width="1.5" fill="'+c+'"/></svg>'+
+          '<div style="font-size:11px;font-weight:bold;color:'+c+';text-shadow:'+textSh+';line-height:1">'+spd.toFixed(0)+'</div>'+
+          '</div>';
+        ax=9;ay=14;
       }else{
         /* 静穏 */
-        html='<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 10 10">'+
+        html='<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">'+
           '<circle cx="5" cy="5" r="4" stroke="rgba(0,0,0,0.7)" stroke-width="1" fill="rgb(160,210,255)"/></svg>';
-        ax=4;ay=4;
+        ax=5;ay=5;
       }
-    }else if(amedasKind==='temp'){
-      var val=d.temp?d.temp[0]:null;
+    }else{
+      /* 数値ラベル */
+      var val=cfg.getVal(d);
       if(val===null||val===undefined) continue;
-      html=styledText(val.toFixed(1),amedasColor('temp',val));
-      ax=12;ay=6;
-    }else if(amedasKind==='precip1h'){
-      var val=d.precipitation1h?d.precipitation1h[0]:null;
-      if(val===null||val===undefined) continue;
-      html=styledText(val.toFixed(1),amedasColor('precip',val));
-      ax=12;ay=6;
-    }else if(amedasKind==='precip10m'){
-      var val=d.precipitation10m?d.precipitation10m[0]:null;
-      if(val===null||val===undefined) continue;
-      html=styledText(val.toFixed(1),amedasColor('precip',val));
-      ax=12;ay=6;
+      var c=amedasColor(cfg.scale,val);
+      html=styledText(cfg.fmt(val),c);
+      ax=14;ay=7;
     }
     if(!html) continue;
     var icon=L.divIcon({html:html,className:'',iconSize:[0,0],iconAnchor:[ax,ay]});
     var mk=L.marker([lat,lon],{icon:icon,interactive:false,keyboard:false});
     mk.addTo(map);
     amedasMarkers.push(mk);
-    count++;
   }
+}
+
+function scheduleAmedasUpdate(delay){
+  clearTimeout(amedasTimer);
+  amedasTimer=setTimeout(doUpdateAmedas,delay||500);
 }
 
 function doUpdateAmedas(){
@@ -885,11 +969,6 @@ function doUpdateAmedas(){
   };
   xhr2.onerror=function(){elS.textContent='局情報取得失敗';};
   xhr2.send();
-}
-
-function scheduleAmedasUpdate(delay){
-  clearTimeout(amedasTimer);
-  amedasTimer=setTimeout(doUpdateAmedas,delay||500);
 }
 
 window.toggleAmedas=function(){
@@ -935,6 +1014,8 @@ window.onSlider=function(v){
   buildFrames(true);  /* 常に現在のビューを維持して構築 */
   updateAutoUI();
   scheduleAuto();
+  /* アメダスデフォルトON: ボタンをアクティブに */
+  document.getElementById('amedasBtn').className='active';
 
   /* ── opacity安全網: 2秒ごとに現フレームのopacityが0になっていたら修正 ── */
   setInterval(function(){
