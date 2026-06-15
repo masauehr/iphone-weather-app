@@ -99,6 +99,16 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
     <button id="btnNow" onclick="goNow()" style="display:none;background:#c62828;border-color:#e53935;padding:4px 8px">▶現在</button>
     <span id="histLabel" style="font-size:10px;color:#ffb74d;margin-left:2px"></span>
   </div>
+  <div class="ctrl-row">
+    <button id="amedasBtn" onclick="toggleAmedas()">アメダス</button>
+    <select id="amedasKind" onchange="onAmedasKindChange()">
+      <option value="wind">矢羽（風）</option>
+      <option value="temp">気温</option>
+      <option value="precip1h">1h雨量</option>
+      <option value="precip10m">10分雨量</option>
+    </select>
+    <span id="amedasStatus" style="font-size:10px;color:#aaa;margin-left:4px"></span>
+  </div>
 </div>
 
 <div id="map"></div>
@@ -404,6 +414,7 @@ function showFrame(idx){
   elSlider.value=String(idx);
   elLabel.textContent=(idx+1)+'/'+satFrames.length;
   elTime.textContent=fmtLocal(satFrames[idx].time);
+  if(amedasOn) scheduleAmedasUpdate();
 }
 
 /* ── 表示モード切替（現フレームに即反映） ── */
@@ -454,8 +465,9 @@ map.on('zoomend',function(){
   }
   reapplyOpacity();
   setTimeout(function(){reapplyOpacity();if(_wasPlaying)play();},300);
+  if(amedasOn) scheduleAmedasUpdate();
 });
-map.on('moveend',function(){saveState();setTimeout(reapplyOpacity,100);});
+map.on('moveend',function(){saveState();setTimeout(reapplyOpacity,100);if(amedasOn) scheduleAmedasUpdate();});
 
 /* ── フェーズ1: 衛星プローブ ── */
 function probe(area,band,candidates,onDone){
@@ -715,6 +727,175 @@ window.toggleLegend=function(){
   var shown=panel.style.display!=='none';
   panel.style.display=shown?'none':'block';
   btn.className=shown?'':'active';
+};
+
+/* ══════════════════════════════════════════════
+   アメダス オーバーレイ
+   ══════════════════════════════════════════════ */
+var amedasOn=false;
+var amedasKind='wind';
+var amedasStations=null;
+var amedasDataCache={};
+var amedasCacheKeys=[];
+var amedasMarkers=[];
+var amedasTimer=null;
+var AMEDAS_CACHE_MAX=30;
+
+/* 風向コード(1-16)→矢印回転角（SVG上向き基準 + 270° = 吹先方向） */
+var WIND_ROTATE=[0,202.5,225,247.5,270,292.5,315,337.5,0,22.5,45,67.5,90,112.5,135,157.5,180];
+
+/* フレーム時刻(Date) → アメダスURL用JST文字列(10分丸め) */
+function fmtJst(d){
+  var t=d.getTime()+9*3600*1000;
+  t=t-(t%(10*60*1000));
+  var j=new Date(t);
+  return ''+j.getUTCFullYear()+pad2(j.getUTCMonth()+1)+pad2(j.getUTCDate())+
+    pad2(j.getUTCHours())+pad2(j.getUTCMinutes())+'00';
+}
+
+/* 観測値→カラー（JMA配色準拠） */
+function amedasColor(kind,val){
+  var th,cl;
+  if(kind==='wind'){
+    th=[0,5,10,15,20,25];
+    cl=['rgb(242,242,255)','rgb(0,65,255)','rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)'];
+  }else if(kind==='temp'){
+    th=[-50,-5,0,5,10,15,20,25,30,35];
+    cl=['rgb(0,32,128)','rgb(0,65,255)','rgb(0,150,255)','rgb(185,235,255)','rgb(255,255,240)',
+        'rgb(255,255,150)','rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)'];
+  }else{
+    th=[0,1,5,10,20,30,50,80];
+    cl=['rgb(242,242,255)','rgb(160,210,255)','rgb(33,140,255)','rgb(0,65,255)',
+        'rgb(250,245,0)','rgb(255,153,0)','rgb(255,40,0)','rgb(180,0,104)'];
+  }
+  var c=cl[0];
+  for(var i=0;i<th.length;i++){if(val>=th[i])c=cl[i];}
+  return c;
+}
+
+function styledText(txt,color){
+  return '<div style="font-size:11px;font-weight:bold;color:'+color+
+    ';text-shadow:-1px 0 #000,0 1px #000,1px 0 #000,0 -1px #000;white-space:nowrap;line-height:1.1">'+txt+'</div>';
+}
+
+function clearAmedasMarkers(){
+  for(var i=0;i<amedasMarkers.length;i++) map.removeLayer(amedasMarkers[i]);
+  amedasMarkers=[];
+}
+
+function renderAmedas(data){
+  clearAmedasMarkers();
+  if(!amedasStations||!data) return;
+  var z=map.getZoom();
+  if(z<6){document.getElementById('amedasStatus').textContent='ズーム7以上で表示';return;}
+  document.getElementById('amedasStatus').textContent='';
+  var b=map.getBounds(),sw=b.getSouthWest(),ne=b.getNorthEast();
+  var count=0;
+  for(var code in data){
+    var st=amedasStations[code];
+    if(!st) continue;
+    var lat=st.lat[0]+st.lat[1]/60;
+    var lon=st.lon[0]+st.lon[1]/60;
+    if(lat<sw.lat-0.1||lat>ne.lat+0.1||lon<sw.lng-0.1||lon>ne.lng+0.1) continue;
+    var d=data[code];
+    var html='',ax=0,ay=0;
+
+    if(amedasKind==='wind'){
+      var spd=d.wind?d.wind[0]:null;
+      var dir=d.windDirection?d.windDirection[0]:0;
+      if(spd===null||spd===undefined) continue;
+      var c=amedasColor('wind',spd);
+      if(dir>0&&dir<=16){
+        var rot=WIND_ROTATE[dir];
+        html='<div style="text-align:center;pointer-events:none">'+
+          '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="22" viewBox="0 0 12 20"'+
+          ' style="transform-origin:center;transform:rotate('+rot+'deg);display:block;margin:auto">'+
+          '<polygon points="6,0 0,20 6,15 12,20" stroke="rgba(0,0,0,0.8)" stroke-width="1.2" fill="'+c+'"/></svg>'+
+          styledText(spd.toFixed(0),c)+'</div>';
+        ax=7;ay=11;
+      }else{
+        /* 静穏 */
+        html='<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 10 10">'+
+          '<circle cx="5" cy="5" r="4" stroke="rgba(0,0,0,0.7)" stroke-width="1" fill="rgb(160,210,255)"/></svg>';
+        ax=4;ay=4;
+      }
+    }else if(amedasKind==='temp'){
+      var val=d.temp?d.temp[0]:null;
+      if(val===null||val===undefined) continue;
+      html=styledText(val.toFixed(1),amedasColor('temp',val));
+      ax=12;ay=6;
+    }else if(amedasKind==='precip1h'){
+      var val=d.precipitation1h?d.precipitation1h[0]:null;
+      if(val===null||val===undefined) continue;
+      html=styledText(val.toFixed(1),amedasColor('precip',val));
+      ax=12;ay=6;
+    }else if(amedasKind==='precip10m'){
+      var val=d.precipitation10m?d.precipitation10m[0]:null;
+      if(val===null||val===undefined) continue;
+      html=styledText(val.toFixed(1),amedasColor('precip',val));
+      ax=12;ay=6;
+    }
+    if(!html) continue;
+    var icon=L.divIcon({html:html,className:'',iconSize:[0,0],iconAnchor:[ax,ay]});
+    var mk=L.marker([lat,lon],{icon:icon,interactive:false,keyboard:false});
+    mk.addTo(map);
+    amedasMarkers.push(mk);
+    count++;
+  }
+}
+
+function doUpdateAmedas(){
+  var idx=currentIdx>=0?currentIdx:satFrames.length-1;
+  if(idx<0||!satFrames[idx]) return;
+  var jst=fmtJst(satFrames[idx].time);
+  var elS=document.getElementById('amedasStatus');
+  elS.textContent='取得中…';
+
+  function afterStations(){
+    if(amedasDataCache[jst]){renderAmedas(amedasDataCache[jst]);return;}
+    var xhr=new XMLHttpRequest();
+    xhr.open('GET','https://www.jma.go.jp/bosai/amedas/data/map/'+jst+'.json');
+    xhr.onload=function(){
+      if(xhr.status===200){
+        var data=JSON.parse(xhr.responseText);
+        if(amedasCacheKeys.length>=AMEDAS_CACHE_MAX){
+          delete amedasDataCache[amedasCacheKeys.shift()];
+        }
+        amedasDataCache[jst]=data;
+        amedasCacheKeys.push(jst);
+        renderAmedas(data);
+      }else{elS.textContent='取得失敗';}
+    };
+    xhr.onerror=function(){elS.textContent='取得失敗';};
+    xhr.send();
+  }
+
+  if(amedasStations){afterStations();return;}
+  var xhr2=new XMLHttpRequest();
+  xhr2.open('GET','https://www.jma.go.jp/bosai/amedas/const/amedastable.json');
+  xhr2.onload=function(){
+    if(xhr2.status===200){amedasStations=JSON.parse(xhr2.responseText);afterStations();}
+    else{elS.textContent='局情報取得失敗';}
+  };
+  xhr2.onerror=function(){elS.textContent='局情報取得失敗';};
+  xhr2.send();
+}
+
+function scheduleAmedasUpdate(){
+  clearTimeout(amedasTimer);
+  amedasTimer=setTimeout(doUpdateAmedas,500);
+}
+
+window.toggleAmedas=function(){
+  amedasOn=!amedasOn;
+  document.getElementById('amedasBtn').className=amedasOn?'active':'';
+  if(amedasOn){scheduleAmedasUpdate();}
+  else{clearAmedasMarkers();document.getElementById('amedasStatus').textContent='';}
+};
+
+window.onAmedasKindChange=function(){
+  amedasKind=document.getElementById('amedasKind').value;
+  if(amedasOn) scheduleAmedasUpdate();
 };
 
 window.onPlay=play;
