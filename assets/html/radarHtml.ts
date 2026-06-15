@@ -879,10 +879,24 @@ function renderAmedas(data){
   var cfg=AMEDAS_TYPES[amedasKind];
   if(!cfg) return;
 
-  /* ズームアウト時の間引き: 格子セルごとに1点のみ表示 */
+  /* ズームアウト時の間引き: 湿度観測局を優先してセルごとに1点 */
   var THIN={6:1.0,7:0.5,8:0.2};
   var gridDeg=THIN[z]||0;
-  var usedCells={};
+  var selectedCodes=null;
+  if(gridDeg>0){
+    var cellBest={};
+    for(var c0 in data){
+      var s0=amedasStations[c0];
+      if(!s0) continue;
+      var la0=s0.lat[0]+s0.lat[1]/60,lo0=s0.lon[0]+s0.lon[1]/60;
+      if(la0<sw.lat-0.1||la0>ne.lat+0.1||lo0<sw.lng-0.1||lo0>ne.lng+0.1) continue;
+      var ck=Math.floor(la0/gridDeg)+'_'+Math.floor(lo0/gridDeg);
+      var hasH=!!(data[c0].humidity);
+      if(!cellBest[ck]||(!cellBest[ck].h&&hasH)) cellBest[ck]={code:c0,h:hasH};
+    }
+    selectedCodes={};
+    for(var ck2 in cellBest) selectedCodes[cellBest[ck2].code]=1;
+  }
 
   for(var code in data){
     var st=amedasStations[code];
@@ -890,11 +904,7 @@ function renderAmedas(data){
     var lat=st.lat[0]+st.lat[1]/60;
     var lon=st.lon[0]+st.lon[1]/60;
     if(lat<sw.lat-0.1||lat>ne.lat+0.1||lon<sw.lng-0.1||lon>ne.lng+0.1) continue;
-    if(gridDeg>0){
-      var cell=Math.floor(lat/gridDeg)+'_'+Math.floor(lon/gridDeg);
-      if(usedCells[cell]) continue;
-      usedCells[cell]=1;
-    }
+    if(selectedCodes&&!selectedCodes[code]) continue;
     var d=data[code];
     var html='',ax=0,ay=0;
 
