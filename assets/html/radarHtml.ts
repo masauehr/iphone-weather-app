@@ -780,7 +780,7 @@ function amedasColor(kind,val){
 
 function styledText(txt,color){
   return '<div style="font-size:11px;font-weight:bold;color:'+color+
-    ';text-shadow:-1px 0 #000,0 1px #000,1px 0 #000,0 -1px #000;white-space:nowrap;line-height:1.1">'+txt+'</div>';
+    ';text-shadow:-1px 0 #fff,0 1px #fff,1px 0 #fff,0 -1px #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff;white-space:nowrap;line-height:1.1">'+txt+'</div>';
 }
 
 function clearAmedasMarkers(){
@@ -815,7 +815,7 @@ function renderAmedas(data){
         html='<div style="text-align:center;pointer-events:none">'+
           '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="22" viewBox="0 0 12 20"'+
           ' style="transform-origin:center;transform:rotate('+rot+'deg);display:block;margin:auto">'+
-          '<polygon points="6,0 0,20 6,15 12,20" stroke="rgba(0,0,0,0.8)" stroke-width="1.2" fill="'+c+'"/></svg>'+
+          '<polygon points="6,0 0,20 6,15 12,20" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" fill="'+c+'"/></svg>'+
           styledText(spd.toFixed(0),c)+'</div>';
         ax=7;ay=11;
       }else{
