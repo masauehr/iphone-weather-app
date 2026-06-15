@@ -271,19 +271,25 @@ function floodTileUrl(ymdhms, z, x, y){
 function initFloodCanvasGrid(){
   if(floodCanvasGrid) return;
   var FloodLayer = L.GridLayer.extend({
-    createTile: function(coords){
+    /* done コールバックを使うことで、フェッチ完了まで旧ズームのタイルを保持させる
+       （done を使わないと空キャンバスが即座に「完了」とみなされ旧タイルが消える） */
+    createTile: function(coords, done){
       var canvas = document.createElement('canvas');
       canvas.width = 256; canvas.height = 256;
-      if(!floodCurrentYmdhms || !visible['flood']) return canvas;
+      if(!floodCurrentYmdhms || !visible['flood']){
+        setTimeout(function(){ done(null, canvas); }, 0);
+        return canvas;
+      }
       var url = floodTileUrl(floodCurrentYmdhms, coords.z, coords.x, coords.y);
       var c = canvas, z = coords.z;
       if(floodPbfCache[url]){
-        /* キャッシュヒット: 即時描画（ブランクなし） */
         drawFloodOnCanvas(c, floodPbfCache[url], z);
+        setTimeout(function(){ done(null, c); }, 0);
       } else {
         fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
           if(buf.byteLength > 0){ floodPbfCache[url]=buf; drawFloodOnCanvas(c,buf,z); }
-        }).catch(function(){});
+          done(null, c);
+        }).catch(function(e){ done(e, c); });
       }
       return canvas;
     }
