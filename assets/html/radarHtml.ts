@@ -414,7 +414,11 @@ function showFrame(idx){
   elSlider.value=String(idx);
   elLabel.textContent=(idx+1)+'/'+satFrames.length;
   elTime.textContent=fmtLocal(satFrames[idx].time);
-  if(amedasOn) scheduleAmedasUpdate();
+  /* アメダス: 10分バケットが変わったときだけ更新（同バケットの連続フレームはスキップ） */
+  if(amedasOn){
+    var _jst=fmtJst(satFrames[idx].time);
+    if(_jst!==lastAmedasJst) scheduleAmedasUpdate(50);
+  }
 }
 
 /* ── 表示モード切替（現フレームに即反映） ── */
@@ -465,9 +469,9 @@ map.on('zoomend',function(){
   }
   reapplyOpacity();
   setTimeout(function(){reapplyOpacity();if(_wasPlaying)play();},300);
-  if(amedasOn) scheduleAmedasUpdate();
+  if(amedasOn) scheduleAmedasUpdate(500);
 });
-map.on('moveend',function(){saveState();setTimeout(reapplyOpacity,100);if(amedasOn) scheduleAmedasUpdate();});
+map.on('moveend',function(){saveState();setTimeout(reapplyOpacity,100);if(amedasOn) scheduleAmedasUpdate(500);});
 
 /* ── フェーズ1: 衛星プローブ ── */
 function probe(area,band,candidates,onDone){
@@ -739,6 +743,7 @@ var amedasDataCache={};
 var amedasCacheKeys=[];
 var amedasMarkers=[];
 var amedasTimer=null;
+var lastAmedasJst='';
 var AMEDAS_CACHE_MAX=30;
 
 /* 風向コード(1-16)→矢印回転角（SVG上向き基準 + 270° = 吹先方向） */
@@ -848,6 +853,7 @@ function doUpdateAmedas(){
   var idx=currentIdx>=0?currentIdx:satFrames.length-1;
   if(idx<0||!satFrames[idx]) return;
   var jst=fmtJst(satFrames[idx].time);
+  lastAmedasJst=jst;
   var elS=document.getElementById('amedasStatus');
   elS.textContent='取得中…';
 
@@ -881,9 +887,9 @@ function doUpdateAmedas(){
   xhr2.send();
 }
 
-function scheduleAmedasUpdate(){
+function scheduleAmedasUpdate(delay){
   clearTimeout(amedasTimer);
-  amedasTimer=setTimeout(doUpdateAmedas,500);
+  amedasTimer=setTimeout(doUpdateAmedas,delay||500);
 }
 
 window.toggleAmedas=function(){
