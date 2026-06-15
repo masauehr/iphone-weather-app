@@ -228,8 +228,8 @@ function floodTileUrl(ymdhms, z, x, y){
   return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/flood/'+z+'/'+x+'/'+y+'.pbf';
 }
 
-/* PBFをcanvasに描画。odd=trueのとき scale(2)＋translate で親タイルのクアドラント表示 */
-function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY){
+/* PBFをcanvasに描画。isOdd=trueのとき scale(2)＋translate で親タイルのクアドラント表示 */
+function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
   try {
     var vt = new VectorTile(new Pbf(new Uint8Array(buffer)));
     var lay = vt.layers['flood'];
@@ -238,8 +238,9 @@ function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY){
     if(!lay) return;
     var lw = FLOOD_LINE_WIDTH[Math.min(z, FLOOD_LINE_WIDTH.length-1)] || 4;
     /* 奇数ズーム時: scale(2,2) で 256px → 512px にして正しいクアドラントを切り出す
-       scale後に lineWidth は 2 倍になるため lw/2 で指定する */
-    var odd = (quadX !== 0 || quadY !== 0);
+       scale後に lineWidth は 2 倍になるため lw/2 で指定する
+       qx=qy=0 のときも必ず scale が必要（左上クアドラントの切り出し）*/
+    var odd = !!isOdd;
     ctx.save();
     if(odd){
       ctx.scale(2, 2);
@@ -281,8 +282,8 @@ function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY){
 
 /* ズームに応じたフェッチ座標とクアドラントを算出 */
 function floodFetchCoords(displayZ, x, y){
-  if(displayZ % 2 === 0) return { z:displayZ, x:x, y:y, qx:0, qy:0 };
-  return { z:displayZ-1, x:Math.floor(x/2), y:Math.floor(y/2), qx:x%2, qy:y%2 };
+  if(displayZ % 2 === 0) return { z:displayZ, x:x, y:y, qx:0, qy:0, isOdd:false };
+  return { z:displayZ-1, x:Math.floor(x/2), y:Math.floor(y/2), qx:x%2, qy:y%2, isOdd:true };
 }
 
 function initFloodCanvasGrid(){
@@ -297,13 +298,13 @@ function initFloodCanvasGrid(){
       }
       var fc = floodFetchCoords(coords.z, coords.x, coords.y);
       var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
-      var c = canvas, qx = fc.qx, qy = fc.qy, lz = fc.z;
+      var c = canvas, qx = fc.qx, qy = fc.qy, lz = fc.z, io = fc.isOdd;
       if(floodPbfCache[url]){
-        drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy);
+        drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, io);
         setTimeout(function(){ done(null, c); }, 0);
       } else {
         fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
-          if(buf.byteLength > 0){ floodPbfCache[url]=buf; drawFloodOnCanvas(c,buf,lz,qx,qy); }
+          if(buf.byteLength > 0){ floodPbfCache[url]=buf; drawFloodOnCanvas(c,buf,lz,qx,qy,io); }
           done(null, c);
         }).catch(function(e){ done(e, c); });
       }
@@ -323,13 +324,13 @@ function redrawFloodCanvases(){
     var co = tile.coords;
     var fc = floodFetchCoords(co.z, co.x, co.y);
     var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
-    var c = tile.el, qx = fc.qx, qy = fc.qy, lz = fc.z;
+    var c = tile.el, qx = fc.qx, qy = fc.qy, lz = fc.z, io = fc.isOdd;
     if(floodPbfCache[url]){
-      drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy);
+      drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, io);
     } else {
-      (function(cv, z2, qx2, qy2, u){ fetch(u).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
-        if(buf.byteLength>0){ floodPbfCache[u]=buf; drawFloodOnCanvas(cv,buf,z2,qx2,qy2); }
-      }).catch(function(){}); })(c, lz, qx, qy, url);
+      (function(cv, z2, qx2, qy2, io2, u){ fetch(u).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
+        if(buf.byteLength>0){ floodPbfCache[u]=buf; drawFloodOnCanvas(cv,buf,z2,qx2,qy2,io2); }
+      }).catch(function(){}); })(c, lz, qx, qy, io, url);
     }
   }
 }
