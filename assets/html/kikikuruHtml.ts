@@ -186,7 +186,7 @@ L.geoJSON(${_coastlineJson},{
 
 /* ── 状態 ── */
 var frames = [];
-/* flood は永続canvasGridLayer で別管理（floodCanvasGrid）*/
+/* flood は floodVGLayer（VectorGrid）で別管理 */
 var layers = { rain_mesh:[], land:[], inund:[], radar:[] };
 var currentIdx = -1;
 var timerId = null, playing = false, speedIdx = 1;
@@ -213,127 +213,51 @@ function updateRiverBaseLayer(){
   }
 }
 
-/* ── 洪水キキクル危険度: 永続キャンバスGridLayer方式（参考: kikikuruViewer）──
-   L.vectorGrid.protobuf を毎回作り直すと tiles 再読込中にブランクが生じる。
-   代わりに L.GridLayer + canvas tile を1つ保持し続け、
-   ymdhms変更時は既存canvasをその場で再描画（旧データを表示したまま非同期更新）。
-   PBFバイナリはメモリキャッシュに保持するため2回目以降のズームは即時描画。 */
-var floodPbfCache = {};       /* url → ArrayBuffer */
-var floodCurrentYmdhms = null;
-var floodCanvasGrid = null;   /* 永続GridLayer（一度だけ生成） */
+/* ── 洪水キキクル危険度: VectorGrid単一永続レイヤー方式 ──
+   L.vectorGrid.protobuf は内部で done コールバックを正しく使うため、
+   ズーム変化時に Leaflet の _retainParent が旧タイルを保持し続ける。
+   アニメーション中は 1400ms デバウンスで setUrl を呼ばず、
+   停止・手動操作時のみ ymdhms に追随（50ms遅延）。
+   maxNativeZoom:14 で JMA タイルが z=4〜14 全範囲をカバー。 */
+var floodVGLayer = null;
 var floodFrameTimer = null;
 
-/* PBFバイナリをcanvasに描画（Pbf/VectorTileはバンドル内でグローバル露出） */
-function drawFloodOnCanvas(canvas, buffer, z){
-  try {
-    var vt = new VectorTile(new Pbf(new Uint8Array(buffer)));
-    var lay = vt.layers['flood'];
-    var ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 256, 256);
-    if(!lay) return;
-    var lw = FLOOD_LINE_WIDTH[Math.min(z, FLOOD_LINE_WIDTH.length-1)] || 4;
-    /* 外側（灰色） */
-    ctx.lineJoin='round'; ctx.strokeStyle='#333'; ctx.lineWidth=lw;
-    for(var i=0; i<lay.length; i++){
-      var geom=lay.feature(i).loadGeometry();
-      ctx.beginPath();
-      for(var j=0;j<geom.length;j++) for(var k=0;k<geom[j].length;k++){
-        var p=geom[j][k],x=p.x/4096*256,y=p.y/4096*256;
-        if(k) ctx.lineTo(x,y); else ctx.moveTo(x,y);
-      }
-      ctx.stroke();
-    }
-    /* 内側（危険度色） */
-    for(var i=0; i<lay.length; i++){
-      var feat=lay.feature(i), level=feat.properties.level;
-      var c='#3cffff';
-      if(level==1) c='#f2e700';
-      if(level==2) c='#ff2800';
-      if(level==3) c='#aa00aa';
-      if(level==4) c='#0c000c';
-      ctx.strokeStyle=c; ctx.lineWidth=Math.max(1,lw-2);
-      var geom=feat.loadGeometry();
-      ctx.beginPath();
-      for(var j=0;j<geom.length;j++) for(var k=0;k<geom[j].length;k++){
-        var p=geom[j][k],x=p.x/4096*256,y=p.y/4096*256;
-        if(k) ctx.lineTo(x,y); else ctx.moveTo(x,y);
-      }
-      ctx.stroke();
-    }
-  } catch(e){}
+function floodVGStyle(p){
+  var level = p.level;
+  var inner = '#3cffff';
+  if(level==1) inner='#f2e700';
+  if(level==2) inner='#ff2800';
+  if(level==3) inner='#aa00aa';
+  if(level==4) inner='#0c000c';
+  var lw = FLOOD_LINE_WIDTH[Math.min(map.getZoom(), FLOOD_LINE_WIDTH.length-1)] || 4;
+  return [
+    {stroke:true, color:'#333', weight:lw,               opacity:0.8, fill:false},
+    {stroke:true, color:inner,  weight:Math.max(1,lw-2), opacity:1,   fill:false}
+  ];
 }
-
-function floodTileUrl(ymdhms, z, x, y){
-  return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/flood/'+z+'/'+x+'/'+y+'.pbf';
-}
-
-/* 永続GridLayerを初回のみ生成 */
-function initFloodCanvasGrid(){
-  if(floodCanvasGrid) return;
-  var FloodLayer = L.GridLayer.extend({
-    /* done コールバックを使うことで、フェッチ完了まで旧ズームのタイルを保持させる
-       （done を使わないと空キャンバスが即座に「完了」とみなされ旧タイルが消える） */
-    createTile: function(coords, done){
-      var canvas = document.createElement('canvas');
-      canvas.width = 256; canvas.height = 256;
-      if(!floodCurrentYmdhms || !visible['flood']){
-        setTimeout(function(){ done(null, canvas); }, 0);
-        return canvas;
-      }
-      var url = floodTileUrl(floodCurrentYmdhms, coords.z, coords.x, coords.y);
-      var c = canvas, z = coords.z;
-      if(floodPbfCache[url]){
-        drawFloodOnCanvas(c, floodPbfCache[url], z);
-        setTimeout(function(){ done(null, c); }, 0);
-      } else {
-        fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
-          if(buf.byteLength > 0){ floodPbfCache[url]=buf; drawFloodOnCanvas(c,buf,z); }
-          done(null, c);
-        }).catch(function(e){ done(e, c); });
-      }
-      return canvas;
-    }
-  });
-  floodCanvasGrid = new FloodLayer({
-    pane:'floodRiskPane', minZoom:4, maxZoom:14, tileSize:256
-  });
-}
-
-/* 表示中の全タイルcanvasを新ymdhmsで再描画（レイヤー除去なし → ブランクなし） */
-function redrawFloodCanvases(){
-  if(!floodCanvasGrid || !floodCurrentYmdhms) return;
-  var tiles = floodCanvasGrid._tiles;
-  if(!tiles) return;
-  for(var key in tiles){
-    var tile = tiles[key];
-    if(!tile || !tile.el) continue;
-    var canvas = tile.el;
-    if(typeof canvas.getContext !== 'function') continue;
-    var co = tile.coords, z = co.z;
-    var url = floodTileUrl(floodCurrentYmdhms, z, co.x, co.y);
-    if(floodPbfCache[url]){
-      drawFloodOnCanvas(canvas, floodPbfCache[url], z);
-    } else {
-      (function(c, z2, u){ fetch(u).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
-        if(buf.byteLength>0){ floodPbfCache[u]=buf; drawFloodOnCanvas(c,buf,z2); }
-      }).catch(function(){}); })(canvas, z, url);
-    }
-  }
+function floodYmdhmsUrl(ymdhms){
+  return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/flood/{z}/{x}/{y}.pbf';
 }
 
 function applyFloodToYmdhms(ymdhms){
   clearTimeout(floodFrameTimer); floodFrameTimer = null;
-  floodCurrentYmdhms = ymdhms || null;
   if(!visible['flood'] || !ymdhms){
-    if(floodCanvasGrid && map.hasLayer(floodCanvasGrid)) map.removeLayer(floodCanvasGrid);
+    if(floodVGLayer && map.hasLayer(floodVGLayer)) map.removeLayer(floodVGLayer);
     return;
   }
-  initFloodCanvasGrid();
-  if(!map.hasLayer(floodCanvasGrid)) floodCanvasGrid.addTo(map);
-  /* 既存タイルをその場で再描画（旧ymdhmsの描画を残しながら非同期更新） */
-  redrawFloodCanvases();
+  var url = floodYmdhmsUrl(ymdhms);
+  if(!floodVGLayer){
+    floodVGLayer = L.vectorGrid.protobuf(url, {
+      pane:'floodRiskPane', minZoom:4, maxZoom:14, maxNativeZoom:14,
+      vectorTileLayerStyles: { flood:floodVGStyle, '*':floodVGStyle }
+    });
+    floodVGLayer.addTo(map);
+  } else {
+    if(!map.hasLayer(floodVGLayer)) floodVGLayer.addTo(map);
+    floodVGLayer.setUrl(url);
+  }
 }
-/* アニメーション中は再生成しない（playing中は1400msデバウンス、一時停止中は50ms） */
+/* アニメーション中は setUrl を呼ばない（playing中は1400msデバウンス、停止時は50ms） */
 function scheduleFloodToFrame(ymdhms){
   clearTimeout(floodFrameTimer);
   var delay = playing ? 1400 : 50;
@@ -426,9 +350,7 @@ function cleanup(){
     layers[t].forEach(function(l){ if(l) map.removeLayer(l); });
     layers[t] = [];
   });
-  /* floodCanvasGridはズームまたぎで再利用するため削除しない */
-  if(floodCanvasGrid && map.hasLayer(floodCanvasGrid)) map.removeLayer(floodCanvasGrid);
-  floodCurrentYmdhms = null;
+  if(floodVGLayer && map.hasLayer(floodVGLayer)) map.removeLayer(floodVGLayer);
   frames=[]; currentIdx=-1;
 }
 
@@ -492,7 +414,7 @@ function buildFrames(){
   elSlider.value=String(frames.length-1);
   elLabel.textContent=frames.length+'/'+frames.length;
 
-  /* 各タイプの配列を初期化してレイヤーをmap追加（flood は floodCanvasGrid で別管理） */
+  /* 各タイプの配列を初期化してレイヤーをmap追加（flood は floodVGLayer で別管理） */
   types.forEach(function(tp){ layers[tp]=new Array(frames.length).fill(null); });
   frames.forEach(function(f,fi){
     types.forEach(function(tp){
@@ -750,13 +672,12 @@ map.on('moveend', function(){ saveState(); setTimeout(reapplyOpacity, 100); });
   buildFrames();
   scheduleAuto();
   /* 安全網: 2秒ごとに現フレームのopacityを確認・修正。
-     floodCanvasGridがmapから外れていた場合も再追加する */
+     floodVGLayerがmapから外れていた場合も再追加する */
   setInterval(function(){
     if(!isLoading && currentIdx>=0) reapplyOpacity();
     if(!isLoading && visible['flood'] && frames.length && currentIdx>=0){
-      if(floodCanvasGrid && !map.hasLayer(floodCanvasGrid)){
-        floodCanvasGrid.addTo(map);
-        redrawFloodCanvases();
+      if(floodVGLayer && !map.hasLayer(floodVGLayer)){
+        floodVGLayer.addTo(map);
       }
     }
   }, 2000);
