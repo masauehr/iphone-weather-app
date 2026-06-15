@@ -770,7 +770,8 @@ kikikuruHtml.ts（Leaflet HTML・純粋なJavaScript）
 | 降水レーダー（nowc） | `bosai/jmatile/data/nowc/{ymdhms}/none/{ymdhms}/surf/hrpns/{z}/{x}/{y}.png` | ✅ |
 
 - `{ymdhms}` : `yyyyMMddHHmmss` 形式、10分刻み
-- flood PBFのnativeZoom: 4〜11 / rain_mesh・land・inund PNGのnativeZoom: 4〜13
+- flood PBFのタイル: 偶数ズームのみ存在（z=4,6,8,10,12,14）/ rain_mesh・land・inund PNGのnativeZoom: 4〜13（同様に偶数のみ）
+- 奇数ズームでは z-1 の親タイル座標でPBFを取得し、canvas scale(2,2)＋translate でクアドラント表示（後述）
 
 ### 10-3. 洪水キキクルの2層構造（最重要）
 
@@ -878,6 +879,45 @@ Leaflet.VectorGrid には `setOpacity()` メソッドが存在しないか動作
 - **原因**: `updateFloodBaseLayer()` が常に `frames[frames.length-1].ymdhms`（最終フレームの固定タイムスタンプ）でVectorGridを生成していた。`showFrame()` 内でPNG系レイヤーの `reapplyOpacity()` しか呼んでおらず、flood PBFの時刻が更新されなかった
 - **解決**: `showFrame()` に `scheduleFloodToFrame(frames[idx].ymdhms)` を追加し、表示フレームのymdhmsでflood VectorGridを再生成するようにした。400msデバウンス（`floodFrameTimer`）を挟んで高速スライダー操作時の過剰リクエストを抑制
 - **備考**: 間引きは行っていない。フレームは常に10分間隔固定で、1h=6枚・2h=12枚・3h=18枚
+
+#### ⑦ 洪水キキクルがズームレベルにより交互に表示されない
+
+- **症状**: zoom偶数（10,12…）では表示されるが、zoom奇数（9,11,13…）では消えるという「交互消え」が発生
+- **原因**: JMAの洪水PBFタイルは他レイヤー（rain_mesh等）と同様に**偶数ズームのみ存在**する気象庁仕様。奇数ズームでは `{z}/{x}/{y}` が404を返すためタイルが空白になる
+- **解決**: `floodFetchCoords()` 関数で奇数ズームを検出し、z-1（偶数）の親タイル座標 `(floor(x/2), floor(y/2))` でPBFを取得。canvas描画時に `scale(2,2)` + `translate(-qx*128, -qy*128)` で正しいクアドラント（左上/右上/左下/右下）を切り出して表示する
+
+```javascript
+function floodFetchCoords(displayZ, x, y){
+  if(displayZ % 2 === 0) return { z:displayZ, x:x, y:y, qx:0, qy:0, isOdd:false };
+  // 奇数ズーム: 親タイル(z-1)を取得、クアドラント(qx,qy)を算出
+  return { z:displayZ-1, x:Math.floor(x/2), y:Math.floor(y/2), qx:x%2, qy:y%2, isOdd:true };
+}
+// 描画: isOdd=true の場合
+ctx.scale(2, 2);
+ctx.translate(-quadX * 128, -quadY * 128);
+// → lineWidth は scale後に2倍になるため lw/2 で指定
+```
+
+- **既知の制限**: 奇数ズームでは scale(2,2)の影響で線幅が偶数ズームの約半分になる（今後の検討課題）
+
+#### ⑧ 奇数ズームで別クアドラントの河川が混入する
+
+- **症状**: 奇数ズームにすると、その地点とは別の場所にあるはずの洪水キキクル線が地図上に出現する
+- **原因**: `odd` フラグの判定を `(quadX !== 0 || quadY !== 0)` にしていたため、ディスプレイタイルの x・y が**両方偶数**（qx=0, qy=0 = 親タイルの左上クアドラント）のとき `odd=false` と判定されてしまった。この場合 `scale(2,2)` が適用されず親タイルの全フィーチャーが1:1で描かれ、他クアドラントの河川が混入した
+- **解決**: `isOdd` フラグを `floodFetchCoords()` の戻り値で明示的に渡す。qx/qy の値ではなく**ズームが奇数かどうか**で判定する
+
+```javascript
+// 誤: var odd = (quadX !== 0 || quadY !== 0);  // qx=qy=0 のとき false になる
+// 正: isOdd フラグを明示的に渡す
+var odd = !!isOdd;  // ズームが奇数なら必ず true
+```
+
+#### ⑨ VectorGrid + setUrl() 方式ではアニメーション中に洪水が更新されない
+
+- **症状**: `L.vectorGrid.protobuf` に `setUrl()` で ymdhms を更新しようとすると、アニメーション中（600ms/フレーム）に洪水が一切更新されなくなった
+- **原因1**: `setUrl()` → `redraw()` → `_removeAllTiles()` で全タイルを即座に削除するため、ブランク期間が生じる。毎フレーム呼ぶと常に空白になる
+- **原因2**: 上記を避けるため 1400ms デバウンスを設定したが、これが 600ms フレーム間隔より長いため「常に直前のタイマーがリセットされ永遠に発火しない」状態になった
+- **解決**: VectorGrid 方式を断念し、canvas GridLayer 方式（⑦）に戻す。canvas はその場で再描画するためタイル除去がなく、50ms デバウンスでもアニメーションに追随できる
 
 ### 10-8. タブアイコン（PNG画像方式）
 
@@ -1222,6 +1262,19 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 | 改修 | 内容 |
 |------|------|
 | Homeタブのラベル変更 | "Home" → "天気予報"（`_layout.tsx` の `title` プロパティ変更） |
+
+### 2026-06 洪水キキクルズームバグ修正
+
+#### キキクルタブ（洪水レイヤー）
+
+| 改修 | 内容 |
+|------|------|
+| 奇数ズーム交互消え修正 | JMA洪水PBFタイルが偶数ズームのみ存在する仕様に対応。奇数ズームでは z-1 の親タイル座標 `(floor(x/2), floor(y/2))` でPBFを取得し、canvas `scale(2,2)` + `translate` で正しいクアドラントを切り出して描画するよう変更 |
+| 奇数ズーム他クアドラント混入修正 | クアドラント判定を `(qx≠0 or qy≠0)` から `isOdd` フラグに変更。左上クアドラント（qx=0,qy=0）でも必ず scale(2,2) を適用し、他エリアの河川線が混入しないよう修正 |
+| アニメーション中の洪水更新回復 | `L.vectorGrid.protobuf` + `setUrl()` 方式では 1400ms デバウンスが 600ms フレーム間隔より長く更新が止まる問題が判明。canvas GridLayer 方式（その場再描画）に戻し、デバウンスを 50ms 固定に変更 |
+| PBFキャッシュ実装 | `floodPbfCache[url]` で取得済みPBFをメモリキャッシュ。同一フレームへの戻り操作・ズーム変化で即時再描画可能 |
+| `done` コールバックによるズーム保持 | `createTile(coords, done)` の `done` 呼び出しで Leaflet の `_retainParent` 機構を有効化。新ズームのタイル読み込み中は旧ズームのタイルが保持され、ブランク期間を低減 |
+| 既知の制限 | 奇数ズームでは `scale(2,2)` の影響で線幅が約半分になる（今後の検討課題） |
 
 ### 2026-06 レーダーprobe修正
 
