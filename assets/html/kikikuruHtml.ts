@@ -1,7 +1,5 @@
-import japanCoastline from '@/assets/geodata/japan_coastline.json';
 import { vectorGridBundledJs } from './vectorgridJs';
 
-const _coastlineJson = JSON.stringify(japanCoastline);
 
 export const kikikuruHtml = `<!DOCTYPE html>
 <html lang="ja">
@@ -175,14 +173,6 @@ map.createPane('inundPane');     map.getPane('inundPane').style.zIndex     = 203
 map.createPane('floodBasePane'); map.getPane('floodBasePane').style.zIndex = 204; /* 静的河川PNG（常時） */
 map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205; /* 危険度PBF（洪水ON時） */
 map.createPane('radarPane');     map.getPane('radarPane').style.zIndex     = 350;
-map.createPane('coastPane');     map.getPane('coastPane').style.zIndex     = 600;
-map.getPane('coastPane').style.pointerEvents = 'none';
-
-/* 海岸線 */
-L.geoJSON(${_coastlineJson},{
-  pane:'coastPane',
-  style:{color:'#00cc44',weight:1.2,opacity:0.85,fill:false}
-}).addTo(map);
 
 /* ── 状態 ── */
 var frames = [];
@@ -434,7 +424,7 @@ function makeTileLayer(type, ymdhms){
 function cleanup(){
   var types = Object.keys(layers);
   types.forEach(function(t){
-    layers[t].forEach(function(l){ if(l) map.removeLayer(l); });
+    layers[t].forEach(function(l){ if(l && map.hasLayer(l)) map.removeLayer(l); });
     layers[t] = [];
   });
   if(floodCanvasGrid && map.hasLayer(floodCanvasGrid)) map.removeLayer(floodCanvasGrid);
@@ -442,15 +432,16 @@ function cleanup(){
   frames=[]; currentIdx=-1;
 }
 
-/* ── フレーム表示 ── */
+/* ── フレーム表示（オンデマンドレイヤー管理）──
+   メモリ節約のため、mapに追加するレイヤーは「現フレーム＋次フレーム」の2枚のみ。
+   それ以外のフレームはlayers配列に保持するがmap未追加のまま。 */
 function reapplyOpacity(){
   if(currentIdx<0) return;
   var types = Object.keys(layers);
   types.forEach(function(t){
     var arr = layers[t];
-    if(!arr.length) return;
     for(var i=0;i<arr.length;i++){
-      if(!arr[i]) continue;
+      if(!arr[i] || !map.hasLayer(arr[i])) continue;
       arr[i].setOpacity( (i===currentIdx && visible[t]) ? OPACITY[t] : 0 );
     }
   });
@@ -459,12 +450,43 @@ function reapplyOpacity(){
 function showFrame(idx){
   if(!frames.length) return;
   idx = ((idx % frames.length) + frames.length) % frames.length;
+  var prevIdx = currentIdx;
   currentIdx = idx;
-  reapplyOpacity();
+  var types = Object.keys(layers);
+
+  /* 現フレームのレイヤーをオンデマンド生成・表示 */
+  types.forEach(function(tp){
+    if(!layers[tp][idx]) layers[tp][idx] = makeTileLayer(tp, frames[idx].ymdhms);
+    if(visible[tp]){
+      if(!map.hasLayer(layers[tp][idx])) layers[tp][idx].addTo(map);
+      layers[tp][idx].setOpacity(OPACITY[tp]);
+    } else {
+      if(map.hasLayer(layers[tp][idx])) map.removeLayer(layers[tp][idx]);
+    }
+  });
+
+  /* 前フレームのレイヤーをmapから除去（メモリ解放） */
+  if(prevIdx >= 0 && prevIdx !== idx){
+    types.forEach(function(tp){
+      if(layers[tp][prevIdx] && map.hasLayer(layers[tp][prevIdx])){
+        map.removeLayer(layers[tp][prevIdx]);
+      }
+    });
+  }
+
+  /* 次フレームをopacity=0で先読み（スムーズなアニメーション用） */
+  var nextIdx = (idx + 1) % frames.length;
+  if(frames.length > 1 && nextIdx !== idx){
+    types.forEach(function(tp){
+      if(!layers[tp][nextIdx]) layers[tp][nextIdx] = makeTileLayer(tp, frames[nextIdx].ymdhms);
+      if(!map.hasLayer(layers[tp][nextIdx])) layers[tp][nextIdx].addTo(map);
+      layers[tp][nextIdx].setOpacity(0);
+    });
+  }
+
   elSlider.value = String(idx);
   elLabel.textContent = (idx+1)+'/'+frames.length;
   elTime.textContent = fmtLocal(frames[idx].time);
-  /* flood PBFを表示フレームに同期（400msデバウンスで高速切替を抑制） */
   if(visible['flood']){ scheduleFloodToFrame(frames[idx].ymdhms); }
 }
 
@@ -502,40 +524,30 @@ function buildFrames(){
   elSlider.value=String(frames.length-1);
   elLabel.textContent=frames.length+'/'+frames.length;
 
-  /* 各タイプの配列を初期化してレイヤーをmap追加（flood は floodCanvasGrid で別管理） */
+  /* 配列だけ確保（レイヤーはshowFrame内でオンデマンド生成→メモリ節約） */
   types.forEach(function(tp){ layers[tp]=new Array(frames.length).fill(null); });
-  frames.forEach(function(f,fi){
-    types.forEach(function(tp){
-      var l = makeTileLayer(tp, f.ymdhms);
-      l.addTo(map);
-      layers[tp][fi]=l;
-    });
-  });
-
-  /* buildFrames完了時点のnativeMaxをcurrentNativeMaxに反映 */
   types.forEach(function(tp){ currentNativeMax[tp] = getEffectiveNativeMax(tp); });
 
-  /* 洪水VectorGrid・河川タイルを更新 */
   updateRiverBaseLayer();
   updateFloodBaseLayer();
 
-  /* currentIdxを確定させてからtileloadでreapplyOpacityが効くようにする */
+  /* 最終フレームを表示（showFrame内で現フレーム+次フレームのレイヤーだけ生成・追加） */
   isLoading=false;
   showFrame(frames.length-1);
   elStatus.textContent='';
 
-  /* 全フレームのプリロード完了後に再生開始 */
-  var total=frames.length*types.length, loaded=0;
+  /* 現フレームの4レイヤーのロード完了後に再生開始（全フレーム待ちは不要） */
+  var total=types.length, loaded=0;
   function onLoad(){
     loaded++;
-    if(loaded===total){ clearLoadUI(); play(); }
+    if(loaded>=total){ clearLoadUI(); play(); }
   }
-  frames.forEach(function(f,fi){
-    types.forEach(function(tp){
-      var l=layers[tp][fi], n=false;
-      l.on('load', function(){ if(!n){n=true;onLoad();} });
-      setTimeout(function(){ if(!n){n=true;onLoad();} }, LOAD_TIMEOUT);
-    });
+  types.forEach(function(tp){
+    var l = layers[tp][frames.length-1];
+    if(!l){ onLoad(); return; }
+    var n=false;
+    l.on('load', function(){ if(!n){n=true;onLoad();} });
+    setTimeout(function(){ if(!n){n=true;onLoad();} }, LOAD_TIMEOUT);
   });
 }
 
@@ -563,7 +575,13 @@ window.toggleLayer = function(type){
     updateRiverBaseLayer();
     updateFloodBaseLayer();
   } else if(currentIdx>=0 && layers[type] && layers[type][currentIdx]){
-    layers[type][currentIdx].setOpacity( visible[type] ? OPACITY[type] : 0 );
+    var l = layers[type][currentIdx];
+    if(visible[type]){
+      if(!map.hasLayer(l)) l.addTo(map);
+      l.setOpacity(OPACITY[type]);
+    } else {
+      if(map.hasLayer(l)) map.removeLayer(l);
+    }
   }
   updateLegendType();
 };
@@ -689,7 +707,7 @@ window.onSpeedChange = function(v){
   if(playing){ pause(); play(); }
 };
 
-/* 奇数ズーム対策: nativeMaxが変化した場合にラスタレイヤを再構築 */
+/* 奇数ズーム対策: nativeMaxが変化した場合に現フレーム+次フレームのみ再構築 */
 function rebuildLayersAtZoom(){
   var types = Object.keys(layers);
   var changed = false;
@@ -702,12 +720,15 @@ function rebuildLayersAtZoom(){
 
   var savedIdx = currentIdx;
   currentIdx = -1;
+  var nextIdx = (savedIdx + 1) % frames.length;
+  /* map上にある現フレーム・次フレームのレイヤーだけ再構築 */
   types.forEach(function(tp){
-    layers[tp].forEach(function(l, i){
-      if(!l) return;
-      map.removeLayer(l);
-      layers[tp][i] = makeTileLayer(tp, frames[i].ymdhms);
-      layers[tp][i].addTo(map);
+    [savedIdx, nextIdx].forEach(function(fi){
+      if(fi < 0 || !layers[tp][fi]) return;
+      var wasInMap = map.hasLayer(layers[tp][fi]);
+      map.removeLayer(layers[tp][fi]);
+      layers[tp][fi] = makeTileLayer(tp, frames[fi].ymdhms);
+      if(wasInMap) layers[tp][fi].addTo(map);
     });
   });
   currentIdx = savedIdx;
