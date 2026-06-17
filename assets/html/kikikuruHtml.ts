@@ -118,7 +118,7 @@ var timeRangeHours     = 2;
 var historicalOffsetMin = 0;
 function isHistoricalMode(){ return historicalOffsetMin > 0; }
 
-/* 洪水・土砂・浸水キキクルの河川/ラスター線幅（ズームレベル0〜18対応） */
+/* 洪水キキクルの河川線幅 */
 var FLOOD_LINE_WIDTH = [1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 5, 6, 8, 8, 8, 10, 12, 14, 16];
 
 /* 凡例定義 */
@@ -164,18 +164,22 @@ var baseLayer = L.tileLayer(BASE_CHIRIIN,{
   attribution:'© 国土地理院'
 }).addTo(map);
 
-/* ペイン定義（大雨→土砂→浸水→洪水→レーダー→海岸線の順） */
+/* ペイン定義 */
 map.createPane('rainPane');      map.getPane('rainPane').style.zIndex      = 201;
 map.createPane('landPane');      map.getPane('landPane').style.zIndex      = 202;
 map.createPane('inundPane');     map.getPane('inundPane').style.zIndex     = 203;
 map.createPane('floodBasePane'); map.getPane('floodBasePane').style.zIndex = 204;
 map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205;
 map.createPane('radarPane');     map.getPane('radarPane').style.zIndex     = 350;
+/* pane レベルで multiply 設定（canvas 個別だと pane の stacking context で効かない） */
+map.getPane('rainPane').style.mixBlendMode  = 'multiply';
+map.getPane('landPane').style.mixBlendMode  = 'multiply';
+map.getPane('inundPane').style.mixBlendMode = 'multiply';
 
 /* ── 状態 ── */
 var frames = [];
-/* flood/land/inund は Canvas GridLayer で別管理 */
-var layers = { rain_mesh:[], radar:[] };
+/* 全キキクルは Canvas GridLayer で管理 / radar のみラスタータイル */
+var layers = { radar: [] };
 var currentIdx = -1;
 var timerId = null, playing = false, speedIdx = 1;
 var isLoading = false;
@@ -200,14 +204,21 @@ function updateRiverBaseLayer(){
   }
 }
 
-/* ── ズームに応じたフェッチ座標とクアドラントを算出（全Canvas GridLayer共通）──
-   奇数ズームでは z-1（偶数）の親タイル座標で取得し、canvas を scale(2) で拡大表示 */
-function riskFetchCoords(displayZ, x, y){
-  if(displayZ % 2 === 0) return { z:displayZ, x:x, y:y, qx:0, qy:0, isOdd:false };
-  return { z:displayZ-1, x:Math.floor(x/2), y:Math.floor(y/2), qx:x%2, qy:y%2, isOdd:true };
+/* ── 座標変換ユーティリティ ──
+   nativeMax 上限 + 偶数ズーム丸め。displayZ > nativeMax の場合は
+   nativeMax の親タイルを scale 倍拡大描画する（全 Canvas GridLayer 共通）。 */
+function calcFetchCoords(displayZ, x, y, nativeMax){
+  var fetchZ = (displayZ % 2 === 1) ? displayZ - 1 : displayZ;
+  if(fetchZ > nativeMax) fetchZ = nativeMax;
+  if(fetchZ < 4) fetchZ = 4;
+  var scale = Math.round(Math.pow(2, displayZ - fetchZ));
+  var fetchX = Math.floor(x / scale);
+  var fetchY = Math.floor(y / scale);
+  return { z:fetchZ, x:fetchX, y:fetchY, qx:x - fetchX*scale, qy:y - fetchY*scale, scale:scale };
 }
 
-/* ── 洪水キキクル危険度: 永続キャンバスGridLayer方式 ── */
+/* ── 洪水キキクル危険度: Canvas GridLayer（PBF）── */
+var FLOOD_NATIVE_MAX = 10;
 var floodPbfCache = {};
 var floodCurrentYmdhms = null;
 var floodCanvasGrid = null;
@@ -217,7 +228,7 @@ function floodTileUrl(ymdhms, z, x, y){
   return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/flood/'+z+'/'+x+'/'+y+'.pbf';
 }
 
-function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
+function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, scale){
   try {
     var vt = new VectorTile(new Pbf(new Uint8Array(buffer)));
     var lay = vt.layers['flood'];
@@ -225,12 +236,12 @@ function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
     ctx.clearRect(0, 0, 256, 256);
     if(!lay) return;
     var lw = FLOOD_LINE_WIDTH[Math.min(z, FLOOD_LINE_WIDTH.length-1)] || 4;
-    var odd = !!isOdd;
     ctx.save();
-    if(odd){
-      ctx.scale(2, 2);
-      ctx.translate(-quadX * 128, -quadY * 128);
-      lw = lw / 2;
+    if(scale > 1){
+      var tileSize = 256 / scale;
+      ctx.scale(scale, scale);
+      ctx.translate(-quadX * tileSize, -quadY * tileSize);
+      lw = lw / scale;
     }
     ctx.lineJoin='round';
     ctx.strokeStyle='#333'; ctx.lineWidth=lw;
@@ -273,17 +284,20 @@ function initFloodCanvasGrid(){
         setTimeout(function(){ done(null, canvas); }, 0);
         return canvas;
       }
-      var fc = riskFetchCoords(coords.z, coords.x, coords.y);
+      var fc = calcFetchCoords(coords.z, coords.x, coords.y, FLOOD_NATIVE_MAX);
       var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
-      var c = canvas, qx = fc.qx, qy = fc.qy, lz = fc.z, io = fc.isOdd;
+      var c = canvas, qx = fc.qx, qy = fc.qy, lz = fc.z, sc = fc.scale;
       if(floodPbfCache[url]){
-        drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, io);
+        drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, sc);
+        setTimeout(function(){ done(null, c); }, 0);
+      } else if(floodPbfCache[url] === false){
         setTimeout(function(){ done(null, c); }, 0);
       } else {
-        fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
-          if(buf.byteLength > 0){ floodPbfCache[url]=buf; drawFloodOnCanvas(c,buf,lz,qx,qy,io); }
+        fetch(url).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
+          if(buf.byteLength > 0){ floodPbfCache[url]=buf; drawFloodOnCanvas(c,buf,lz,qx,qy,sc); }
+          else floodPbfCache[url]=false;
           done(null, c);
-        }).catch(function(e){ done(e, c); });
+        }).catch(function(){ floodPbfCache[url]=false; done(null, c); });
       }
       return canvas;
     }
@@ -299,15 +313,16 @@ function redrawFloodCanvases(){
     var tile = tiles[key];
     if(!tile || !tile.el || typeof tile.el.getContext !== 'function') continue;
     var co = tile.coords;
-    var fc = riskFetchCoords(co.z, co.x, co.y);
+    var fc = calcFetchCoords(co.z, co.x, co.y, FLOOD_NATIVE_MAX);
     var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
-    var c = tile.el, qx = fc.qx, qy = fc.qy, lz = fc.z, io = fc.isOdd;
+    var c = tile.el, qx = fc.qx, qy = fc.qy, lz = fc.z, sc = fc.scale;
     if(floodPbfCache[url]){
-      drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, io);
-    } else {
-      (function(cv, z2, qx2, qy2, io2, u){ fetch(u).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
-        if(buf.byteLength>0){ floodPbfCache[u]=buf; drawFloodOnCanvas(cv,buf,z2,qx2,qy2,io2); }
-      }).catch(function(){}); })(c, lz, qx, qy, io, url);
+      drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, sc);
+    } else if(floodPbfCache[url] !== false){
+      (function(cv, z2, qx2, qy2, sc2, u){ fetch(u).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
+        if(buf.byteLength>0){ floodPbfCache[u]=buf; drawFloodOnCanvas(cv,buf,z2,qx2,qy2,sc2); }
+        else floodPbfCache[u]=false;
+      }).catch(function(){ floodPbfCache[u]=false; }); })(c, lz, qx, qy, sc, url);
     }
   }
 }
@@ -332,21 +347,26 @@ function updateFloodBaseLayer(){
   applyFloodToYmdhms(frames.length ? frames[idx].ymdhms : null);
 }
 
-/* ── 土砂・浸水キキクル: Canvas GridLayer方式（PNG白背景透過＋高ズーム対応）──
-   気象庁PNG タイルを fetch → Blob URL → Image → canvas に描画後、
-   白・薄グレー背景（危険度なし）を透過にして下の地図を透かして見せる。
-   奇数ズームでは z-1 の親タイルを scale(2) で拡大描画（洪水と同じロジック）。 */
-var landPngCache  = {}, inundPngCache  = {};
-var landCurrentYmdhms  = null, inundCurrentYmdhms  = null;
-var landCanvasGrid   = null, inundCanvasGrid   = null;
-var landFrameTimer   = null, inundFrameTimer   = null;
+/* ── 大雨・土砂・浸水キキクル: Canvas GridLayer（PNG + mix-blend-mode透過）──
+   getImageData は iframe の CORS 制限で使えないため、
+   mix-blend-mode: multiply で白背景を透過に見せる。
+   白(255,255,255) × 地図色 = 地図色 → 白が消えて下の地図が透けて見える。
+   危険度色（黄・赤・紫・黒）はそのまま重なって表示される。
+   cache値: undefined=未取得, false=404確認済み, ArrayBuffer=データあり */
+var RISK_PNG_NATIVE_MAX = { rain_mesh:10, land:10, inund:10 };
+var RISK_PNG_PANE       = { rain_mesh:'rainPane', land:'landPane', inund:'inundPane' };
+
+var riskPngCache    = { rain_mesh:{}, land:{}, inund:{} };
+var riskCurrentYmd  = { rain_mesh:null, land:null, inund:null };
+var riskCanvasGrid  = { rain_mesh:null, land:null, inund:null };
+var riskFrameTimer  = { rain_mesh:null, land:null, inund:null };
 
 function riskPngTileUrl(type, ymdhms, z, x, y){
   return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/'+type+'/'+z+'/'+x+'/'+y+'.png';
 }
 
-/* PNG ArrayBuffer → canvas 描画 + 白背景透過処理 */
-function drawRiskPngFromBuffer(canvas, buffer, isOdd, quadX, quadY, onComplete){
+/* PNG ArrayBuffer → canvas 描画。mix-blend-mode:multiply で白背景を透過表示 */
+function drawRiskPngFromBuffer(canvas, buffer, scale, quadX, quadY, onComplete){
   var blob = new Blob([buffer], {type:'image/png'});
   var blobUrl = URL.createObjectURL(blob);
   var img = new Image();
@@ -354,68 +374,64 @@ function drawRiskPngFromBuffer(canvas, buffer, isOdd, quadX, quadY, onComplete){
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, 256, 256);
     ctx.save();
-    if(isOdd){
-      ctx.scale(2, 2);
-      ctx.translate(-quadX * 128, -quadY * 128);
+    if(scale > 1){
+      var ts = 256 / scale;
+      ctx.scale(scale, scale);
+      ctx.translate(-quadX * ts, -quadY * ts);
     }
     ctx.drawImage(img, 0, 0, 256, 256);
     ctx.restore();
     URL.revokeObjectURL(blobUrl);
-    /* 白・薄グレー（危険度なし背景）を透過にする */
-    try {
-      var id = ctx.getImageData(0, 0, 256, 256), d = id.data;
-      for(var i = 0; i < d.length; i += 4){
-        if(d[i] > 230 && d[i+1] > 230 && d[i+2] > 230) d[i+3] = 0;
-      }
-      ctx.putImageData(id, 0, 0);
-    } catch(e){}
     if(onComplete) onComplete();
   };
   img.onerror = function(){ URL.revokeObjectURL(blobUrl); if(onComplete) onComplete(); };
   img.src = blobUrl;
 }
 
-/* 土砂または浸水の Canvas GridLayer を初期化 */
+/* 土砂・浸水・大雨の Canvas GridLayer を初期化 */
 function initRiskCanvasGrid(type){
-  var pane  = (type==='land') ? 'landPane' : 'inundPane';
-  var cache = (type==='land') ? landPngCache : inundPngCache;
+  var nMax  = RISK_PNG_NATIVE_MAX[type];
+  var pane  = RISK_PNG_PANE[type];
+  var cache = riskPngCache[type];
   var Layer = L.GridLayer.extend({
     createTile: function(coords, done){
       var canvas = document.createElement('canvas');
       canvas.width = 256; canvas.height = 256;
-      var ymd = (type==='land') ? landCurrentYmdhms : inundCurrentYmdhms;
+      var ymd = riskCurrentYmd[type];
       if(!ymd || !visible[type]){
         setTimeout(function(){ done(null, canvas); }, 0);
         return canvas;
       }
-      var fc  = riskFetchCoords(coords.z, coords.x, coords.y);
+      var fc  = calcFetchCoords(coords.z, coords.x, coords.y, nMax);
       var url = riskPngTileUrl(type, ymd, fc.z, fc.x, fc.y);
-      var c = canvas, qx = fc.qx, qy = fc.qy, io = fc.isOdd;
+      var c = canvas, qx = fc.qx, qy = fc.qy, sc = fc.scale;
       if(cache[url]){
-        drawRiskPngFromBuffer(c, cache[url], io, qx, qy, function(){ done(null, c); });
+        drawRiskPngFromBuffer(c, cache[url], sc, qx, qy, function(){ done(null, c); });
+      } else if(cache[url] === false){
+        setTimeout(function(){ done(null, c); }, 0);
       } else {
-        fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
+        fetch(url).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
           if(buf.byteLength > 0){
             cache[url] = buf;
-            drawRiskPngFromBuffer(c, buf, io, qx, qy, function(){ done(null, c); });
+            drawRiskPngFromBuffer(c, buf, sc, qx, qy, function(){ done(null, c); });
           } else {
-            done(null, c);
+            cache[url] = false; done(null, c);
           }
-        }).catch(function(e){ done(e, c); });
+        }).catch(function(){ cache[url] = false; done(null, c); });
       }
       return canvas;
     }
   });
   var grid = new Layer({ pane:pane, minZoom:4, maxZoom:14, tileSize:256 });
-  if(type==='land') landCanvasGrid  = grid;
-  else              inundCanvasGrid = grid;
+  riskCanvasGrid[type] = grid;
 }
 
-/* 既存タイルを現在の ymdhms で再描画（フレーム切替時） */
+/* 既存タイルを現在の ymdhms で再描画 */
 function redrawRiskCanvases(type){
-  var grid  = (type==='land') ? landCanvasGrid  : inundCanvasGrid;
-  var cache = (type==='land') ? landPngCache    : inundPngCache;
-  var ymd   = (type==='land') ? landCurrentYmdhms : inundCurrentYmdhms;
+  var nMax  = RISK_PNG_NATIVE_MAX[type];
+  var grid  = riskCanvasGrid[type];
+  var cache = riskPngCache[type];
+  var ymd   = riskCurrentYmd[type];
   if(!grid || !ymd) return;
   var tiles = grid._tiles;
   if(!tiles) return;
@@ -423,72 +439,44 @@ function redrawRiskCanvases(type){
     var tile = tiles[key];
     if(!tile || !tile.el || typeof tile.el.getContext !== 'function') continue;
     var co  = tile.coords;
-    var fc  = riskFetchCoords(co.z, co.x, co.y);
+    var fc  = calcFetchCoords(co.z, co.x, co.y, nMax);
     var url = riskPngTileUrl(type, ymd, fc.z, fc.x, fc.y);
     (function(cv, fc2, u){
       if(cache[u]){
-        drawRiskPngFromBuffer(cv, cache[u], fc2.isOdd, fc2.qx, fc2.qy, null);
-      } else {
-        fetch(u).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
-          if(buf.byteLength > 0){ cache[u]=buf; drawRiskPngFromBuffer(cv,buf,fc2.isOdd,fc2.qx,fc2.qy,null); }
-        }).catch(function(){});
+        drawRiskPngFromBuffer(cv, cache[u], fc2.scale, fc2.qx, fc2.qy, null);
+      } else if(cache[u] !== false){
+        fetch(u).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
+          if(buf.byteLength > 0){ cache[u]=buf; drawRiskPngFromBuffer(cv,buf,fc2.scale,fc2.qx,fc2.qy,null); }
+          else cache[u]=false;
+        }).catch(function(){ cache[u]=false; });
       }
     })(tile.el, fc, url);
   }
 }
 
 function applyRiskToYmdhms(type, ymdhms){
-  if(type==='land'){
-    clearTimeout(landFrameTimer); landFrameTimer=null;
-    landCurrentYmdhms = ymdhms || null;
-  } else {
-    clearTimeout(inundFrameTimer); inundFrameTimer=null;
-    inundCurrentYmdhms = ymdhms || null;
-  }
-  var grid = (type==='land') ? landCanvasGrid : inundCanvasGrid;
+  clearTimeout(riskFrameTimer[type]); riskFrameTimer[type]=null;
+  riskCurrentYmd[type] = ymdhms || null;
+  var grid = riskCanvasGrid[type];
   if(!visible[type] || !ymdhms){
     if(grid && map.hasLayer(grid)) map.removeLayer(grid);
     return;
   }
-  if(!grid){ initRiskCanvasGrid(type); grid=(type==='land')?landCanvasGrid:inundCanvasGrid; }
+  if(!grid){ initRiskCanvasGrid(type); grid=riskCanvasGrid[type]; }
   if(!map.hasLayer(grid)) grid.addTo(map);
   redrawRiskCanvases(type);
 }
 function scheduleRiskToFrame(type, ymdhms){
-  if(type==='land'){
-    clearTimeout(landFrameTimer);
-    landFrameTimer = setTimeout(function(){ applyRiskToYmdhms('land', ymdhms); }, 50);
-  } else {
-    clearTimeout(inundFrameTimer);
-    inundFrameTimer = setTimeout(function(){ applyRiskToYmdhms('inund', ymdhms); }, 50);
-  }
+  clearTimeout(riskFrameTimer[type]);
+  riskFrameTimer[type] = setTimeout(function(){ applyRiskToYmdhms(type, ymdhms); }, 50);
 }
 function updateRiskBaseLayer(type){
   var idx = (currentIdx >= 0 && currentIdx < frames.length) ? currentIdx : frames.length - 1;
   applyRiskToYmdhms(type, frames.length ? frames[idx].ymdhms : null);
 }
 
-/* タイプ別設定（rain_mesh と radar のみラスタータイル） */
-var PANE    = { rain_mesh:'rainPane', radar:'radarPane' };
-var OPACITY = { rain_mesh:0.8, radar:0.4 };
-var NATIVE_MAX_BASE = { rain_mesh:11, radar:10 };
-var currentNativeMax = { rain_mesh:11, radar:10 };
-
-/* 奇数ズーム対策（rain_mesh と radar 用） */
-function getEffectiveNativeMax(type){
-  var z = map.getZoom();
-  var base = NATIVE_MAX_BASE[type];
-  var nMax = (z % 2 === 1) ? z - 1 : z;
-  if(nMax < 4) nMax = 4;
-  if(nMax > base) nMax = base;
-  return nMax;
-}
-
-/* ── URL ── */
-function riskUrl(type, ymdhms){
-  return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+
-    ymdhms+'/none/'+ymdhms+'/surf/'+type+'/{z}/{x}/{y}.png';
-}
+/* ── radar のみラスタータイル ── */
+var RADAR_NATIVE_MAX = 10;
 function radarUrl(ymdhms){
   return 'https://www.jma.go.jp/bosai/jmatile/data/nowc/'+
     ymdhms+'/none/'+ymdhms+'/surf/hrpns/{z}/{x}/{y}.png';
@@ -517,24 +505,19 @@ var elLabel  = document.getElementById('frameLabel');
 var elFill   = document.getElementById('loadBarFill');
 var elStatus = document.getElementById('loadStatus');
 
-function setLoadUI(done,total,msg){
-  elFill.style.width = (total>0 ? Math.round(done/total*100) : 0)+'%';
-  elStatus.textContent = msg || ('読込中 '+done+'/'+total);
-}
 function clearLoadUI(){ elFill.style.width='0%'; elStatus.textContent=''; }
 
-/* ── ラスタータイルレイヤー作成（rain_mesh・radar のみ）── */
-function makeTileLayer(type, ymdhms){
-  var url  = (type==='radar') ? radarUrl(ymdhms) : riskUrl(type, ymdhms);
-  var pane = PANE[type];
-  var nMax = getEffectiveNativeMax(type);
-  var l = L.tileLayer(url,{
+/* ── radar ラスタータイルレイヤー作成 ── */
+function makeRadarLayer(ymdhms){
+  var fc = calcFetchCoords(map.getZoom(), 0, 0, RADAR_NATIVE_MAX); /* nMax計算用 */
+  var nMax = fc.z; /* ズームに応じたnMax */
+  var l = L.tileLayer(radarUrl(ymdhms),{
     minNativeZoom:4, maxNativeZoom:nMax,
     minZoom:4, maxZoom:14, opacity:0,
-    updateWhenIdle:false, keepBuffer:4, pane:pane
+    updateWhenIdle:false, keepBuffer:4, pane:'radarPane'
   });
   l.on('tileload', function(e){
-    if(type==='radar') e.tile.style.imageRendering='pixelated';
+    e.tile.style.imageRendering='pixelated';
     reapplyOpacity();
   });
   l.on('load', function(){ reapplyOpacity(); });
@@ -543,31 +526,25 @@ function makeTileLayer(type, ymdhms){
 
 /* ── クリーンアップ ── */
 function cleanup(){
-  var types = Object.keys(layers);
-  types.forEach(function(t){
-    layers[t].forEach(function(l){ if(l && map.hasLayer(l)) map.removeLayer(l); });
-    layers[t] = [];
-  });
+  layers.radar.forEach(function(l){ if(l && map.hasLayer(l)) map.removeLayer(l); });
+  layers.radar = [];
   if(floodCanvasGrid && map.hasLayer(floodCanvasGrid)) map.removeLayer(floodCanvasGrid);
   floodCurrentYmdhms = null;
-  if(landCanvasGrid && map.hasLayer(landCanvasGrid)) map.removeLayer(landCanvasGrid);
-  landCurrentYmdhms = null;
-  if(inundCanvasGrid && map.hasLayer(inundCanvasGrid)) map.removeLayer(inundCanvasGrid);
-  inundCurrentYmdhms = null;
+  ['rain_mesh','land','inund'].forEach(function(tp){
+    var g = riskCanvasGrid[tp];
+    if(g && map.hasLayer(g)) map.removeLayer(g);
+    riskCurrentYmd[tp] = null;
+  });
   frames=[]; currentIdx=-1;
 }
 
 /* ── フレーム表示 ── */
 function reapplyOpacity(){
   if(currentIdx<0) return;
-  var types = Object.keys(layers);
-  types.forEach(function(t){
-    var arr = layers[t];
-    for(var i=0;i<arr.length;i++){
-      if(!arr[i] || !map.hasLayer(arr[i])) continue;
-      arr[i].setOpacity( (i===currentIdx && visible[t]) ? OPACITY[t] : 0 );
-    }
-  });
+  for(var i=0;i<layers.radar.length;i++){
+    if(!layers.radar[i] || !map.hasLayer(layers.radar[i])) continue;
+    layers.radar[i].setOpacity( (i===currentIdx && visible['radar']) ? 0.4 : 0 );
+  }
 }
 
 function showFrame(idx){
@@ -575,45 +552,35 @@ function showFrame(idx){
   idx = ((idx % frames.length) + frames.length) % frames.length;
   var prevIdx = currentIdx;
   currentIdx = idx;
-  var types = Object.keys(layers);
 
-  /* rain_mesh・radar はラスタータイルでオンデマンド管理 */
-  types.forEach(function(tp){
-    if(!layers[tp][idx]) layers[tp][idx] = makeTileLayer(tp, frames[idx].ymdhms);
-    if(visible[tp]){
-      if(!map.hasLayer(layers[tp][idx])) layers[tp][idx].addTo(map);
-      layers[tp][idx].setOpacity(OPACITY[tp]);
-    } else {
-      if(map.hasLayer(layers[tp][idx])) map.removeLayer(layers[tp][idx]);
-    }
-  });
-
-  if(prevIdx >= 0 && prevIdx !== idx){
-    types.forEach(function(tp){
-      if(layers[tp][prevIdx] && map.hasLayer(layers[tp][prevIdx])){
-        map.removeLayer(layers[tp][prevIdx]);
-      }
-    });
+  /* radar はラスタータイル管理 */
+  if(!layers.radar[idx]) layers.radar[idx] = makeRadarLayer(frames[idx].ymdhms);
+  if(visible['radar']){
+    if(!map.hasLayer(layers.radar[idx])) layers.radar[idx].addTo(map);
+    layers.radar[idx].setOpacity(0.4);
+  } else {
+    if(map.hasLayer(layers.radar[idx])) map.removeLayer(layers.radar[idx]);
   }
-
+  if(prevIdx >= 0 && prevIdx !== idx && layers.radar[prevIdx] && map.hasLayer(layers.radar[prevIdx])){
+    map.removeLayer(layers.radar[prevIdx]);
+  }
   /* 次フレームを先読み */
   var nextIdx = (idx + 1) % frames.length;
   if(frames.length > 1 && nextIdx !== idx){
-    types.forEach(function(tp){
-      if(!layers[tp][nextIdx]) layers[tp][nextIdx] = makeTileLayer(tp, frames[nextIdx].ymdhms);
-      if(!map.hasLayer(layers[tp][nextIdx])) layers[tp][nextIdx].addTo(map);
-      layers[tp][nextIdx].setOpacity(0);
-    });
+    if(!layers.radar[nextIdx]) layers.radar[nextIdx] = makeRadarLayer(frames[nextIdx].ymdhms);
+    if(!map.hasLayer(layers.radar[nextIdx])) layers.radar[nextIdx].addTo(map);
+    layers.radar[nextIdx].setOpacity(0);
   }
 
   elSlider.value = String(idx);
   elLabel.textContent = (idx+1)+'/'+frames.length;
   elTime.textContent = fmtLocal(frames[idx].time);
 
-  /* Canvas GridLayer 方式のフレーム切替 */
-  if(visible['flood']){ scheduleFloodToFrame(frames[idx].ymdhms); }
-  if(visible['land']) { scheduleRiskToFrame('land',  frames[idx].ymdhms); }
-  if(visible['inund']){ scheduleRiskToFrame('inund', frames[idx].ymdhms); }
+  /* Canvas GridLayer のフレーム切替 */
+  if(visible['flood'])    { scheduleFloodToFrame(frames[idx].ymdhms); }
+  if(visible['rain_mesh']){ scheduleRiskToFrame('rain_mesh', frames[idx].ymdhms); }
+  if(visible['land'])     { scheduleRiskToFrame('land',  frames[idx].ymdhms); }
+  if(visible['inund'])    { scheduleRiskToFrame('inund', frames[idx].ymdhms); }
 }
 
 /* ── 再生制御 ── */
@@ -643,36 +610,33 @@ function buildFrames(){
     frames.push({ time:t, ymdhms:fmtUtc(t) });
   }
 
-  var types = Object.keys(layers);
   elSlider.min='0';
   elSlider.max=String(frames.length-1);
   elSlider.value=String(frames.length-1);
   elLabel.textContent=frames.length+'/'+frames.length;
 
-  types.forEach(function(tp){ layers[tp]=new Array(frames.length).fill(null); });
-  types.forEach(function(tp){ currentNativeMax[tp] = getEffectiveNativeMax(tp); });
+  layers.radar = new Array(frames.length).fill(null);
 
   updateRiverBaseLayer();
   updateFloodBaseLayer();
-  if(visible['land'])  updateRiskBaseLayer('land');
-  if(visible['inund']) updateRiskBaseLayer('inund');
+  ['rain_mesh','land','inund'].forEach(function(tp){
+    if(visible[tp]) updateRiskBaseLayer(tp);
+  });
 
   isLoading=false;
   showFrame(frames.length-1);
   elStatus.textContent='';
 
-  var total=types.length, loaded=0;
+  /* radar のロード完了後に再生開始 */
+  var loaded=false;
   function onLoad(){
-    loaded++;
-    if(loaded>=total){ clearLoadUI(); play(); }
+    if(!loaded){ loaded=true; clearLoadUI(); play(); }
   }
-  types.forEach(function(tp){
-    var l = layers[tp][frames.length-1];
-    if(!l){ onLoad(); return; }
-    var n=false;
-    l.on('load', function(){ if(!n){n=true;onLoad();} });
-    setTimeout(function(){ if(!n){n=true;onLoad();} }, LOAD_TIMEOUT);
-  });
+  var l = layers.radar[frames.length-1];
+  if(!l){ onLoad(); return; }
+  var n=false;
+  l.on('load', function(){ if(!n){n=true;onLoad();} });
+  setTimeout(function(){ if(!n){n=true;onLoad();} }, LOAD_TIMEOUT);
 }
 
 /* ── 自動更新 ── */
@@ -698,21 +662,22 @@ window.toggleLayer = function(type){
   if(type === 'flood'){
     updateRiverBaseLayer();
     updateFloodBaseLayer();
-  } else if(type === 'land' || type === 'inund'){
-    /* Canvas GridLayer の表示/非表示 */
+  } else if(type === 'rain_mesh' || type === 'land' || type === 'inund'){
     if(visible[type]){
       if(frames.length && currentIdx >= 0) applyRiskToYmdhms(type, frames[currentIdx].ymdhms);
     } else {
-      var grid = (type==='land') ? landCanvasGrid : inundCanvasGrid;
+      var grid = riskCanvasGrid[type];
       if(grid && map.hasLayer(grid)) map.removeLayer(grid);
     }
-  } else if(currentIdx>=0 && layers[type] && layers[type][currentIdx]){
-    var l = layers[type][currentIdx];
-    if(visible[type]){
-      if(!map.hasLayer(l)) l.addTo(map);
-      l.setOpacity(OPACITY[type]);
-    } else {
-      if(map.hasLayer(l)) map.removeLayer(l);
+  } else if(type === 'radar'){
+    if(currentIdx>=0 && layers.radar[currentIdx]){
+      var l = layers.radar[currentIdx];
+      if(visible['radar']){
+        if(!map.hasLayer(l)) l.addTo(map);
+        l.setOpacity(0.4);
+      } else {
+        if(map.hasLayer(l)) map.removeLayer(l);
+      }
     }
   }
   updateLegendType();
@@ -836,35 +801,6 @@ window.onSpeedChange = function(v){
   if(playing){ pause(); play(); }
 };
 
-/* 奇数ズーム対策: rain_mesh・radar レイヤーの再構築（Canvas GridLayer は不要） */
-function rebuildLayersAtZoom(){
-  var types = Object.keys(layers);
-  var changed = false;
-  types.forEach(function(tp){
-    if(getEffectiveNativeMax(tp) !== currentNativeMax[tp]) changed = true;
-  });
-  if(!changed) return false;
-
-  types.forEach(function(tp){ currentNativeMax[tp] = getEffectiveNativeMax(tp); });
-
-  var savedIdx = currentIdx;
-  currentIdx = -1;
-  var nextIdx = (savedIdx + 1) % frames.length;
-  types.forEach(function(tp){
-    [savedIdx, nextIdx].forEach(function(fi){
-      if(fi < 0 || !layers[tp][fi]) return;
-      var wasInMap = map.hasLayer(layers[tp][fi]);
-      map.removeLayer(layers[tp][fi]);
-      layers[tp][fi] = makeTileLayer(tp, frames[fi].ymdhms);
-      if(wasInMap) layers[tp][fi].addTo(map);
-    });
-  });
-  currentIdx = savedIdx;
-  reapplyOpacity();
-  if(_wasPlaying) play();
-  return true;
-}
-
 /* ── ベースマップ明暗切り替え ── */
 window.toggleBaseMap = function(){
   baseOpacityIdx = (baseOpacityIdx + 1) % BASE_OPACITIES.length;
@@ -889,7 +825,8 @@ window.toggleInundFlood = function(){
   if(inundFloodMode && frames.length && currentIdx >= 0){
     applyRiskToYmdhms('inund', frames[currentIdx].ymdhms);
   } else {
-    if(inundCanvasGrid && map.hasLayer(inundCanvasGrid)) map.removeLayer(inundCanvasGrid);
+    var g = riskCanvasGrid['inund'];
+    if(g && map.hasLayer(g)) map.removeLayer(g);
   }
   updateLegendType();
 };
@@ -898,8 +835,28 @@ window.toggleInundFlood = function(){
 map.on('zoomstart', function(){ _wasPlaying=playing; pause(); });
 map.on('zoomend', function(){
   saveState();
-  clearTimeout(floodFrameTimer); floodFrameTimer = null;
-  if(rebuildLayersAtZoom()) return;
+  clearTimeout(floodFrameTimer); floodFrameTimer=null;
+  /* Canvas GridLayer（rain_mesh/land/inund/flood）はズーム後自動でタイル再取得 */
+  /* radar のラスタータイルのみ nativeMax 変化時に再構築 */
+  var radarChanged = false;
+  if(layers.radar.length && currentIdx >= 0){
+    var fc = calcFetchCoords(map.getZoom(), 0, 0, RADAR_NATIVE_MAX);
+    var savedNMax = layers.radar[currentIdx] ?
+      layers.radar[currentIdx].options.maxNativeZoom : -1;
+    if(fc.z !== savedNMax){
+      radarChanged = true;
+      var savedIdx = currentIdx;
+      var nextIdx = (savedIdx + 1) % frames.length;
+      [savedIdx, nextIdx].forEach(function(fi){
+        if(fi < 0 || !layers.radar[fi]) return;
+        var wasIn = map.hasLayer(layers.radar[fi]);
+        map.removeLayer(layers.radar[fi]);
+        layers.radar[fi] = makeRadarLayer(frames[fi].ymdhms);
+        if(wasIn) layers.radar[fi].addTo(map);
+      });
+      reapplyOpacity();
+    }
+  }
   reapplyOpacity();
   setTimeout(function(){ reapplyOpacity(); if(_wasPlaying) play(); }, 300);
 });
@@ -913,22 +870,19 @@ map.on('moveend', function(){ saveState(); setTimeout(reapplyOpacity, 100); });
   scheduleAuto();
   /* 安全網: Canvas GridLayer が外れていた場合に再追加して再描画 */
   setInterval(function(){
-    if(!isLoading && currentIdx>=0) reapplyOpacity();
-    if(!isLoading && visible['flood'] && frames.length && currentIdx>=0){
+    if(isLoading || currentIdx<0) return;
+    reapplyOpacity();
+    if(visible['flood'] && frames.length){
       if(floodCanvasGrid && !map.hasLayer(floodCanvasGrid)){
         floodCanvasGrid.addTo(map); redrawFloodCanvases();
       }
     }
-    if(!isLoading && visible['land'] && frames.length && currentIdx>=0){
-      if(landCanvasGrid && !map.hasLayer(landCanvasGrid)){
-        landCanvasGrid.addTo(map); redrawRiskCanvases('land');
+    ['rain_mesh','land','inund'].forEach(function(tp){
+      if(visible[tp] && frames.length){
+        var g = riskCanvasGrid[tp];
+        if(g && !map.hasLayer(g)){ g.addTo(map); redrawRiskCanvases(tp); }
       }
-    }
-    if(!isLoading && visible['inund'] && frames.length && currentIdx>=0){
-      if(inundCanvasGrid && !map.hasLayer(inundCanvasGrid)){
-        inundCanvasGrid.addTo(map); redrawRiskCanvases('inund');
-      }
-    }
+    });
   }, 2000);
 })();
 
