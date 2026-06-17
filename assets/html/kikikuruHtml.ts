@@ -114,11 +114,11 @@ var SPEEDS        = [1200, 600, 300];
 var AUTO_INTERVAL = 10 * 60 * 1000;
 
 /* 時間範囲・過去モード */
-var timeRangeHours     = 2;       /* デフォルト2時間 */
-var historicalOffsetMin = 0;      /* 0=現在 >0=過去N分遡り */
+var timeRangeHours     = 2;
+var historicalOffsetMin = 0;
 function isHistoricalMode(){ return historicalOffsetMin > 0; }
 
-/* 洪水キキクルの河川線幅（ズームレベル0〜18対応・kikikuruViewer準拠） */
+/* 洪水・土砂・浸水キキクルの河川/ラスター線幅（ズームレベル0〜18対応） */
 var FLOOD_LINE_WIDTH = [1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 5, 6, 8, 8, 8, 10, 12, 14, 16];
 
 /* 凡例定義 */
@@ -140,7 +140,6 @@ function fmtLocal(d){
     pad2(d.getHours())+':'+pad2(d.getMinutes())+' JST';
 }
 function getBaseTime(leadSec, intervalSec){
-  /* 過去モード時は historicalOffsetMin 分だけ遡ったベース時刻を返す */
   var t = Date.now() - (isHistoricalMode() ? historicalOffsetMin*60000 : leadSec*1000);
   t = t - (t % (intervalSec*1000));
   var d = new Date(t);
@@ -155,7 +154,7 @@ var map = L.map('map',{
 }).setView([35.5,137.0],6);
 map.setMinZoom(4); map.setMaxZoom(14);
 
-/* 国土地理院淡色地図 — 背景が暗いので透明度で明暗を調整 */
+/* 国土地理院淡色地図 */
 var BASE_CHIRIIN = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
 var BASE_OPACITIES = [0.2, 0.55, 0.9];
 var BASE_LABELS    = ['地図暗', '地図中', '地図明'];
@@ -165,19 +164,18 @@ var baseLayer = L.tileLayer(BASE_CHIRIIN,{
   attribution:'© 国土地理院'
 }).addTo(map);
 
-/* ペイン定義（大雨→土砂→浸水→洪水→レーダー→海岸線の順）
-   Leaflet の tilePane デフォルトは z=200 なので、全てそれより大きい値にする */
+/* ペイン定義（大雨→土砂→浸水→洪水→レーダー→海岸線の順） */
 map.createPane('rainPane');      map.getPane('rainPane').style.zIndex      = 201;
 map.createPane('landPane');      map.getPane('landPane').style.zIndex      = 202;
 map.createPane('inundPane');     map.getPane('inundPane').style.zIndex     = 203;
-map.createPane('floodBasePane'); map.getPane('floodBasePane').style.zIndex = 204; /* 静的河川PNG（常時） */
-map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205; /* 危険度PBF（洪水ON時） */
+map.createPane('floodBasePane'); map.getPane('floodBasePane').style.zIndex = 204;
+map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205;
 map.createPane('radarPane');     map.getPane('radarPane').style.zIndex     = 350;
 
 /* ── 状態 ── */
 var frames = [];
-/* flood は floodCanvasGrid（canvas GridLayer）で別管理 */
-var layers = { rain_mesh:[], land:[], inund:[], radar:[] };
+/* flood/land/inund は Canvas GridLayer で別管理 */
+var layers = { rain_mesh:[], radar:[] };
 var currentIdx = -1;
 var timerId = null, playing = false, speedIdx = 1;
 var isLoading = false;
@@ -188,13 +186,12 @@ var _wasPlaying = false;
 /* 各レイヤーの表示ON/OFF（初期: 大雨のみON） */
 var visible = { rain_mesh:true, land:false, inund:false, flood:false, radar:false };
 
-/* 静的河川PNGタイル（洪水ON時のみ表示）— 全河川を水色で描く */
+/* 静的河川PNGタイル（洪水ON時のみ表示） */
 var riverBaseLayer = L.tileLayer(
   'https://www.jma.go.jp/bosai/jmatile/data/map/none/none/none/surf/flood/{z}/{x}/{y}.png',
   { pane:'floodBasePane', minNativeZoom:4, maxNativeZoom:13,
     minZoom:4, maxZoom:14, opacity:0.85 }
 );
-/* visible['flood'] に応じて河川タイルを表示/非表示 */
 function updateRiverBaseLayer(){
   if(visible['flood']){
     if(!map.hasLayer(riverBaseLayer)) riverBaseLayer.addTo(map);
@@ -203,12 +200,14 @@ function updateRiverBaseLayer(){
   }
 }
 
-/* ── 洪水キキクル危険度: 永続キャンバスGridLayer方式 ──
-   JMA 洪水タイルは偶数ズームのみ存在（他レイヤーと同じ気象庁仕様）。
-   奇数ズームでは z-1（偶数）の親タイル座標で PBF を取得し、
-   canvas を scale(2)＋translate でクアドラント表示することで対応する。
-   アニメーション中はキャンバスをその場で再描画するためブランクなし。
-   done コールバックで _retainParent を有効化→ズーム変化中も旧タイルを保持。 */
+/* ── ズームに応じたフェッチ座標とクアドラントを算出（全Canvas GridLayer共通）──
+   奇数ズームでは z-1（偶数）の親タイル座標で取得し、canvas を scale(2) で拡大表示 */
+function riskFetchCoords(displayZ, x, y){
+  if(displayZ % 2 === 0) return { z:displayZ, x:x, y:y, qx:0, qy:0, isOdd:false };
+  return { z:displayZ-1, x:Math.floor(x/2), y:Math.floor(y/2), qx:x%2, qy:y%2, isOdd:true };
+}
+
+/* ── 洪水キキクル危険度: 永続キャンバスGridLayer方式 ── */
 var floodPbfCache = {};
 var floodCurrentYmdhms = null;
 var floodCanvasGrid = null;
@@ -218,7 +217,6 @@ function floodTileUrl(ymdhms, z, x, y){
   return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/flood/'+z+'/'+x+'/'+y+'.pbf';
 }
 
-/* PBFをcanvasに描画。isOdd=trueのとき scale(2)＋translate で親タイルのクアドラント表示 */
 function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
   try {
     var vt = new VectorTile(new Pbf(new Uint8Array(buffer)));
@@ -227,9 +225,6 @@ function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
     ctx.clearRect(0, 0, 256, 256);
     if(!lay) return;
     var lw = FLOOD_LINE_WIDTH[Math.min(z, FLOOD_LINE_WIDTH.length-1)] || 4;
-    /* 奇数ズーム時: scale(2,2) で 256px → 512px にして正しいクアドラントを切り出す
-       scale後に lineWidth は 2 倍になるため lw/2 で指定する
-       qx=qy=0 のときも必ず scale が必要（左上クアドラントの切り出し）*/
     var odd = !!isOdd;
     ctx.save();
     if(odd){
@@ -238,7 +233,6 @@ function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
       lw = lw / 2;
     }
     ctx.lineJoin='round';
-    /* 外側（灰色） */
     ctx.strokeStyle='#333'; ctx.lineWidth=lw;
     for(var i=0; i<lay.length; i++){
       var geom=lay.feature(i).loadGeometry();
@@ -249,7 +243,6 @@ function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
       }
       ctx.stroke();
     }
-    /* 内側（危険度色） */
     for(var i=0; i<lay.length; i++){
       var feat=lay.feature(i), level=feat.properties.level;
       var c='#3cffff';
@@ -270,12 +263,6 @@ function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, isOdd){
   } catch(e){}
 }
 
-/* ズームに応じたフェッチ座標とクアドラントを算出 */
-function floodFetchCoords(displayZ, x, y){
-  if(displayZ % 2 === 0) return { z:displayZ, x:x, y:y, qx:0, qy:0, isOdd:false };
-  return { z:displayZ-1, x:Math.floor(x/2), y:Math.floor(y/2), qx:x%2, qy:y%2, isOdd:true };
-}
-
 function initFloodCanvasGrid(){
   if(floodCanvasGrid) return;
   var FloodLayer = L.GridLayer.extend({
@@ -286,7 +273,7 @@ function initFloodCanvasGrid(){
         setTimeout(function(){ done(null, canvas); }, 0);
         return canvas;
       }
-      var fc = floodFetchCoords(coords.z, coords.x, coords.y);
+      var fc = riskFetchCoords(coords.z, coords.x, coords.y);
       var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
       var c = canvas, qx = fc.qx, qy = fc.qy, lz = fc.z, io = fc.isOdd;
       if(floodPbfCache[url]){
@@ -312,7 +299,7 @@ function redrawFloodCanvases(){
     var tile = tiles[key];
     if(!tile || !tile.el || typeof tile.el.getContext !== 'function') continue;
     var co = tile.coords;
-    var fc = floodFetchCoords(co.z, co.x, co.y);
+    var fc = riskFetchCoords(co.z, co.x, co.y);
     var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
     var c = tile.el, qx = fc.qx, qy = fc.qy, lz = fc.z, io = fc.isOdd;
     if(floodPbfCache[url]){
@@ -345,15 +332,149 @@ function updateFloodBaseLayer(){
   applyFloodToYmdhms(frames.length ? frames[idx].ymdhms : null);
 }
 
-/* タイプ別設定 */
-var PANE    = { rain_mesh:'rainPane', land:'landPane', inund:'inundPane', radar:'radarPane' };
-var OPACITY = { rain_mesh:0.8, land:0.8, inund:0.8, radar:0.4 };
-/* rain_meshはmaxNativeZoom=11（気象庁仕様）、その他は10 */
-var NATIVE_MAX_BASE = { rain_mesh:11, land:10, inund:10, radar:10 };
-/* 現在適用中のnativeMax（ズーム変化検知用） */
-var currentNativeMax = { rain_mesh:11, land:10, inund:10, radar:10 };
+/* ── 土砂・浸水キキクル: Canvas GridLayer方式（PNG白背景透過＋高ズーム対応）──
+   気象庁PNG タイルを fetch → Blob URL → Image → canvas に描画後、
+   白・薄グレー背景（危険度なし）を透過にして下の地図を透かして見せる。
+   奇数ズームでは z-1 の親タイルを scale(2) で拡大描画（洪水と同じロジック）。 */
+var landPngCache  = {}, inundPngCache  = {};
+var landCurrentYmdhms  = null, inundCurrentYmdhms  = null;
+var landCanvasGrid   = null, inundCanvasGrid   = null;
+var landFrameTimer   = null, inundFrameTimer   = null;
 
-/* 奇数ズーム対策: radarHtml.tsと同じロジック — 奇数ズームは常にz-1（偶数）に丸め、base上限 */
+function riskPngTileUrl(type, ymdhms, z, x, y){
+  return 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/'+type+'/'+z+'/'+x+'/'+y+'.png';
+}
+
+/* PNG ArrayBuffer → canvas 描画 + 白背景透過処理 */
+function drawRiskPngFromBuffer(canvas, buffer, isOdd, quadX, quadY, onComplete){
+  var blob = new Blob([buffer], {type:'image/png'});
+  var blobUrl = URL.createObjectURL(blob);
+  var img = new Image();
+  img.onload = function(){
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 256, 256);
+    ctx.save();
+    if(isOdd){
+      ctx.scale(2, 2);
+      ctx.translate(-quadX * 128, -quadY * 128);
+    }
+    ctx.drawImage(img, 0, 0, 256, 256);
+    ctx.restore();
+    URL.revokeObjectURL(blobUrl);
+    /* 白・薄グレー（危険度なし背景）を透過にする */
+    try {
+      var id = ctx.getImageData(0, 0, 256, 256), d = id.data;
+      for(var i = 0; i < d.length; i += 4){
+        if(d[i] > 230 && d[i+1] > 230 && d[i+2] > 230) d[i+3] = 0;
+      }
+      ctx.putImageData(id, 0, 0);
+    } catch(e){}
+    if(onComplete) onComplete();
+  };
+  img.onerror = function(){ URL.revokeObjectURL(blobUrl); if(onComplete) onComplete(); };
+  img.src = blobUrl;
+}
+
+/* 土砂または浸水の Canvas GridLayer を初期化 */
+function initRiskCanvasGrid(type){
+  var pane  = (type==='land') ? 'landPane' : 'inundPane';
+  var cache = (type==='land') ? landPngCache : inundPngCache;
+  var Layer = L.GridLayer.extend({
+    createTile: function(coords, done){
+      var canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 256;
+      var ymd = (type==='land') ? landCurrentYmdhms : inundCurrentYmdhms;
+      if(!ymd || !visible[type]){
+        setTimeout(function(){ done(null, canvas); }, 0);
+        return canvas;
+      }
+      var fc  = riskFetchCoords(coords.z, coords.x, coords.y);
+      var url = riskPngTileUrl(type, ymd, fc.z, fc.x, fc.y);
+      var c = canvas, qx = fc.qx, qy = fc.qy, io = fc.isOdd;
+      if(cache[url]){
+        drawRiskPngFromBuffer(c, cache[url], io, qx, qy, function(){ done(null, c); });
+      } else {
+        fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
+          if(buf.byteLength > 0){
+            cache[url] = buf;
+            drawRiskPngFromBuffer(c, buf, io, qx, qy, function(){ done(null, c); });
+          } else {
+            done(null, c);
+          }
+        }).catch(function(e){ done(e, c); });
+      }
+      return canvas;
+    }
+  });
+  var grid = new Layer({ pane:pane, minZoom:4, maxZoom:14, tileSize:256 });
+  if(type==='land') landCanvasGrid  = grid;
+  else              inundCanvasGrid = grid;
+}
+
+/* 既存タイルを現在の ymdhms で再描画（フレーム切替時） */
+function redrawRiskCanvases(type){
+  var grid  = (type==='land') ? landCanvasGrid  : inundCanvasGrid;
+  var cache = (type==='land') ? landPngCache    : inundPngCache;
+  var ymd   = (type==='land') ? landCurrentYmdhms : inundCurrentYmdhms;
+  if(!grid || !ymd) return;
+  var tiles = grid._tiles;
+  if(!tiles) return;
+  for(var key in tiles){
+    var tile = tiles[key];
+    if(!tile || !tile.el || typeof tile.el.getContext !== 'function') continue;
+    var co  = tile.coords;
+    var fc  = riskFetchCoords(co.z, co.x, co.y);
+    var url = riskPngTileUrl(type, ymd, fc.z, fc.x, fc.y);
+    (function(cv, fc2, u){
+      if(cache[u]){
+        drawRiskPngFromBuffer(cv, cache[u], fc2.isOdd, fc2.qx, fc2.qy, null);
+      } else {
+        fetch(u).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
+          if(buf.byteLength > 0){ cache[u]=buf; drawRiskPngFromBuffer(cv,buf,fc2.isOdd,fc2.qx,fc2.qy,null); }
+        }).catch(function(){});
+      }
+    })(tile.el, fc, url);
+  }
+}
+
+function applyRiskToYmdhms(type, ymdhms){
+  if(type==='land'){
+    clearTimeout(landFrameTimer); landFrameTimer=null;
+    landCurrentYmdhms = ymdhms || null;
+  } else {
+    clearTimeout(inundFrameTimer); inundFrameTimer=null;
+    inundCurrentYmdhms = ymdhms || null;
+  }
+  var grid = (type==='land') ? landCanvasGrid : inundCanvasGrid;
+  if(!visible[type] || !ymdhms){
+    if(grid && map.hasLayer(grid)) map.removeLayer(grid);
+    return;
+  }
+  if(!grid){ initRiskCanvasGrid(type); grid=(type==='land')?landCanvasGrid:inundCanvasGrid; }
+  if(!map.hasLayer(grid)) grid.addTo(map);
+  redrawRiskCanvases(type);
+}
+function scheduleRiskToFrame(type, ymdhms){
+  if(type==='land'){
+    clearTimeout(landFrameTimer);
+    landFrameTimer = setTimeout(function(){ applyRiskToYmdhms('land', ymdhms); }, 50);
+  } else {
+    clearTimeout(inundFrameTimer);
+    inundFrameTimer = setTimeout(function(){ applyRiskToYmdhms('inund', ymdhms); }, 50);
+  }
+}
+function updateRiskBaseLayer(type){
+  var idx = (currentIdx >= 0 && currentIdx < frames.length) ? currentIdx : frames.length - 1;
+  applyRiskToYmdhms(type, frames.length ? frames[idx].ymdhms : null);
+}
+
+/* タイプ別設定（rain_mesh と radar のみラスタータイル） */
+var PANE    = { rain_mesh:'rainPane', radar:'radarPane' };
+var OPACITY = { rain_mesh:0.8, radar:0.4 };
+var NATIVE_MAX_BASE = { rain_mesh:11, radar:10 };
+var currentNativeMax = { rain_mesh:11, radar:10 };
+
+/* 奇数ズーム対策（rain_mesh と radar 用） */
 function getEffectiveNativeMax(type){
   var z = map.getZoom();
   var base = NATIVE_MAX_BASE[type];
@@ -372,7 +493,8 @@ function radarUrl(ymdhms){
   return 'https://www.jma.go.jp/bosai/jmatile/data/nowc/'+
     ymdhms+'/none/'+ymdhms+'/surf/hrpns/{z}/{x}/{y}.png';
 }
-/* ── 表示位置の保存/復元（localStorage）── */
+
+/* ── 表示位置の保存/復元 ── */
 function saveState(){
   try{
     var c=map.getCenter();
@@ -401,17 +523,16 @@ function setLoadUI(done,total,msg){
 }
 function clearLoadUI(){ elFill.style.width='0%'; elStatus.textContent=''; }
 
-/* ── ラスタータイルレイヤー作成（flood 以外）── */
+/* ── ラスタータイルレイヤー作成（rain_mesh・radar のみ）── */
 function makeTileLayer(type, ymdhms){
-  var url    = (type==='radar') ? radarUrl(ymdhms) : riskUrl(type, ymdhms);
-  var pane   = PANE[type];
-  var nMax   = getEffectiveNativeMax(type);
+  var url  = (type==='radar') ? radarUrl(ymdhms) : riskUrl(type, ymdhms);
+  var pane = PANE[type];
+  var nMax = getEffectiveNativeMax(type);
   var l = L.tileLayer(url,{
     minNativeZoom:4, maxNativeZoom:nMax,
     minZoom:4, maxZoom:14, opacity:0,
     updateWhenIdle:false, keepBuffer:4, pane:pane
   });
-  /* tileload ごとに opacity を再適用（radarHtml.ts と同じパターン） */
   l.on('tileload', function(e){
     if(type==='radar') e.tile.style.imageRendering='pixelated';
     reapplyOpacity();
@@ -429,12 +550,14 @@ function cleanup(){
   });
   if(floodCanvasGrid && map.hasLayer(floodCanvasGrid)) map.removeLayer(floodCanvasGrid);
   floodCurrentYmdhms = null;
+  if(landCanvasGrid && map.hasLayer(landCanvasGrid)) map.removeLayer(landCanvasGrid);
+  landCurrentYmdhms = null;
+  if(inundCanvasGrid && map.hasLayer(inundCanvasGrid)) map.removeLayer(inundCanvasGrid);
+  inundCurrentYmdhms = null;
   frames=[]; currentIdx=-1;
 }
 
-/* ── フレーム表示（オンデマンドレイヤー管理）──
-   メモリ節約のため、mapに追加するレイヤーは「現フレーム＋次フレーム」の2枚のみ。
-   それ以外のフレームはlayers配列に保持するがmap未追加のまま。 */
+/* ── フレーム表示 ── */
 function reapplyOpacity(){
   if(currentIdx<0) return;
   var types = Object.keys(layers);
@@ -454,7 +577,7 @@ function showFrame(idx){
   currentIdx = idx;
   var types = Object.keys(layers);
 
-  /* 現フレームのレイヤーをオンデマンド生成・表示 */
+  /* rain_mesh・radar はラスタータイルでオンデマンド管理 */
   types.forEach(function(tp){
     if(!layers[tp][idx]) layers[tp][idx] = makeTileLayer(tp, frames[idx].ymdhms);
     if(visible[tp]){
@@ -465,7 +588,6 @@ function showFrame(idx){
     }
   });
 
-  /* 前フレームのレイヤーをmapから除去（メモリ解放） */
   if(prevIdx >= 0 && prevIdx !== idx){
     types.forEach(function(tp){
       if(layers[tp][prevIdx] && map.hasLayer(layers[tp][prevIdx])){
@@ -474,7 +596,7 @@ function showFrame(idx){
     });
   }
 
-  /* 次フレームをopacity=0で先読み（スムーズなアニメーション用） */
+  /* 次フレームを先読み */
   var nextIdx = (idx + 1) % frames.length;
   if(frames.length > 1 && nextIdx !== idx){
     types.forEach(function(tp){
@@ -487,7 +609,11 @@ function showFrame(idx){
   elSlider.value = String(idx);
   elLabel.textContent = (idx+1)+'/'+frames.length;
   elTime.textContent = fmtLocal(frames[idx].time);
+
+  /* Canvas GridLayer 方式のフレーム切替 */
   if(visible['flood']){ scheduleFloodToFrame(frames[idx].ymdhms); }
+  if(visible['land']) { scheduleRiskToFrame('land',  frames[idx].ymdhms); }
+  if(visible['inund']){ scheduleRiskToFrame('inund', frames[idx].ymdhms); }
 }
 
 /* ── 再生制御 ── */
@@ -502,7 +628,7 @@ function play(){
 }
 function pause(){ playing=false; clearTimeout(timerId); timerId=null; }
 
-/* ── フレーム構築（probeなし・即時表示）── */
+/* ── フレーム構築 ── */
 function buildFrames(){
   if(isLoading) return;
   isLoading=true; pause(); cleanup();
@@ -510,7 +636,6 @@ function buildFrames(){
   var bt = getBaseTime(LEAD_SEC, INTERVAL_SEC);
   latestBaseTime = bt;
 
-  /* timeRangeHours に応じたフレーム数（10分間隔 × 6本/h）*/
   var frameCount = timeRangeHours * 6;
   var i;
   for(i=frameCount-1; i>=0; i--){
@@ -524,19 +649,18 @@ function buildFrames(){
   elSlider.value=String(frames.length-1);
   elLabel.textContent=frames.length+'/'+frames.length;
 
-  /* 配列だけ確保（レイヤーはshowFrame内でオンデマンド生成→メモリ節約） */
   types.forEach(function(tp){ layers[tp]=new Array(frames.length).fill(null); });
   types.forEach(function(tp){ currentNativeMax[tp] = getEffectiveNativeMax(tp); });
 
   updateRiverBaseLayer();
   updateFloodBaseLayer();
+  if(visible['land'])  updateRiskBaseLayer('land');
+  if(visible['inund']) updateRiskBaseLayer('inund');
 
-  /* 最終フレームを表示（showFrame内で現フレーム+次フレームのレイヤーだけ生成・追加） */
   isLoading=false;
   showFrame(frames.length-1);
   elStatus.textContent='';
 
-  /* 現フレームの4レイヤーのロード完了後に再生開始（全フレーム待ちは不要） */
   var total=types.length, loaded=0;
   function onLoad(){
     loaded++;
@@ -551,7 +675,7 @@ function buildFrames(){
   });
 }
 
-/* ── 自動更新（過去モード中は更新しない）── */
+/* ── 自動更新 ── */
 function scheduleAuto(){
   clearTimeout(autoTimerId);
   autoTimerId = setTimeout(function(){
@@ -574,6 +698,14 @@ window.toggleLayer = function(type){
   if(type === 'flood'){
     updateRiverBaseLayer();
     updateFloodBaseLayer();
+  } else if(type === 'land' || type === 'inund'){
+    /* Canvas GridLayer の表示/非表示 */
+    if(visible[type]){
+      if(frames.length && currentIdx >= 0) applyRiskToYmdhms(type, frames[currentIdx].ymdhms);
+    } else {
+      var grid = (type==='land') ? landCanvasGrid : inundCanvasGrid;
+      if(grid && map.hasLayer(grid)) map.removeLayer(grid);
+    }
   } else if(currentIdx>=0 && layers[type] && layers[type][currentIdx]){
     var l = layers[type][currentIdx];
     if(visible[type]){
@@ -603,7 +735,6 @@ function updateLegendType(){
 function applyLegend(type){
   if(!LEGEND[type]) return;
   document.getElementById('legTitle').textContent = LEGEND[type].name;
-  /* SVGをfetchしてDOM挿入し、黒テキストを白に変換 */
   fetch(LEGEND[type].url)
     .then(function(r){ return r.text(); })
     .then(function(svgText){
@@ -611,7 +742,6 @@ function applyLegend(type){
       wrap.innerHTML = svgText;
       var svg = wrap.querySelector('svg');
       if(svg){ svg.style.width='224px'; svg.style.height='auto'; }
-      /* 危険度・低は黒（黄・白背景のため）、それ以外は白に変換 */
       wrap.querySelectorAll('text').forEach(function(t){
         var content = (t.textContent || '').trim();
         var f = t.getAttribute('fill');
@@ -626,7 +756,6 @@ function applyLegend(type){
       });
     })
     .catch(function(){
-      /* fetch失敗時はimgにフォールバック */
       document.getElementById('legSvgWrap').innerHTML =
         '<img src="'+LEGEND[type].url+'" style="width:224px;height:auto"/>';
     });
@@ -674,7 +803,7 @@ window.setTimeRange = function(h){
 window.stepBack = function(min){
   historicalOffsetMin += min;
   updateHistoricalUI();
-  clearTimeout(autoTimerId);  /* 過去モード中は自動更新停止 */
+  clearTimeout(autoTimerId);
   buildFrames();
 };
 
@@ -707,7 +836,7 @@ window.onSpeedChange = function(v){
   if(playing){ pause(); play(); }
 };
 
-/* 奇数ズーム対策: nativeMaxが変化した場合に現フレーム+次フレームのみ再構築 */
+/* 奇数ズーム対策: rain_mesh・radar レイヤーの再構築（Canvas GridLayer は不要） */
 function rebuildLayersAtZoom(){
   var types = Object.keys(layers);
   var changed = false;
@@ -721,7 +850,6 @@ function rebuildLayersAtZoom(){
   var savedIdx = currentIdx;
   currentIdx = -1;
   var nextIdx = (savedIdx + 1) % frames.length;
-  /* map上にある現フレーム・次フレームのレイヤーだけ再構築 */
   types.forEach(function(tp){
     [savedIdx, nextIdx].forEach(function(fi){
       if(fi < 0 || !layers[tp][fi]) return;
@@ -733,12 +861,11 @@ function rebuildLayersAtZoom(){
   });
   currentIdx = savedIdx;
   reapplyOpacity();
-  /* flood VectorGrid はズーム時に再生成しない（GridLayer内蔵のタイル管理に任せる） */
   if(_wasPlaying) play();
   return true;
 }
 
-/* ── ベースマップ明暗切り替え（3段階サイクル） ── */
+/* ── ベースマップ明暗切り替え ── */
 window.toggleBaseMap = function(){
   baseOpacityIdx = (baseOpacityIdx + 1) % BASE_OPACITIES.length;
   baseLayer.setOpacity(BASE_OPACITIES[baseOpacityIdx]);
@@ -759,14 +886,18 @@ window.toggleInundFlood = function(){
   reapplyOpacity();
   updateRiverBaseLayer();
   updateFloodBaseLayer();
+  if(inundFloodMode && frames.length && currentIdx >= 0){
+    applyRiskToYmdhms('inund', frames[currentIdx].ymdhms);
+  } else {
+    if(inundCanvasGrid && map.hasLayer(inundCanvasGrid)) map.removeLayer(inundCanvasGrid);
+  }
   updateLegendType();
 };
 
-/* ズーム中はアニメーション停止・終了後に再開＋opacity再適用 */
+/* ズーム中はアニメーション停止・終了後に再開 */
 map.on('zoomstart', function(){ _wasPlaying=playing; pause(); });
 map.on('zoomend', function(){
   saveState();
-  /* ズーム後に発火予定の再生成タイマーをキャンセル（zoom中のちらつき防止） */
   clearTimeout(floodFrameTimer); floodFrameTimer = null;
   if(rebuildLayersAtZoom()) return;
   reapplyOpacity();
@@ -774,20 +905,28 @@ map.on('zoomend', function(){
 });
 map.on('moveend', function(){ saveState(); setTimeout(reapplyOpacity, 100); });
 
-/* ── 初期化: 前回の表示状態を復元 ── */
+/* ── 初期化 ── */
 (function(){
   var s=loadState();
   if(s&&s.lat!=null&&s.zoom!=null) map.setView([s.lat,s.lng],s.zoom);
   buildFrames();
   scheduleAuto();
-  /* 安全網: 2秒ごとに現フレームのopacityを確認・修正。
-     floodCanvasGridがmapから外れていた場合も再追加して再描画する */
+  /* 安全網: Canvas GridLayer が外れていた場合に再追加して再描画 */
   setInterval(function(){
     if(!isLoading && currentIdx>=0) reapplyOpacity();
     if(!isLoading && visible['flood'] && frames.length && currentIdx>=0){
       if(floodCanvasGrid && !map.hasLayer(floodCanvasGrid)){
-        floodCanvasGrid.addTo(map);
-        redrawFloodCanvases();
+        floodCanvasGrid.addTo(map); redrawFloodCanvases();
+      }
+    }
+    if(!isLoading && visible['land'] && frames.length && currentIdx>=0){
+      if(landCanvasGrid && !map.hasLayer(landCanvasGrid)){
+        landCanvasGrid.addTo(map); redrawRiskCanvases('land');
+      }
+    }
+    if(!isLoading && visible['inund'] && frames.length && currentIdx>=0){
+      if(inundCanvasGrid && !map.hasLayer(inundCanvasGrid)){
+        inundCanvasGrid.addTo(map); redrawRiskCanvases('inund');
       }
     }
   }, 2000);
