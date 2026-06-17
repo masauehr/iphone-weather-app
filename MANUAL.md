@@ -1311,6 +1311,24 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
      → 自動リロード → またクラッシュ → ループ
 ```
 
+### 2026-06 キキクル透過色・高解像度対応
+
+#### キキクルタブ（大雨・土砂・浸水レイヤー）
+
+| 改修 | 内容 |
+|------|------|
+| PNG 3レイヤーをCanvas GridLayer方式に変更 | 大雨（rain_mesh）・土砂（land）・浸水（inund）をラスタータイルからcanvas GridLayer方式に統一。高解像度（ズーム11以上）でも表示されるよう改善 |
+| `calcFetchCoords` 共通関数を実装 | rain_mesh・land・inund・flood全4レイヤーで使用する親タイル座標変換関数を統一実装。奇数ズーム→z-1偶数丸め、nativeMax上限（z=10）適用、scale/quadX/quadY算出を1関数に集約 |
+| `mix-blend-mode: multiply` で白背景透過 | canvas個別への設定ではLeaflet paneがstacking contextを作るため地図と合成されない問題に対処。`map.getPane('rainPane').style.mixBlendMode = 'multiply'` のように**paneレベル**で設定することで、気象庁タイルの白背景（非データ領域）が透過し下の地図が見えるよう改善 |
+| `getImageData` 廃止 | 従来の白ピクセル除去処理（`getImageData` → pixel操作）はiframe `about:srcdoc`環境のCORS制限（SecurityError）で無効だったため完全廃止。`mix-blend-mode`方式に一本化 |
+| 404タイルのキャッシュ化 | 気象庁タイルは危険度のある地域のみ存在するため404は正常。`cache[url] = false`で404確認済みタイルをキャッシュし、毎フレームの無駄なリクエストを防止 |
+
+**技術メモ（透過の仕組み）**:
+
+`mix-blend-mode: multiply` では白（1,1,1）× 地図色 = 地図色となり白背景が消える。Leaflet paneは CSS `transform` により独立した stacking context を持つため、canvas個別ではなくpane要素に設定しないと地図とのブレンドが効かない。
+
+---
+
 ### 2026-06 洪水キキクルズームバグ修正
 
 #### キキクルタブ（洪水レイヤー）
@@ -1364,4 +1382,4 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 
 ---
 
-*最終更新: 2026-06（タブアイコン刷新・webタブバー修正・アメダスオーバーレイ追加）*
+*最終更新: 2026-06-17（キキクル透過色・高解像度対応・洪水ズームバグ修正・スマホ異常終了修正・レーダーprobe修正 他）*
