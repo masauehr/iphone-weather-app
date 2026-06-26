@@ -170,6 +170,7 @@ map.createPane('landPane');      map.getPane('landPane').style.zIndex      = 202
 map.createPane('inundPane');     map.getPane('inundPane').style.zIndex     = 203;
 map.createPane('floodBasePane'); map.getPane('floodBasePane').style.zIndex = 204;
 map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205;
+map.createPane('designatedRiverPane'); map.getPane('designatedRiverPane').style.zIndex = 300;
 map.createPane('radarPane');     map.getPane('radarPane').style.zIndex     = 350;
 /* pane レベルで multiply 設定（canvas 個別だと pane の stacking context で効かない） */
 map.getPane('rainPane').style.mixBlendMode  = 'multiply';
@@ -190,6 +191,12 @@ var _wasPlaying = false;
 /* 各レイヤーの表示ON/OFF（初期: 大雨・土砂・浸水・洪水ON） */
 var visible = { rain_mesh:true, land:true, inund:true, flood:true, radar:false };
 
+/* 指定河川洪水予報の線幅テーブル（ズームレベル0〜18） */
+var DESIGNATED_RIVER_WIDTHS = [2, 2, 2, 2, 2, 2, 2, 8, 8, 10, 10, 10, 12, 14, 16, 16, 16, 16, 16];
+var designatedRiverGeoJSON = null;
+var designatedRiverOuterLayer = null;
+var designatedRiverInnerLayer = null;
+
 /* 静的河川PNGタイル（洪水ON時のみ表示） */
 var riverBaseLayer = L.tileLayer(
   'https://www.jma.go.jp/bosai/jmatile/data/map/none/none/none/surf/flood/{z}/{x}/{y}.png',
@@ -202,6 +209,42 @@ function updateRiverBaseLayer(){
   } else {
     if(map.hasLayer(riverBaseLayer)) map.removeLayer(riverBaseLayer);
   }
+  updateDesignatedRiverLayer();
+}
+
+/* ── 指定河川洪水予報の流路（GeoJSON、洪水ONと連動） ── */
+function fetchDesignatedRiverGeoJSON(cb){
+  if(designatedRiverGeoJSON){ cb(designatedRiverGeoJSON); return; }
+  fetch('https://www.jma.go.jp/bosai/jmatile/data/map/none/none/none/surf/designated_river/data.geojson?id=map_designated_river')
+    .then(function(r){ return r.json(); })
+    .then(function(d){ designatedRiverGeoJSON=d; cb(d); })
+    .catch(function(){});
+}
+function refreshDesignatedRiverStyle(){
+  var zoom = map.getZoom();
+  var w = DESIGNATED_RIVER_WIDTHS[Math.min(zoom, DESIGNATED_RIVER_WIDTHS.length-1)];
+  if(designatedRiverOuterLayer) designatedRiverOuterLayer.setStyle({weight:w});
+  if(designatedRiverInnerLayer) designatedRiverInnerLayer.setStyle({weight:Math.max(1, w-2)});
+}
+function updateDesignatedRiverLayer(){
+  if(!visible['flood']){
+    if(designatedRiverOuterLayer){ map.removeLayer(designatedRiverOuterLayer); designatedRiverOuterLayer=null; }
+    if(designatedRiverInnerLayer){ map.removeLayer(designatedRiverInnerLayer); designatedRiverInnerLayer=null; }
+    return;
+  }
+  if(designatedRiverOuterLayer) return;
+  fetchDesignatedRiverGeoJSON(function(data){
+    var zoom = map.getZoom();
+    var w = DESIGNATED_RIVER_WIDTHS[Math.min(zoom, DESIGNATED_RIVER_WIDTHS.length-1)];
+    designatedRiverOuterLayer = L.geoJson(data, {
+      pane:'designatedRiverPane',
+      style:function(){ return {color:'#000000', weight:w, opacity:1, fill:false}; }
+    }).addTo(map);
+    designatedRiverInnerLayer = L.geoJson(data, {
+      pane:'designatedRiverPane',
+      style:function(){ return {color:'#3cffff', weight:Math.max(1,w-2), opacity:1, fill:false}; }
+    }).addTo(map);
+  });
 }
 
 /* ── 座標変換ユーティリティ ──
@@ -861,6 +904,7 @@ map.on('zoomend', function(){
     }
   }
   reapplyOpacity();
+  refreshDesignatedRiverStyle();
   setTimeout(function(){ reapplyOpacity(); if(_wasPlaying) play(); }, 300);
 });
 map.on('moveend', function(){ saveState(); setTimeout(reapplyOpacity, 100); });
