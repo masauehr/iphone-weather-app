@@ -866,6 +866,12 @@ function styledText(txt,color){
   return '<div style="font-size:13px;font-weight:bold;color:'+color+
     ';text-shadow:'+sh+';white-space:nowrap;line-height:1.1">'+txt+'</div>';
 }
+/* アメダスリンク付きラベル: ホバーで地点名、クリックで気象庁観測ページを開く */
+function amedasLink(inner,stationCode,stationName){
+  var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+stationCode;
+  return '<a href="'+url+'" title="'+stationName+'" target="_blank"'+
+    ' style="text-decoration:none;cursor:pointer;display:inline-block">'+inner+'</a>';
+}
 
 function clearAmedasMarkers(){
   for(var i=0;i<amedasMarkers.length;i++) map.removeLayer(amedasMarkers[i]);
@@ -910,6 +916,7 @@ function renderAmedas(data){
     if(selectedCodes&&!selectedCodes[code]) continue;
     var d=data[code];
     var html='',ax=0,ay=0;
+    var stName=(st.kjName||'')+(st.knName?'('+st.knName+')':'');
 
     if(cfg.isArrow){
       /* 矢羽（風向風速） */
@@ -922,17 +929,19 @@ function renderAmedas(data){
       var textSh='-1px 0 '+textOc+',0 1px '+textOc+',1px 0 '+textOc+',0 -1px '+textOc;
       if(dir>0&&dir<=16){
         var rot=WIND_ROTATE[dir];
-        html='<div style="text-align:center;pointer-events:none">'+
+        var inner='<div style="text-align:center">'+
           '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="28" viewBox="0 0 12 20"'+
           ' style="transform-origin:center;transform:rotate('+rot+'deg);display:block;margin:auto">'+
           '<polygon points="6,0 0,20 6,15 12,20" stroke="'+arrowStroke+'" stroke-width="1.5" fill="'+c+'"/></svg>'+
           '<div style="font-size:13px;font-weight:bold;color:'+c+';text-shadow:'+textSh+';line-height:1">'+spd.toFixed(0)+'</div>'+
           '</div>';
+        html=amedasLink(inner,code,stName);
         ax=9;ay=14;
       }else{
         /* 静穏 */
-        html='<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">'+
+        var inner='<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">'+
           '<circle cx="5" cy="5" r="4" stroke="rgba(0,0,0,0.7)" stroke-width="1" fill="rgb(160,210,255)"/></svg>';
+        html=amedasLink(inner,code,stName);
         ax=5;ay=5;
       }
     }else{
@@ -940,12 +949,12 @@ function renderAmedas(data){
       var val=cfg.getVal(d);
       if(val===null||val===undefined) continue;
       var c=amedasColor(cfg.scale,val);
-      html=styledText(cfg.fmt(val),c);
+      html=amedasLink(styledText(cfg.fmt(val),c),code,stName);
       ax=14;ay=7;
     }
     if(!html) continue;
     var icon=L.divIcon({html:html,className:'',iconSize:[0,0],iconAnchor:[ax,ay]});
-    var mk=L.marker([lat,lon],{icon:icon,interactive:false,keyboard:false});
+    var mk=L.marker([lat,lon],{icon:icon,keyboard:false});
     mk.addTo(map);
     amedasMarkers.push(mk);
   }

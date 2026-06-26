@@ -1180,6 +1180,41 @@ var THIN = {6: 1.0, 7: 0.5, 8: 0.2};  // 度単位のグリッド幅
 
 取得済みデータは `amedasDataCache` オブジェクトに最大30タイムスタンプ分キャッシュ（`AMEDAS_CACHE_MAX=30`）。観測局リスト（`amedastable.json`）は初回1回のみ取得し `amedasStations` に保持。
 
+#### 地点名ホバー表示・クリックで観測ページを開く
+
+各アメダスマーカー（矢羽・静穏丸・数値ラベル）を `<a>` タグでラップし、以下を実現する。
+
+| 操作 | 動作 |
+|------|------|
+| マウスホバー（PC） | ブラウザネイティブのツールチップで地点名を表示（例：「大阪(おおさか)」） |
+| クリック（PC） | 気象庁アメダス観測ページを新しいタブで開く |
+| 長押し（スマホブラウザ） | 気象庁アメダス観測ページを開く |
+
+```javascript
+function amedasLink(inner, stationCode, stationName){
+  var url = 'https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno=' + stationCode;
+  return '<a href="' + url + '" title="' + stationName + '" target="_blank"'
+    + ' style="text-decoration:none;cursor:pointer;display:inline-block">' + inner + '</a>';
+}
+// 使用例（数値ラベル）
+html = amedasLink(styledText(cfg.fmt(val), c), code, st.kjName + '(' + st.knName + ')');
+```
+
+**PC（Web版 iframe）での `allow-popups` 設定**:
+
+Web版は `<iframe sandbox="...">` 内で動作するため、デフォルトの `allow-scripts allow-same-origin` だけでは `target="_blank"` がブロックされる。`radar.tsx` に `allow-popups` を追加することで解決。
+
+```tsx
+// app/(tabs)/radar.tsx
+<iframe
+  srcDoc={radarHtml}
+  sandbox="allow-scripts allow-same-origin allow-popups"
+/>
+```
+
+- スマホ WebView（`radar.native.tsx`）は sandbox 制限を受けないため変更不要。
+- 参考実装: `/web/webapp/gmsRadarAmedasTileViewer/js/image_util.js`（`title` + `href` + `target=_blank` の `<a>` タグ方式）
+
 ---
 
 ## 11. JMA API 構造メモ
@@ -1515,4 +1550,17 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 
 ---
 
-*最終更新: 2026-06-26（指定河川洪水予報表示追加・ベースマップ pale 変更・陸地/海色分離 他）*
+### 2026-06-26 アメダス地点インタラクション追加
+
+#### レーダー・衛星タブ（radarHtml.ts / radar.tsx）
+
+| 改修 | 内容 |
+|------|------|
+| アメダスマーカーに地点名ホバー表示を追加 | 各アメダスマーカー（矢羽・静穏丸・数値ラベル）を `<a>` タグでラップ。`title` 属性に「漢字名(かな名)」を設定し、PCブラウザでマウスホバー時にネイティブツールチップで地点名を表示 |
+| アメダスマーカーのクリックで観測ページを開く | `href` に `https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno={地点コード}` を設定。PC ではクリック、スマホブラウザでは長押しで気象庁のアメダス観測データページを新しいタブで開く |
+| Web版 iframe の sandbox に `allow-popups` を追加 | `radar.tsx` の `<iframe sandbox>` に `allow-popups` を追加。これがないと iframe 内の `target="_blank"` がブロックされ PC でリンクが開けなかった。スマホ WebView（`radar.native.tsx`）は sandbox 制限を受けないため変更不要 |
+| マーカーの `interactive:false` を除去 | クリックを受け付けるよう変更（`keyboard:false` は維持） |
+
+---
+
+*最終更新: 2026-06-26（アメダス地点名ホバー・クリック観測ページ表示追加）*
