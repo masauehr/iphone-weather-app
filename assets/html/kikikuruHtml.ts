@@ -226,15 +226,31 @@ function clearDesignatedRiverLayers(){
   designatedRiverInnerLayers = [];
   designatedRiverLabelLayers = [];
 }
-function drawDesignatedRiver(data){
+/* staticData: 全河川（常時水色下地）、dynamicData: 危険度付き（危険度2以上のみ含む可能性あり） */
+function drawDesignatedRiver(staticData, dynamicData){
   clearDesignatedRiverLayers();
-  if(!visible['flood'] || !data) return;
+  if(!visible['flood'] || !staticData) return;
   var zoom = map.getZoom();
   var w = DESIGNATED_RIVER_WIDTHS[Math.min(zoom, DESIGNATED_RIVER_WIDTHS.length - 1)];
-  data.features.forEach(function(obj){
+  /* 危険度マップ: riverCode → {level, color, labelLat, labelLon, name} */
+  var riskMap = {};
+  if(dynamicData && dynamicData.features){
+    dynamicData.features.forEach(function(obj){
+      var p = obj.properties;
+      var lv = p.level || 1;
+      riskMap[p.riverCode] = {
+        level: lv,
+        color: DESIGNATED_RIVER_COLORS[lv] || '#3cffff',
+        labelLat: p.labelLat, labelLon: p.labelLon,
+        name: p.fcstAreaNameJP
+      };
+    });
+  }
+  staticData.features.forEach(function(obj){
     var props = obj.properties;
-    var level = props.level || 1;
-    var color = DESIGNATED_RIVER_COLORS[level] || '#3cffff';
+    var risk  = riskMap[props.riverCode];
+    var level = risk ? risk.level : 1;
+    var color = risk ? risk.color : '#3cffff';
     var outer = L.geoJson(obj, {
       pane: 'designatedRiverPane',
       style: function(){ return {color:'#000000', weight:w, opacity:1, fill:false, lineCap:'butt'}; }
@@ -245,10 +261,10 @@ function drawDesignatedRiver(data){
       style: function(){ return {color:color, weight:Math.max(1, w-2), opacity:1, fill:false, lineCap:'butt'}; }
     }).addTo(map);
     designatedRiverInnerLayers.push(inner);
-    /* 名称ラベル（ズーム8以上、labelLat/Lon があるもの） */
-    var labelLat = props.labelLat;
-    var labelLon = props.labelLon;
-    var name = props.fcstAreaNameJP || '';
+    /* 名称ラベル（危険度データから labelLat/Lon を取得、ズーム8以上） */
+    var labelLat = risk ? risk.labelLat : null;
+    var labelLon = risk ? risk.labelLon : null;
+    var name     = (risk ? risk.name : null) || props.fcstAreaNameJP || '';
     if(zoom >= 8 && labelLat != null && labelLon != null && name){
       var textColor = level >= 4 ? '#ffffff' : color;
       var lbl = L.marker([labelLat, labelLon], {
@@ -269,20 +285,23 @@ function drawDesignatedRiver(data){
 function applyDesignatedRiverToYmdhms(ymdhms){
   designatedRiverCurrentYmdhms = ymdhms;
   if(!visible['flood'] || !ymdhms){ clearDesignatedRiverLayers(); return; }
-  if(designatedRiverCache[ymdhms]){ drawDesignatedRiver(designatedRiverCache[ymdhms]); return; }
+  if(!designatedRiverStaticData) return; /* 静的データ未取得 → 初期化完了後に再呼び出し */
+  /* キャッシュあり（null = データなし確認済み）*/
+  if(ymdhms in designatedRiverCache){
+    drawDesignatedRiver(designatedRiverStaticData, designatedRiverCache[ymdhms]);
+    return;
+  }
+  /* fetch前にまず静的データで水色表示 */
+  drawDesignatedRiver(designatedRiverStaticData, null);
   var url = 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/designated_river/data.geojson?id=designated_river';
   fetch(url)
     .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(d){
       designatedRiverCache[ymdhms] = d;
-      if(designatedRiverCurrentYmdhms === ymdhms) drawDesignatedRiver(d);
+      if(designatedRiverCurrentYmdhms === ymdhms) drawDesignatedRiver(designatedRiverStaticData, d);
     })
     .catch(function(){
-      /* データなし（洪水なし等）→ 静的データで常時水色表示 */
-      if(designatedRiverCurrentYmdhms === ymdhms && designatedRiverStaticData){
-        designatedRiverCache[ymdhms] = designatedRiverStaticData;
-        drawDesignatedRiver(designatedRiverStaticData);
-      }
+      designatedRiverCache[ymdhms] = null; /* データなし確認済みとしてキャッシュ */
     });
 }
 function scheduleDesignatedRiverToFrame(ymdhms){
@@ -290,11 +309,7 @@ function scheduleDesignatedRiverToFrame(ymdhms){
   designatedRiverTimer = setTimeout(function(){ applyDesignatedRiverToYmdhms(ymdhms); }, 50);
 }
 function refreshDesignatedRiverStyle(){
-  var zoom = map.getZoom();
-  var w = DESIGNATED_RIVER_WIDTHS[Math.min(zoom, DESIGNATED_RIVER_WIDTHS.length - 1)];
-  designatedRiverOuterLayers.forEach(function(l){ l.setStyle({weight:w}); });
-  designatedRiverInnerLayers.forEach(function(l){ l.setStyle({weight:Math.max(1, w-2)}); });
-  /* ラベルはズーム変化で再描画 */
+  /* ズーム変化時：線幅・ラベル（ズーム8境界）を更新するため全再描画 */
   if(designatedRiverCurrentYmdhms) applyDesignatedRiverToYmdhms(designatedRiverCurrentYmdhms);
 }
 
@@ -980,8 +995,8 @@ map.on('moveend', function(){ saveState(); setTimeout(reapplyOpacity, 100); });
     .then(function(r){ return r.json(); })
     .then(function(d){
       designatedRiverStaticData = d;
-      /* 既にフレームが表示中でキャッシュが静的データのフォールバック待ちなら再適用 */
-      if(designatedRiverCurrentYmdhms && !designatedRiverCache[designatedRiverCurrentYmdhms]){
+      /* 静的データ到着後：フレームが既に表示中なら再適用（起動直後に静的データが間に合わなかった場合） */
+      if(designatedRiverCurrentYmdhms){
         applyDesignatedRiverToYmdhms(designatedRiverCurrentYmdhms);
       }
     })
