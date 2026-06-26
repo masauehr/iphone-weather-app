@@ -454,8 +454,11 @@ function play(){
   playing=true;
   (function tick(){
     if(!playing)return;
-    showFrame((currentIdx+1)%satFrames.length);
-    timerId=setTimeout(tick,SPEEDS[speedIdx]);
+    var nextIdx=(currentIdx+1)%satFrames.length;
+    showFrame(nextIdx);
+    // 最新フレーム到達時は0.5秒停止してからループ
+    var delay=nextIdx===satFrames.length-1?500:SPEEDS[speedIdx];
+    timerId=setTimeout(tick,delay);
   })();
 }
 function pause(){playing=false;clearTimeout(timerId);timerId=null;}

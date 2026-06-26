@@ -589,8 +589,11 @@ function play(){
   playing=true;
   (function tick(){
     if(!playing) return;
-    showFrame((currentIdx+1) % frames.length);
-    timerId = setTimeout(tick, SPEEDS[speedIdx]);
+    var nextIdx = (currentIdx+1) % frames.length;
+    showFrame(nextIdx);
+    // 最新フレーム到達時は0.5秒停止してからループ
+    var delay = nextIdx === frames.length - 1 ? 500 : SPEEDS[speedIdx];
+    timerId = setTimeout(tick, delay);
   })();
 }
 function pause(){ playing=false; clearTimeout(timerId); timerId=null; }
