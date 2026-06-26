@@ -11,6 +11,7 @@ export const kikikuruHtml = `<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{display:flex;flex-direction:column;height:100vh;height:100dvh;background:#1a1a2e;color:#e0e0e0;font-family:sans-serif;font-size:12px}
+.leaflet-container{background:#aaa!important}
 #header{padding:4px 8px;background:#0f3460;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 #header .title{font-weight:bold;font-size:13px}
 #timeDisp{font-size:11px;color:#90caf9}
