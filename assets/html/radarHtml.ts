@@ -456,8 +456,8 @@ function play(){
     if(!playing)return;
     var nextIdx=(currentIdx+1)%satFrames.length;
     showFrame(nextIdx);
-    // 最新フレーム到達時は0.5秒停止してからループ
-    var delay=nextIdx===satFrames.length-1?500:SPEEDS[speedIdx];
+    // 最新フレーム到達時は1秒停止してからループ
+    var delay=nextIdx===satFrames.length-1?1000:SPEEDS[speedIdx];
     timerId=setTimeout(tick,delay);
   })();
 }

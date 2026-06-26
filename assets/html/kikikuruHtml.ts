@@ -48,10 +48,10 @@ button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
 <div id="controls">
   <div class="ctrl-row">
     <button id="btnRain"       class="act-rain" onclick="toggleLayer('rain_mesh')">大雨</button>
-    <button id="btnLand"                        onclick="toggleLayer('land')">土砂</button>
-    <button id="btnInund"                       onclick="toggleLayer('inund')">浸水</button>
-    <button id="btnFlood"                       onclick="toggleLayer('flood')">洪水</button>
-    <button id="btnInundFlood"                  onclick="toggleInundFlood()">浸水+洪水</button>
+    <button id="btnLand"  class="act-land"  onclick="toggleLayer('land')">土砂</button>
+    <button id="btnInund" class="act-inund" onclick="toggleLayer('inund')">浸水</button>
+    <button id="btnFlood" class="act-flood" onclick="toggleLayer('flood')">洪水</button>
+    <button id="btnInundFlood" class="active" onclick="toggleInundFlood()">浸水+洪水</button>
     <span class="sep">|</span>
     <button id="btnRadar"                       onclick="toggleLayer('radar')">雨雲</button>
     <span class="sep">|</span>
@@ -187,8 +187,8 @@ var autoTimerId = null;
 var latestBaseTime = null;
 var _wasPlaying = false;
 
-/* 各レイヤーの表示ON/OFF（初期: 大雨のみON） */
-var visible = { rain_mesh:true, land:false, inund:false, flood:false, radar:false };
+/* 各レイヤーの表示ON/OFF（初期: 大雨・土砂・浸水・洪水ON） */
+var visible = { rain_mesh:true, land:true, inund:true, flood:true, radar:false };
 
 /* 静的河川PNGタイル（洪水ON時のみ表示） */
 var riverBaseLayer = L.tileLayer(
@@ -591,8 +591,8 @@ function play(){
     if(!playing) return;
     var nextIdx = (currentIdx+1) % frames.length;
     showFrame(nextIdx);
-    // 最新フレーム到達時は0.5秒停止してからループ
-    var delay = nextIdx === frames.length - 1 ? 500 : SPEEDS[speedIdx];
+    // 最新フレーム到達時は1秒停止してからループ
+    var delay = nextIdx === frames.length - 1 ? 1000 : SPEEDS[speedIdx];
     timerId = setTimeout(tick, delay);
   })();
 }
@@ -814,7 +814,7 @@ window.toggleBaseMap = function(){
 };
 
 /* ── 浸水・洪水重ね合わせ ── */
-var inundFloodMode = false;
+var inundFloodMode = true;
 window.toggleInundFlood = function(){
   inundFloodMode = !inundFloodMode;
   visible['inund'] = inundFloodMode;
