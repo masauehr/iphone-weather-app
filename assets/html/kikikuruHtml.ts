@@ -154,8 +154,8 @@ var map = L.map('map',{
 }).setView([35.5,137.0],6);
 map.setMinZoom(4); map.setMaxZoom(14);
 
-/* 国土地理院淡色地図 */
-var BASE_CHIRIIN = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
+/* 国土地理院白地図 */
+var BASE_CHIRIIN = 'https://cyberjapandata.gsi.go.jp/xyz/blank/{z}/{x}/{y}.png';
 var BASE_OPACITIES = [0.2, 0.55, 0.9];
 var BASE_LABELS    = ['地図暗', '地図中', '地図明'];
 var baseOpacityIdx = 1;
@@ -170,8 +170,9 @@ map.createPane('landPane');      map.getPane('landPane').style.zIndex      = 202
 map.createPane('inundPane');     map.getPane('inundPane').style.zIndex     = 203;
 map.createPane('floodBasePane'); map.getPane('floodBasePane').style.zIndex = 204;
 map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205;
-map.createPane('designatedRiverPane'); map.getPane('designatedRiverPane').style.zIndex = 300;
-map.createPane('radarPane');     map.getPane('radarPane').style.zIndex     = 350;
+map.createPane('designatedRiverPane');      map.getPane('designatedRiverPane').style.zIndex      = 300;
+map.createPane('radarPane');               map.getPane('radarPane').style.zIndex               = 350;
+map.createPane('designatedRiverLabelPane'); map.getPane('designatedRiverLabelPane').style.zIndex = 600;
 /* pane レベルで multiply 設定（canvas 個別だと pane の stacking context で効かない） */
 map.getPane('rainPane').style.mixBlendMode  = 'multiply';
 map.getPane('landPane').style.mixBlendMode  = 'multiply';
@@ -195,6 +196,7 @@ var visible = { rain_mesh:true, land:true, inund:true, flood:true, radar:false }
 var DESIGNATED_RIVER_WIDTHS = [2, 2, 2, 2, 2, 2, 2, 8, 8, 10, 10, 10, 12, 14, 16, 16, 16, 16, 16];
 var DESIGNATED_RIVER_COLORS = { 1:'#3cffff', 2:'#f2e700', 3:'#ff2800', 4:'#aa00aa', 5:'#0c000c' };
 var designatedRiverCache = {};           /* ymdhms → GeoJSON data */
+var designatedRiverStaticData = null;    /* map_designated_river（常時水色のフォールバック） */
 var designatedRiverOuterLayers = [];
 var designatedRiverInnerLayers = [];
 var designatedRiverLabelLayers = [];
@@ -243,7 +245,7 @@ function drawDesignatedRiver(data){
       style: function(){ return {color:color, weight:Math.max(1, w-2), opacity:1, fill:false, lineCap:'butt'}; }
     }).addTo(map);
     designatedRiverInnerLayers.push(inner);
-    /* 名称ラベル（ズーム8以上、labelLatLon があるもの） */
+    /* 名称ラベル（ズーム8以上、labelLat/Lon があるもの） */
     var labelLat = props.labelLat;
     var labelLon = props.labelLon;
     var name = props.fcstAreaNameJP || '';
@@ -251,12 +253,14 @@ function drawDesignatedRiver(data){
       var textColor = level >= 4 ? '#ffffff' : color;
       var lbl = L.marker([labelLat, labelLon], {
         icon: L.divIcon({
-          html: '<div style="color:'+textColor+';font-size:11px;font-weight:bold;white-space:nowrap;text-shadow:0 0 2px #000,0 0 2px #000,0 0 2px #000">'+name+'</div>',
+          html: '<div style="color:'+textColor+';font-size:11px;font-weight:bold;white-space:nowrap;'+
+            'text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,'+
+            '-2px 0 0 #000,2px 0 0 #000,0 -2px 0 #000,0 2px 0 #000">'+name+'</div>',
           className: '',
           iconAnchor: [-5, 10]
         }),
         interactive: false,
-        pane: 'designatedRiverPane'
+        pane: 'designatedRiverLabelPane'
       }).addTo(map);
       designatedRiverLabelLayers.push(lbl);
     }
@@ -268,12 +272,18 @@ function applyDesignatedRiverToYmdhms(ymdhms){
   if(designatedRiverCache[ymdhms]){ drawDesignatedRiver(designatedRiverCache[ymdhms]); return; }
   var url = 'https://www.jma.go.jp/bosai/jmatile/data/risk/'+ymdhms+'/none/'+ymdhms+'/surf/designated_river/data.geojson?id=designated_river';
   fetch(url)
-    .then(function(r){ return r.json(); })
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(d){
       designatedRiverCache[ymdhms] = d;
       if(designatedRiverCurrentYmdhms === ymdhms) drawDesignatedRiver(d);
     })
-    .catch(function(){});
+    .catch(function(){
+      /* データなし（洪水なし等）→ 静的データで常時水色表示 */
+      if(designatedRiverCurrentYmdhms === ymdhms && designatedRiverStaticData){
+        designatedRiverCache[ymdhms] = designatedRiverStaticData;
+        drawDesignatedRiver(designatedRiverStaticData);
+      }
+    });
 }
 function scheduleDesignatedRiverToFrame(ymdhms){
   clearTimeout(designatedRiverTimer);
@@ -965,6 +975,17 @@ map.on('moveend', function(){ saveState(); setTimeout(reapplyOpacity, 100); });
 (function(){
   var s=loadState();
   if(s&&s.lat!=null&&s.zoom!=null) map.setView([s.lat,s.lng],s.zoom);
+  /* 指定河川静的データを先行フェッチ（フォールバック用） */
+  fetch('https://www.jma.go.jp/bosai/jmatile/data/map/none/none/none/surf/designated_river/data.geojson?id=map_designated_river')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      designatedRiverStaticData = d;
+      /* 既にフレームが表示中でキャッシュが静的データのフォールバック待ちなら再適用 */
+      if(designatedRiverCurrentYmdhms && !designatedRiverCache[designatedRiverCurrentYmdhms]){
+        applyDesignatedRiverToYmdhms(designatedRiverCurrentYmdhms);
+      }
+    })
+    .catch(function(){});
   buildFrames();
   scheduleAuto();
   /* 安全網: Canvas GridLayer が外れていた場合に再追加して再描画 */
