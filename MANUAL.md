@@ -1361,58 +1361,61 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 
 ## 13. 改修履歴
 
-### 2026-06-15 タブアイコン刷新・webタブバー修正
+### 2026-06-26 キキクルビューア機能拡張・地図スタイル変更
 
-#### 全タブ共通
+#### キキクルタブ（kikikuruHtml.ts）
 
 | 改修 | 内容 |
 |------|------|
-| アイコンサイズ縮小 | 全タブのアイコンを28px → 24pxに縮小 |
-| webタブバー高さ修正 | webのみ `tabBarStyle: { height: 60, paddingBottom: 8 }` を適用し、ラベルが画面外に切れる問題を修正（`Platform.OS === 'web'` 条件分岐でiOSには影響なし） |
-| 天気予報アイコン変更 | `house.fill`（家） → `cloud.sun.fill`（太陽+雲）。web版は `icon-symbol.tsx` に `'cloud.sun.fill': 'wb-sunny'` マッピングを追加 |
-| キキクルアイコン変更 | 道路マップ風PNG → 川の流れ図PNG（S字本流・2支流・流向矢印）に再生成（Python/PIL、4x超解像→84pxリサイズ） |
+| ループアニメーション一時停止 | 最新フレームに達した際に 1 秒停止してから先頭に戻るよう変更（`tick()` 内で最終フレーム判定し `delay = 1000`）。最新フレームで止まることで「現在時刻まで描画した」ことが一目でわかるように改善 |
+| 起動デフォルト変更 | 起動時の表示レイヤーを「大雨のみ」→「土砂・浸水・洪水（inundFloodMode）」に変更（`visible = { rain_mesh:false, land:true, inund:true, flood:true, radar:false }` + `inundFloodMode = true`） |
+| 指定河川洪水予報の表示追加 | JMA 気象庁の指定河川洪水予報約 340 河川を常時水色で表示。危険度 level≥2 の河川を黄/赤/紫/黒の危険度色で上書き描画。参考実装: `/web/webapp/kikikuruViewer` |
+| 指定河川の2層構造 | 静的全河川（`map_designated_river` GeoJSON）を常時水色で下層描画し、動的危険度データ（`designated_river` GeoJSON・時刻付き）で level≥2 のみ上書き。静的/動的を完全分離することで「水色が危険度色に上書きされる」問題を解消 |
+| 水系名称ラベル表示 | ズーム 8 以上で level≥2 河川の水系名（`properties.name`）を危険度色で表示。`designatedRiverLabelPane`（zIndex:600）に配置してラベルが河川線に隠れないよう前面に固定。8方向テキストシャドウで黒輪郭を付与し視認性を向上 |
+| 指定河川の404キャッシュ | `designatedRiverCache[ymdhms] = null` で 404 レスポンスをキャッシュし、同一時刻への無駄なリクエストを抑制 |
+| ベースマップを pale に変更 | 地図タイルを `blank`（国土地理院白地図）から `pale`（国土地理院淡色地図）に変更。JMA公式キキクルビューアと同じスタイルに統一 |
+| 陸地/海の色を分離 | `pale` タイルに `grayscale(100%) brightness(X)` CSS フィルターを適用し、陸地（元が白→薄灰色）と海（元が薄青→暗い灰色）を視覚的に区別。`.leaflet-container { background: #333333 }` がタイルロード前の海色として機能 |
+| 地図明暗フィルター連動 | 「地図暗/中/明」ボタン切替時に `baseLayer.setOpacity()` と CSS filter（brightness）の両方を更新するよう変更 |
+
+**ペイン構成の変更**:
+
+| 追加ペイン | zIndex | 用途 |
+|-----------|--------|------|
+| `designatedRiverPane` | 300 | 指定河川の線（静的＋動的） |
+| `designatedRiverLabelPane` | 600 | 水系名称ラベル（最前面） |
 
 ---
 
-### 2026-06-15 アメダスオーバーレイ追加・拡張
+### 2026-06-26 アメダス地点インタラクション追加
 
-#### レーダー・衛星タブ
-
-| 改修 | 内容 |
-|------|------|
-| アメダスオーバーレイ実装 | `radarHtml.ts` にアメダス重ね合わせ機能を追加。[アメダス]ボタンでON/OFF、セレクトで12種類の観測要素を切替可能 |
-| 対応種別（12種） | 矢羽（風）・気温・露点温度・湿度・気圧・10分/1h/3h/24h雨量・1h/6h/24h降雪 |
-| 露点温度 | JMA APIに直接フィールドなし → temp + humidity から Magnus 近似式で計算 |
-| 縁取り色の色依存化 | 青系の塗りつぶし色 → 白縁取り、それ以外 → 黒縁取り（暗背景での視認性向上） |
-| マーカーサイズ拡大 | 矢羽 14×22px → 18×28px、テキスト 11px → 13px に統一 |
-| デフォルトON | `amedasOn=true` に変更、起動時にボタンをアクティブ化 |
-| ズーム間引き | ズーム6〜8でグリッド間引き（1.0°/0.5°/0.2°）。humidity観測局を優先して残す2パス方式 |
-| 時刻同期 | `lastAmedasJst` でJST10分バケット変化時のみ再取得（アニメーション中の過剰リクエスト防止） |
-
-### 2026-06-14 キキクルビューアタブ追加
-
-#### キキクルタブ（新規）
+#### レーダー・衛星タブ（radarHtml.ts / radar.tsx）
 
 | 改修 | 内容 |
 |------|------|
-| タブ新規追加 | `kikikuru.tsx / kikikuru.native.tsx / kikikuruHtml.ts` を作成。`_layout.tsx` に3枚目タブとして登録 |
-| 大雨・土砂・浸水・洪水レイヤー | JMAキキクルの4種レイヤー（rain_mesh/land/inund/flood）を個別トグル |
-| 浸水+洪水同時モード | 1ボタンで浸水・洪水を同時ON/OFFする `inundFloodMode` 実装 |
-| 洪水2層構造 | 静的PNG（全河川背景）＋動的PBF（危険度色）の2層構造を実装（JMA公式ビューアと同方式） |
-| ベースマップ変更 | CartoDB暗色 → 国土地理院淡色地図（opacity 3段階切替: 地図暗/地図中/地図明） |
-| 時間範囲選択 | 1時間/2時間（デフォルト）/3時間 切替 |
-| 過去データ再生 | ◀6h/◀1h/1h▶/▶現在 ボタンで過去キキクル閲覧 |
-| レーダー重ね合わせ | キキクル画像に降水レーダーを重ねるオプション |
-| 位置記憶 | localStorage（`kikikuruState` キー）で最後の地図位置を保存・復元 |
-| タブアイコン変更 | View描画 → 地図風PNG画像（`assets/images/kikikuru-icon.png`・84×84px・Python生成）に切り替え |
-| 凡例文字色修正 | JMA SVG凡例の「危険度」「低」を黒字固定（黄・白背景での視認性向上）、「高」他は白字 |
-| 洪水PBFフレーム同期修正 | `showFrame()` 内で `scheduleFloodToFrame(ymdhms)` を呼ぶよう変更。アニメーションフレームと洪水危険度色が一致しなかった問題を修正（400msデバウンス付き） |
+| アメダスマーカーに地点名ホバー表示を追加 | 各アメダスマーカー（矢羽・静穏丸・数値ラベル）を `<a>` タグでラップ。`title` 属性に「漢字名(かな名)」を設定し、PCブラウザでマウスホバー時にネイティブツールチップで地点名を表示 |
+| アメダスマーカーのクリックで観測ページを開く | `href` に `https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno={地点コード}` を設定。PC ではクリック、スマホブラウザでは長押しで気象庁のアメダス観測データページを新しいタブで開く |
+| Web版 iframe の sandbox に `allow-popups` を追加 | `radar.tsx` の `<iframe sandbox>` に `allow-popups` を追加。これがないと iframe 内の `target="_blank"` がブロックされ PC でリンクが開けなかった。スマホ WebView（`radar.native.tsx`）は sandbox 制限を受けないため変更不要 |
+| マーカーの `interactive:false` を除去 | クリックを受け付けるよう変更（`keyboard:false` は維持） |
 
-#### 全タブ共通
+---
+
+### 2026-06-17 キキクル透過色・高解像度対応
+
+#### キキクルタブ（大雨・土砂・浸水レイヤー）
 
 | 改修 | 内容 |
 |------|------|
-| Homeタブのラベル変更 | "Home" → "天気予報"（`_layout.tsx` の `title` プロパティ変更） |
+| PNG 3レイヤーをCanvas GridLayer方式に変更 | 大雨（rain_mesh）・土砂（land）・浸水（inund）をラスタータイルからcanvas GridLayer方式に統一。高解像度（ズーム11以上）でも表示されるよう改善 |
+| `calcFetchCoords` 共通関数を実装 | rain_mesh・land・inund・flood全4レイヤーで使用する親タイル座標変換関数を統一実装。奇数ズーム→z-1偶数丸め、nativeMax上限（z=10）適用、scale/quadX/quadY算出を1関数に集約 |
+| `mix-blend-mode: multiply` で白背景透過 | canvas個別への設定ではLeaflet paneがstacking contextを作るため地図と合成されない問題に対処。`map.getPane('rainPane').style.mixBlendMode = 'multiply'` のように**paneレベル**で設定することで、気象庁タイルの白背景（非データ領域）が透過し下の地図が見えるよう改善 |
+| `getImageData` 廃止 | 従来の白ピクセル除去処理（`getImageData` → pixel操作）はiframe `about:srcdoc`環境のCORS制限（SecurityError）で無効だったため完全廃止。`mix-blend-mode`方式に一本化 |
+| 404タイルのキャッシュ化 | 気象庁タイルは危険度のある地域のみ存在するため404は正常。`cache[url] = false`で404確認済みタイルをキャッシュし、毎フレームの無駄なリクエストを防止 |
+
+**技術メモ（透過の仕組み）**:
+
+`mix-blend-mode: multiply` では白（1,1,1）× 地図色 = 地図色となり白背景が消える。Leaflet paneは CSS `transform` により独立した stacking context を持つため、canvas個別ではなくpane要素に設定しないと地図とのブレンドが効かない。
+
+---
 
 ### 2026-06-16 コントロールボタン横一列レイアウト変更
 
@@ -1454,23 +1457,33 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
      → 自動リロード → またクラッシュ → ループ
 ```
 
-### 2026-06-17 キキクル透過色・高解像度対応
+### 2026-06-15 タブアイコン刷新・webタブバー修正
 
-#### キキクルタブ（大雨・土砂・浸水レイヤー）
+#### 全タブ共通
 
 | 改修 | 内容 |
 |------|------|
-| PNG 3レイヤーをCanvas GridLayer方式に変更 | 大雨（rain_mesh）・土砂（land）・浸水（inund）をラスタータイルからcanvas GridLayer方式に統一。高解像度（ズーム11以上）でも表示されるよう改善 |
-| `calcFetchCoords` 共通関数を実装 | rain_mesh・land・inund・flood全4レイヤーで使用する親タイル座標変換関数を統一実装。奇数ズーム→z-1偶数丸め、nativeMax上限（z=10）適用、scale/quadX/quadY算出を1関数に集約 |
-| `mix-blend-mode: multiply` で白背景透過 | canvas個別への設定ではLeaflet paneがstacking contextを作るため地図と合成されない問題に対処。`map.getPane('rainPane').style.mixBlendMode = 'multiply'` のように**paneレベル**で設定することで、気象庁タイルの白背景（非データ領域）が透過し下の地図が見えるよう改善 |
-| `getImageData` 廃止 | 従来の白ピクセル除去処理（`getImageData` → pixel操作）はiframe `about:srcdoc`環境のCORS制限（SecurityError）で無効だったため完全廃止。`mix-blend-mode`方式に一本化 |
-| 404タイルのキャッシュ化 | 気象庁タイルは危険度のある地域のみ存在するため404は正常。`cache[url] = false`で404確認済みタイルをキャッシュし、毎フレームの無駄なリクエストを防止 |
-
-**技術メモ（透過の仕組み）**:
-
-`mix-blend-mode: multiply` では白（1,1,1）× 地図色 = 地図色となり白背景が消える。Leaflet paneは CSS `transform` により独立した stacking context を持つため、canvas個別ではなくpane要素に設定しないと地図とのブレンドが効かない。
+| アイコンサイズ縮小 | 全タブのアイコンを28px → 24pxに縮小 |
+| webタブバー高さ修正 | webのみ `tabBarStyle: { height: 60, paddingBottom: 8 }` を適用し、ラベルが画面外に切れる問題を修正（`Platform.OS === 'web'` 条件分岐でiOSには影響なし） |
+| 天気予報アイコン変更 | `house.fill`（家） → `cloud.sun.fill`（太陽+雲）。web版は `icon-symbol.tsx` に `'cloud.sun.fill': 'wb-sunny'` マッピングを追加 |
+| キキクルアイコン変更 | 道路マップ風PNG → 川の流れ図PNG（S字本流・2支流・流向矢印）に再生成（Python/PIL、4x超解像→84pxリサイズ） |
 
 ---
+
+### 2026-06-15 アメダスオーバーレイ追加・拡張
+
+#### レーダー・衛星タブ
+
+| 改修 | 内容 |
+|------|------|
+| アメダスオーバーレイ実装 | `radarHtml.ts` にアメダス重ね合わせ機能を追加。[アメダス]ボタンでON/OFF、セレクトで12種類の観測要素を切替可能 |
+| 対応種別（12種） | 矢羽（風）・気温・露点温度・湿度・気圧・10分/1h/3h/24h雨量・1h/6h/24h降雪 |
+| 露点温度 | JMA APIに直接フィールドなし → temp + humidity から Magnus 近似式で計算 |
+| 縁取り色の色依存化 | 青系の塗りつぶし色 → 白縁取り、それ以外 → 黒縁取り（暗背景での視認性向上） |
+| マーカーサイズ拡大 | 矢羽 14×22px → 18×28px、テキスト 11px → 13px に統一 |
+| デフォルトON | `amedasOn=true` に変更、起動時にボタンをアクティブ化 |
+| ズーム間引き | ズーム6〜8でグリッド間引き（1.0°/0.5°/0.2°）。humidity観測局を優先して残す2パス方式 |
+| 時刻同期 | `lastAmedasJst` でJST10分バケット変化時のみ再取得（アニメーション中の過剰リクエスト防止） |
 
 ### 2026-06-15 洪水キキクルズームバグ修正
 
@@ -1484,6 +1497,31 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 | PBFキャッシュ実装 | `floodPbfCache[url]` で取得済みPBFをメモリキャッシュ。同一フレームへの戻り操作・ズーム変化で即時再描画可能 |
 | `done` コールバックによるズーム保持 | `createTile(coords, done)` の `done` 呼び出しで Leaflet の `_retainParent` 機構を有効化。新ズームのタイル読み込み中は旧ズームのタイルが保持され、ブランク期間を低減 |
 | 既知の制限 | 奇数ズームでは `scale(2,2)` の影響で線幅が約半分になる（今後の検討課題） |
+
+### 2026-06-14 キキクルビューアタブ追加
+
+#### キキクルタブ（新規）
+
+| 改修 | 内容 |
+|------|------|
+| タブ新規追加 | `kikikuru.tsx / kikikuru.native.tsx / kikikuruHtml.ts` を作成。`_layout.tsx` に3枚目タブとして登録 |
+| 大雨・土砂・浸水・洪水レイヤー | JMAキキクルの4種レイヤー（rain_mesh/land/inund/flood）を個別トグル |
+| 浸水+洪水同時モード | 1ボタンで浸水・洪水を同時ON/OFFする `inundFloodMode` 実装 |
+| 洪水2層構造 | 静的PNG（全河川背景）＋動的PBF（危険度色）の2層構造を実装（JMA公式ビューアと同方式） |
+| ベースマップ変更 | CartoDB暗色 → 国土地理院淡色地図（opacity 3段階切替: 地図暗/地図中/地図明） |
+| 時間範囲選択 | 1時間/2時間（デフォルト）/3時間 切替 |
+| 過去データ再生 | ◀6h/◀1h/1h▶/▶現在 ボタンで過去キキクル閲覧 |
+| レーダー重ね合わせ | キキクル画像に降水レーダーを重ねるオプション |
+| 位置記憶 | localStorage（`kikikuruState` キー）で最後の地図位置を保存・復元 |
+| タブアイコン変更 | View描画 → 地図風PNG画像（`assets/images/kikikuru-icon.png`・84×84px・Python生成）に切り替え |
+| 凡例文字色修正 | JMA SVG凡例の「危険度」「低」を黒字固定（黄・白背景での視認性向上）、「高」他は白字 |
+| 洪水PBFフレーム同期修正 | `showFrame()` 内で `scheduleFloodToFrame(ymdhms)` を呼ぶよう変更。アニメーションフレームと洪水危険度色が一致しなかった問題を修正（400msデバウンス付き） |
+
+#### 全タブ共通
+
+| 改修 | 内容 |
+|------|------|
+| Homeタブのラベル変更 | "Home" → "天気予報"（`_layout.tsx` の `title` プロパティ変更） |
 
 ### 2026-06-14 レーダーprobe修正
 
@@ -1522,44 +1560,6 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 | デフォルト変更 | 沖縄本島・東京・大阪の3地点をデフォルトお気に入りに |
 | サブ地域切替 | class10s レベルのサブ地域を取得し、複数ある場合に切替バーを表示 |
 | 安全なインデックス参照 | サブ地域数が異なる場合のクラッシュを防ぐ `cap()` 関数を追加 |
-
----
-
-### 2026-06-26 キキクルビューア機能拡張・地図スタイル変更
-
-#### キキクルタブ（kikikuruHtml.ts）
-
-| 改修 | 内容 |
-|------|------|
-| ループアニメーション一時停止 | 最新フレームに達した際に 1 秒停止してから先頭に戻るよう変更（`tick()` 内で最終フレーム判定し `delay = 1000`）。最新フレームで止まることで「現在時刻まで描画した」ことが一目でわかるように改善 |
-| 起動デフォルト変更 | 起動時の表示レイヤーを「大雨のみ」→「土砂・浸水・洪水（inundFloodMode）」に変更（`visible = { rain_mesh:false, land:true, inund:true, flood:true, radar:false }` + `inundFloodMode = true`） |
-| 指定河川洪水予報の表示追加 | JMA 気象庁の指定河川洪水予報約 340 河川を常時水色で表示。危険度 level≥2 の河川を黄/赤/紫/黒の危険度色で上書き描画。参考実装: `/web/webapp/kikikuruViewer` |
-| 指定河川の2層構造 | 静的全河川（`map_designated_river` GeoJSON）を常時水色で下層描画し、動的危険度データ（`designated_river` GeoJSON・時刻付き）で level≥2 のみ上書き。静的/動的を完全分離することで「水色が危険度色に上書きされる」問題を解消 |
-| 水系名称ラベル表示 | ズーム 8 以上で level≥2 河川の水系名（`properties.name`）を危険度色で表示。`designatedRiverLabelPane`（zIndex:600）に配置してラベルが河川線に隠れないよう前面に固定。8方向テキストシャドウで黒輪郭を付与し視認性を向上 |
-| 指定河川の404キャッシュ | `designatedRiverCache[ymdhms] = null` で 404 レスポンスをキャッシュし、同一時刻への無駄なリクエストを抑制 |
-| ベースマップを pale に変更 | 地図タイルを `blank`（国土地理院白地図）から `pale`（国土地理院淡色地図）に変更。JMA公式キキクルビューアと同じスタイルに統一 |
-| 陸地/海の色を分離 | `pale` タイルに `grayscale(100%) brightness(X)` CSS フィルターを適用し、陸地（元が白→薄灰色）と海（元が薄青→暗い灰色）を視覚的に区別。`.leaflet-container { background: #333333 }` がタイルロード前の海色として機能 |
-| 地図明暗フィルター連動 | 「地図暗/中/明」ボタン切替時に `baseLayer.setOpacity()` と CSS filter（brightness）の両方を更新するよう変更 |
-
-**ペイン構成の変更**:
-
-| 追加ペイン | zIndex | 用途 |
-|-----------|--------|------|
-| `designatedRiverPane` | 300 | 指定河川の線（静的＋動的） |
-| `designatedRiverLabelPane` | 600 | 水系名称ラベル（最前面） |
-
----
-
-### 2026-06-26 アメダス地点インタラクション追加
-
-#### レーダー・衛星タブ（radarHtml.ts / radar.tsx）
-
-| 改修 | 内容 |
-|------|------|
-| アメダスマーカーに地点名ホバー表示を追加 | 各アメダスマーカー（矢羽・静穏丸・数値ラベル）を `<a>` タグでラップ。`title` 属性に「漢字名(かな名)」を設定し、PCブラウザでマウスホバー時にネイティブツールチップで地点名を表示 |
-| アメダスマーカーのクリックで観測ページを開く | `href` に `https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno={地点コード}` を設定。PC ではクリック、スマホブラウザでは長押しで気象庁のアメダス観測データページを新しいタブで開く |
-| Web版 iframe の sandbox に `allow-popups` を追加 | `radar.tsx` の `<iframe sandbox>` に `allow-popups` を追加。これがないと iframe 内の `target="_blank"` がブロックされ PC でリンクが開けなかった。スマホ WebView（`radar.native.tsx`）は sandbox 制限を受けないため変更不要 |
-| マーカーの `interactive:false` を除去 | クリックを受け付けるよう変更（`keyboard:false` は維持） |
 
 ---
 
