@@ -11,7 +11,7 @@ export const kikikuruHtml = `<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{display:flex;flex-direction:column;height:100vh;height:100dvh;background:#1a1a2e;color:#e0e0e0;font-family:sans-serif;font-size:12px}
-.leaflet-container{background:#aaa!important}
+.leaflet-container{background:#333333!important}
 #header{padding:4px 8px;background:#0f3460;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 #header .title{font-weight:bold;font-size:13px}
 #timeDisp{font-size:11px;color:#90caf9}
@@ -156,14 +156,20 @@ var map = L.map('map',{
 map.setMinZoom(4); map.setMaxZoom(14);
 
 /* 国土地理院白地図 */
-var BASE_CHIRIIN = 'https://cyberjapandata.gsi.go.jp/xyz/blank/{z}/{x}/{y}.png';
-var BASE_OPACITIES = [0.2, 0.55, 0.9];
+/* pale タイル（参考コード kikikuruViewer 準拠）
+   grayscale+brightness フィルターで：陸地=薄灰色、海=暗い灰色 に変換 */
+var BASE_CHIRIIN = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
+var BASE_FILTERS  = ['grayscale(100%) brightness(0.45)', 'grayscale(100%) brightness(0.55)', 'grayscale(100%) brightness(0.65)'];
+var BASE_OPACITIES = [0.8, 0.9, 1.0];
 var BASE_LABELS    = ['地図暗', '地図中', '地図明'];
 var baseOpacityIdx = 1;
 var baseLayer = L.tileLayer(BASE_CHIRIIN,{
   maxZoom:18, opacity:BASE_OPACITIES[baseOpacityIdx],
   attribution:'© 国土地理院'
 }).addTo(map);
+baseLayer.on('tileload', function(e){
+  e.tile.style.filter = BASE_FILTERS[baseOpacityIdx];
+});
 
 /* ペイン定義 */
 map.createPane('rainPane');      map.getPane('rainPane').style.zIndex      = 201;
@@ -937,6 +943,12 @@ window.onSpeedChange = function(v){
 window.toggleBaseMap = function(){
   baseOpacityIdx = (baseOpacityIdx + 1) % BASE_OPACITIES.length;
   baseLayer.setOpacity(BASE_OPACITIES[baseOpacityIdx]);
+  /* 既存タイルのフィルターを更新 */
+  var f = BASE_FILTERS[baseOpacityIdx];
+  baseLayer.eachLayer ? baseLayer.eachLayer(function(l){ if(l._image) l._image.style.filter=f; }) : void 0;
+  document.querySelectorAll('.leaflet-tile-pane img').forEach(function(img){
+    if(img.src && img.src.indexOf('pale') > -1) img.style.filter = f;
+  });
   var btn = document.getElementById('btnBaseMap');
   btn.textContent = BASE_LABELS[baseOpacityIdx];
   btn.className = baseOpacityIdx === 2 ? 'active' : '';
