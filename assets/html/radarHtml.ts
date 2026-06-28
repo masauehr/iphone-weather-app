@@ -1,3 +1,7 @@
+import japanCoastline from '@/assets/geodata/japan_coastline.json';
+
+const _coastlineJson = JSON.stringify(japanCoastline);
+
 export const radarHtml = `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -153,7 +157,6 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
 
 /* ── 定数 ── */
 var FIXED_FRAME_COUNT = 12; /* フレーム数固定 — ステップ間隔で時間範囲を調整（レイヤ数一定でメモリ安全）*/
-var FIXED_FRAME_COUNT_FD = 6; /* 全球は衛星タイル数が多くiOSでクラッシュするため半減 */
 var LOAD_TIMEOUT   = 10000;
 var PROBE_TIMEOUT  = 5000;
 var SPEEDS         = [600,300,150,80];
@@ -171,7 +174,7 @@ var SAT_SEG = {
 };
 var AREA_PARAMS = {
   jp:{nativeZoom:6,interval:2.5*60,center:[35.5,137.0],zoom:6},
-  fd:{nativeZoom:5,interval:10*60, center:[0,140.7],zoom:3}
+  fd:{nativeZoom:5,interval:10*60, center:[26.2,127.7],zoom:5}
 };
 
 /* ── common.js インライン ── */
@@ -230,17 +233,11 @@ var osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18,attribution:'© OpenStreetMap contributors'
 });
 
-/* ── 海岸線（GitHub Raw から fetch で動的取得）── */
-(function(){
-  var REPO='https://raw.githubusercontent.com/masauehr/iphone-weather-app/main/assets/geodata/';
-  function addCoast(url,style){
-    fetch(url).then(function(r){return r.json();})
-      .then(function(data){L.geoJSON(data,{pane:'coastPane',style:style}).addTo(map);})
-      .catch(function(){});
-  }
-  addCoast(REPO+'world_coastline.json',{color:'#00cc44',weight:0.8,opacity:0.72,fill:false});
-  addCoast(REPO+'japan_coastline.json',{color:'#00cc44',weight:1.2,opacity:0.85,fill:false});
-})();
+/* ── 海岸線（日本周辺・高精度・インライン埋め込み）── */
+L.geoJSON(${_coastlineJson},{
+  pane:'coastPane',
+  style:{color:'#00cc44',weight:1.2,opacity:0.85,fill:false}
+}).addTo(map);
 
 /* ── 状態変数 ── */
 var satFrames=[],radarFrames=[];
@@ -252,6 +249,7 @@ var autoTimerId=null,pauseAt=0;
 var latestSatTime=null,latestRadarTime=null;
 var currentArea='jp',currentBand='ETC',displayMode='both';
 var _wasPlaying=false;
+var currentNativeMax=10;
 var timeRangeHours=2;
 var historicalOffsetMin=0;
 function isHistoricalMode(){return historicalOffsetMin>0;}
@@ -297,22 +295,31 @@ function radarUrl(ymdhms){
     ymdhms+'/none/'+ymdhms+'/surf/hrpns/{z}/{x}/{y}.png';
 }
 
+/* ── 奇数ズーム対策: maxNativeZoom を偶数に丸める ── */
+function getEffectiveRadarNativeMax(){
+  var z=map.getZoom();
+  var nMax=(z%2===1)?z-1:z;
+  if(nMax<4)nMax=4;
+  if(nMax>10)nMax=10;
+  return nMax;
+}
+
 /* ── Layer生成 ── */
 function makeSatLayer(f,band){
   var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
     minNativeZoom:f.nativeZoom,maxNativeZoom:f.nativeZoom,
-    minZoom:2,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:f.area==='fd'?1:4,pane:'satPane'
+    minZoom:4,maxZoom:12,opacity:0,
+    updateWhenIdle:false,keepBuffer:6,pane:'satPane'
   });
   l.on('tileload',function(){reapplyOpacity();});
   l.on('load',function(){reapplyOpacity();});
   return l;
 }
-function makeRadarLayer(ymdhms){
+function makeRadarLayer(ymdhms,nMax){
   var l=L.tileLayer(radarUrl(ymdhms),{
-    minNativeZoom:4,maxNativeZoom:10,
+    minNativeZoom:4,maxNativeZoom:nMax||10,
     minZoom:4,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:2,pane:'radarPane'
+    updateWhenIdle:false,keepBuffer:6,pane:'radarPane'
   });
   l.on('tileload',function(e){
     e.tile.style.imageRendering='pixelated';
@@ -320,6 +327,25 @@ function makeRadarLayer(ymdhms){
   });
   l.on('load',function(){reapplyOpacity();});
   return l;
+}
+
+/* ── ズーム変化時にレーダー全レイヤを再構築 ── */
+function rebuildRadarLayersAtZoom(newMax){
+  var oldIdx=prevRadarIdx;
+  var i;
+  for(i=0;i<radarLayers.length;i++){
+    if(radarLayers[i])map.removeLayer(radarLayers[i]);
+    radarLayers[i]=makeRadarLayer(fmtUtc(radarFrames[i].time),newMax);
+    radarLayers[i].addTo(map);
+  }
+  currentNativeMax=newMax;
+  prevRadarIdx=-1;
+  if(oldIdx>=0&&radarLayers[oldIdx]){
+    radarLayers[oldIdx].setOpacity(radarOpacity());
+    prevRadarIdx=oldIdx;
+  }
+  reapplyOpacity();
+  if(_wasPlaying)play();
 }
 
 /* ── クリーンアップ ── */
@@ -379,20 +405,14 @@ function showFrame(idx){
   idx=((idx%satFrames.length)+satFrames.length)%satFrames.length;
   if(currentIdx>=0&&satLayers[currentIdx])satLayers[currentIdx].setOpacity(0);
   currentIdx=idx;
-  if(satLayers[idx]){
-    if(!map.hasLayer(satLayers[idx]))satLayers[idx].addTo(map);
-    satLayers[idx].setOpacity(satOpacity());
-  }
+  if(satLayers[idx])satLayers[idx].setOpacity(satOpacity());
 
   var hasRadar=radarLayers.length>0;
   if(hasRadar&&displayMode!=='sat'){
     var ri=closestRadar(satFrames[idx].time);
     if(ri!==prevRadarIdx){
       if(prevRadarIdx>=0&&radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
-      if(radarLayers[ri]){
-        if(!map.hasLayer(radarLayers[ri]))radarLayers[ri].addTo(map);
-        radarLayers[ri].setOpacity(radarOpacity());
-      }
+      if(radarLayers[ri])radarLayers[ri].setOpacity(radarOpacity());
       prevRadarIdx=ri;
     }
   } else {
@@ -443,32 +463,23 @@ function play(){
 }
 function pause(){playing=false;clearTimeout(timerId);timerId=null;}
 
-/* ── ズーム中はアニメーション停止・非表示レイヤを除外してメモリ削減 ── */
+/* ── ズーム中はアニメーション停止・終了後に再開＋opacity再適用 ── */
 map.on('zoomstart',function(){
   _wasPlaying=playing;
   pause();
-  /* 現フレーム以外をマップから外しズーム時のタイル大量リロードを防ぐ */
-  var i;
-  for(i=0;i<satLayers.length;i++)
-    if(i!==currentIdx&&satLayers[i]&&map.hasLayer(satLayers[i]))
-      map.removeLayer(satLayers[i]);
-  for(i=0;i<radarLayers.length;i++)
-    if(i!==prevRadarIdx&&radarLayers[i]&&map.hasLayer(radarLayers[i]))
-      map.removeLayer(radarLayers[i]);
 });
 map.on('zoomend',function(){
   saveState();
+  /* レーダー: 奇数ズーム対策 — nativeMax が変化した場合は全レイヤ再構築 */
+  if(currentArea==='jp'&&radarLayers.length>0){
+    var newMax=getEffectiveRadarNativeMax();
+    if(newMax!==currentNativeMax){
+      rebuildRadarLayersAtZoom(newMax);
+      return;
+    }
+  }
   reapplyOpacity();
-  /* 非表示レイヤを遅延復元してズーム直後の一斉タイル取得を回避 */
-  setTimeout(function(){
-    var i;
-    for(i=0;i<satLayers.length;i++)
-      if(satLayers[i]&&!map.hasLayer(satLayers[i]))satLayers[i].addTo(map);
-    for(i=0;i<radarLayers.length;i++)
-      if(radarLayers[i]&&!map.hasLayer(radarLayers[i]))radarLayers[i].addTo(map);
-    reapplyOpacity();
-    if(_wasPlaying)play();
-  },800);
+  setTimeout(function(){reapplyOpacity();if(_wasPlaying)play();},300);
   if(amedasOn) scheduleAmedasUpdate(500);
 });
 map.on('moveend',function(){saveState();setTimeout(reapplyOpacity,100);if(amedasOn) scheduleAmedasUpdate(500);});
@@ -557,9 +568,10 @@ function loadAll(band,area){
   });
 
   if(needRadar){
+    currentNativeMax=getEffectiveRadarNativeMax();
     radarLayers=new Array(radarFrames.length).fill(null);
     radarFrames.forEach(function(f,i){
-      var l=makeRadarLayer(fmtUtc(f.time));
+      var l=makeRadarLayer(fmtUtc(f.time),currentNativeMax);
       l.addTo(map);radarLayers[i]=l;
       var n=false;
       l.on('load',function(){if(!n){n=true;onReady();}});
@@ -574,32 +586,28 @@ function buildFrames(preserveView){
   isLoading=true;pause();cleanup();
 
   var params=AREA_PARAMS[currentArea];
-  /* 全球モードではズーム3まで引けるようにminZoomを調整 */
-  map.setMinZoom(currentArea==='fd'?2:4);
   if(!preserveView)map.setView(params.center,params.zoom);
 
   elSlider.min='0';elSlider.max='0';elSlider.value='0';
   elLabel.textContent='0/0';
 
   var lead=isHistoricalMode()?0:LEAD_SEC;
-  /* 全球モードはタイル数が多くiOSでクラッシュするためフレーム数を半減 */
-  var frameCount=currentArea==='fd'?FIXED_FRAME_COUNT_FD:FIXED_FRAME_COUNT;
-  /* フレーム数固定・ステップ間隔を時間範囲に合わせて伸縮 → 総レイヤ数を一定に保つ */
-  var radarFactor=Math.max(1,Math.round(timeRangeHours*3600/(frameCount*RADAR_INT)));
+  /* フレーム数固定・ステップ間隔を時間範囲に合わせて伸縮 → 総レイヤ数を12+12に保つ */
+  var radarFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*RADAR_INT)));
   var radarStepSec=radarFactor*RADAR_INT;
-  var satFactor=Math.max(1,Math.round(timeRangeHours*3600/(frameCount*params.interval)));
+  var satFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*params.interval)));
   var satStepSec=satFactor*params.interval;
 
   var bt=getHistoricalBaseTime(lead,radarStepSec);
   latestRadarTime=bt;
   var radarCands=[];
-  for(var j=frameCount-1;j>=0;j--)
+  for(var j=FIXED_FRAME_COUNT-1;j>=0;j--)
     radarCands.push({time:new Date(bt.getTime()-j*radarStepSec*1000)});
 
   var satBt=getHistoricalBaseTime(lead,satStepSec);
   latestSatTime=satBt;
   var satCands=[];
-  for(var i=frameCount-1;i>=0;i--)
+  for(var i=FIXED_FRAME_COUNT-1;i>=0;i--)
     satCands.push({time:new Date(satBt.getTime()-i*satStepSec*1000),
                 area:currentArea,nativeZoom:params.nativeZoom});
 
@@ -644,14 +652,13 @@ function scheduleAuto(){clearTimeout(autoTimerId);autoTimerId=setTimeout(autoLoo
 
 /* ── UI操作 ── */
 window.setArea=function(a,noRebuild){
-  var areaChanged=(a!==currentArea);
   currentArea=a;
   document.getElementById('aJP').className=a==='jp'?'active':'';
   document.getElementById('aFD').className=a==='fd'?'active':'';
   document.getElementById('mBoth').disabled=false;
   document.getElementById('mRadar').disabled=false;
   latestSatTime=null;latestRadarTime=null;
-  if(!noRebuild){saveState();buildFrames(!areaChanged);}
+  if(!noRebuild){saveState();buildFrames(true);}  /* ビュー位置を維持したまま再構築 */
 };
 
 window.setBand=function(b){
@@ -859,12 +866,6 @@ function styledText(txt,color){
   return '<div style="font-size:13px;font-weight:bold;color:'+color+
     ';text-shadow:'+sh+';white-space:nowrap;line-height:1.1">'+txt+'</div>';
 }
-/* アメダスリンク付きラベル: ホバーで地点名、ダブルクリックで気象庁観測ページを開く */
-function amedasLink(inner,stationCode,stationName){
-  var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+stationCode;
-  return '<span ondblclick="window.open(\\''+url+'\\',\\'_blank\\')" title="'+stationName+'"'+
-    ' style="text-decoration:none;cursor:pointer;display:inline-block">'+inner+'</span>';
-}
 
 function clearAmedasMarkers(){
   for(var i=0;i<amedasMarkers.length;i++) map.removeLayer(amedasMarkers[i]);
@@ -909,7 +910,6 @@ function renderAmedas(data){
     if(selectedCodes&&!selectedCodes[code]) continue;
     var d=data[code];
     var html='',ax=0,ay=0;
-    var stName=(st.kjName||'')+(st.knName?'('+st.knName+')':'');
 
     if(cfg.isArrow){
       /* 矢羽（風向風速） */
@@ -922,19 +922,17 @@ function renderAmedas(data){
       var textSh='-1px 0 '+textOc+',0 1px '+textOc+',1px 0 '+textOc+',0 -1px '+textOc;
       if(dir>0&&dir<=16){
         var rot=WIND_ROTATE[dir];
-        var inner='<div style="text-align:center">'+
+        html='<div style="text-align:center;pointer-events:none">'+
           '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="28" viewBox="0 0 12 20"'+
           ' style="transform-origin:center;transform:rotate('+rot+'deg);display:block;margin:auto">'+
           '<polygon points="6,0 0,20 6,15 12,20" stroke="'+arrowStroke+'" stroke-width="1.5" fill="'+c+'"/></svg>'+
           '<div style="font-size:13px;font-weight:bold;color:'+c+';text-shadow:'+textSh+';line-height:1">'+spd.toFixed(0)+'</div>'+
           '</div>';
-        html=amedasLink(inner,code,stName);
         ax=9;ay=14;
       }else{
         /* 静穏 */
-        var inner='<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">'+
+        html='<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">'+
           '<circle cx="5" cy="5" r="4" stroke="rgba(0,0,0,0.7)" stroke-width="1" fill="rgb(160,210,255)"/></svg>';
-        html=amedasLink(inner,code,stName);
         ax=5;ay=5;
       }
     }else{
@@ -942,12 +940,12 @@ function renderAmedas(data){
       var val=cfg.getVal(d);
       if(val===null||val===undefined) continue;
       var c=amedasColor(cfg.scale,val);
-      html=amedasLink(styledText(cfg.fmt(val),c),code,stName);
+      html=styledText(cfg.fmt(val),c);
       ax=14;ay=7;
     }
     if(!html) continue;
     var icon=L.divIcon({html:html,className:'',iconSize:[0,0],iconAnchor:[ax,ay]});
-    var mk=L.marker([lat,lon],{icon:icon,keyboard:false});
+    var mk=L.marker([lat,lon],{icon:icon,interactive:false,keyboard:false});
     mk.addTo(map);
     amedasMarkers.push(mk);
   }
