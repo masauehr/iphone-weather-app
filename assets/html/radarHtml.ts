@@ -252,6 +252,7 @@ var autoTimerId=null,pauseAt=0;
 var latestSatTime=null,latestRadarTime=null;
 var currentArea='jp',currentBand='ETC',displayMode='both';
 var _wasPlaying=false;
+var radarRebuildTimer=null;
 var currentNativeMax=10;
 var timeRangeHours=2;
 var historicalOffsetMin=0;
@@ -473,17 +474,19 @@ map.on('zoomstart',function(){
 });
 map.on('zoomend',function(){
   saveState();
-  /* レーダー: 奇数ズーム対策 — nativeMax が変化した場合は全レイヤ再構築 */
-  if(currentArea==='jp'&&radarLayers.length>0){
-    var newMax=getEffectiveRadarNativeMax();
-    if(newMax!==currentNativeMax){
-      rebuildRadarLayersAtZoom(newMax);
-      return;
-    }
-  }
   reapplyOpacity();
   setTimeout(function(){reapplyOpacity();if(_wasPlaying)play();},300);
   if(amedasOn) scheduleAmedasUpdate(500);
+  /* レーダー: 奇数ズーム対策 — 連続ズームでの多重再構築を防ぐためdebounce */
+  if(currentArea==='jp'&&radarLayers.length>0){
+    var newMax=getEffectiveRadarNativeMax();
+    if(newMax!==currentNativeMax){
+      clearTimeout(radarRebuildTimer);
+      radarRebuildTimer=setTimeout(function(){
+        rebuildRadarLayersAtZoom(getEffectiveRadarNativeMax());
+      },500);
+    }
+  }
 });
 map.on('moveend',function(){saveState();setTimeout(reapplyOpacity,100);if(amedasOn) scheduleAmedasUpdate(500);});
 
