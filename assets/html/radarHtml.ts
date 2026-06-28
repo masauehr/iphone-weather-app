@@ -252,8 +252,6 @@ var autoTimerId=null,pauseAt=0;
 var latestSatTime=null,latestRadarTime=null;
 var currentArea='jp',currentBand='ETC',displayMode='both';
 var _wasPlaying=false;
-var radarRebuildTimer=null;
-var currentNativeMax=10;
 var timeRangeHours=2;
 var historicalOffsetMin=0;
 function isHistoricalMode(){return historicalOffsetMin>0;}
@@ -299,15 +297,6 @@ function radarUrl(ymdhms){
     ymdhms+'/none/'+ymdhms+'/surf/hrpns/{z}/{x}/{y}.png';
 }
 
-/* ── 奇数ズーム対策: maxNativeZoom を偶数に丸める ── */
-function getEffectiveRadarNativeMax(){
-  var z=map.getZoom();
-  var nMax=(z%2===1)?z-1:z;
-  if(nMax<4)nMax=4;
-  if(nMax>10)nMax=10;
-  return nMax;
-}
-
 /* ── Layer生成 ── */
 function makeSatLayer(f,band){
   var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
@@ -319,11 +308,11 @@ function makeSatLayer(f,band){
   l.on('load',function(){reapplyOpacity();});
   return l;
 }
-function makeRadarLayer(ymdhms,nMax){
+function makeRadarLayer(ymdhms){
   var l=L.tileLayer(radarUrl(ymdhms),{
-    minNativeZoom:4,maxNativeZoom:nMax||10,
+    minNativeZoom:4,maxNativeZoom:10,
     minZoom:4,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:6,pane:'radarPane'
+    updateWhenIdle:false,keepBuffer:2,pane:'radarPane'
   });
   l.on('tileload',function(e){
     e.tile.style.imageRendering='pixelated';
@@ -331,25 +320,6 @@ function makeRadarLayer(ymdhms,nMax){
   });
   l.on('load',function(){reapplyOpacity();});
   return l;
-}
-
-/* ── ズーム変化時にレーダー全レイヤを再構築 ── */
-function rebuildRadarLayersAtZoom(newMax){
-  var oldIdx=prevRadarIdx;
-  var i;
-  for(i=0;i<radarLayers.length;i++){
-    if(radarLayers[i])map.removeLayer(radarLayers[i]);
-    radarLayers[i]=makeRadarLayer(fmtUtc(radarFrames[i].time),newMax);
-    radarLayers[i].addTo(map);
-  }
-  currentNativeMax=newMax;
-  prevRadarIdx=-1;
-  if(oldIdx>=0&&radarLayers[oldIdx]){
-    radarLayers[oldIdx].setOpacity(radarOpacity());
-    prevRadarIdx=oldIdx;
-  }
-  reapplyOpacity();
-  if(_wasPlaying)play();
 }
 
 /* ── クリーンアップ ── */
@@ -409,14 +379,20 @@ function showFrame(idx){
   idx=((idx%satFrames.length)+satFrames.length)%satFrames.length;
   if(currentIdx>=0&&satLayers[currentIdx])satLayers[currentIdx].setOpacity(0);
   currentIdx=idx;
-  if(satLayers[idx])satLayers[idx].setOpacity(satOpacity());
+  if(satLayers[idx]){
+    if(!map.hasLayer(satLayers[idx]))satLayers[idx].addTo(map);
+    satLayers[idx].setOpacity(satOpacity());
+  }
 
   var hasRadar=radarLayers.length>0;
   if(hasRadar&&displayMode!=='sat'){
     var ri=closestRadar(satFrames[idx].time);
     if(ri!==prevRadarIdx){
       if(prevRadarIdx>=0&&radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
-      if(radarLayers[ri])radarLayers[ri].setOpacity(radarOpacity());
+      if(radarLayers[ri]){
+        if(!map.hasLayer(radarLayers[ri]))radarLayers[ri].addTo(map);
+        radarLayers[ri].setOpacity(radarOpacity());
+      }
       prevRadarIdx=ri;
     }
   } else {
@@ -467,26 +443,33 @@ function play(){
 }
 function pause(){playing=false;clearTimeout(timerId);timerId=null;}
 
-/* ── ズーム中はアニメーション停止・終了後に再開＋opacity再適用 ── */
+/* ── ズーム中はアニメーション停止・非表示レイヤを除外してメモリ削減 ── */
 map.on('zoomstart',function(){
   _wasPlaying=playing;
   pause();
+  /* 現フレーム以外をマップから外しズーム時のタイル大量リロードを防ぐ */
+  var i;
+  for(i=0;i<satLayers.length;i++)
+    if(i!==currentIdx&&satLayers[i]&&map.hasLayer(satLayers[i]))
+      map.removeLayer(satLayers[i]);
+  for(i=0;i<radarLayers.length;i++)
+    if(i!==prevRadarIdx&&radarLayers[i]&&map.hasLayer(radarLayers[i]))
+      map.removeLayer(radarLayers[i]);
 });
 map.on('zoomend',function(){
   saveState();
   reapplyOpacity();
-  setTimeout(function(){reapplyOpacity();if(_wasPlaying)play();},300);
+  /* 非表示レイヤを遅延復元してズーム直後の一斉タイル取得を回避 */
+  setTimeout(function(){
+    var i;
+    for(i=0;i<satLayers.length;i++)
+      if(satLayers[i]&&!map.hasLayer(satLayers[i]))satLayers[i].addTo(map);
+    for(i=0;i<radarLayers.length;i++)
+      if(radarLayers[i]&&!map.hasLayer(radarLayers[i]))radarLayers[i].addTo(map);
+    reapplyOpacity();
+    if(_wasPlaying)play();
+  },800);
   if(amedasOn) scheduleAmedasUpdate(500);
-  /* レーダー: 奇数ズーム対策 — 連続ズームでの多重再構築を防ぐためdebounce */
-  if(currentArea==='jp'&&radarLayers.length>0){
-    var newMax=getEffectiveRadarNativeMax();
-    if(newMax!==currentNativeMax){
-      clearTimeout(radarRebuildTimer);
-      radarRebuildTimer=setTimeout(function(){
-        rebuildRadarLayersAtZoom(getEffectiveRadarNativeMax());
-      },500);
-    }
-  }
 });
 map.on('moveend',function(){saveState();setTimeout(reapplyOpacity,100);if(amedasOn) scheduleAmedasUpdate(500);});
 
@@ -574,10 +557,9 @@ function loadAll(band,area){
   });
 
   if(needRadar){
-    currentNativeMax=getEffectiveRadarNativeMax();
     radarLayers=new Array(radarFrames.length).fill(null);
     radarFrames.forEach(function(f,i){
-      var l=makeRadarLayer(fmtUtc(f.time),currentNativeMax);
+      var l=makeRadarLayer(fmtUtc(f.time));
       l.addTo(map);radarLayers[i]=l;
       var n=false;
       l.on('load',function(){if(!n){n=true;onReady();}});
