@@ -153,6 +153,7 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
 
 /* ── 定数 ── */
 var FIXED_FRAME_COUNT = 12; /* フレーム数固定 — ステップ間隔で時間範囲を調整（レイヤ数一定でメモリ安全）*/
+var FIXED_FRAME_COUNT_FD = 6; /* 全球は衛星タイル数が多くiOSでクラッシュするため半減 */
 var LOAD_TIMEOUT   = 10000;
 var PROBE_TIMEOUT  = 5000;
 var SPEEDS         = [600,300,150,80];
@@ -311,7 +312,7 @@ function makeSatLayer(f,band){
   var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
     minNativeZoom:f.nativeZoom,maxNativeZoom:f.nativeZoom,
     minZoom:2,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:6,pane:'satPane'
+    updateWhenIdle:false,keepBuffer:f.area==='fd'?1:4,pane:'satPane'
   });
   l.on('tileload',function(){reapplyOpacity();});
   l.on('load',function(){reapplyOpacity();});
@@ -596,22 +597,24 @@ function buildFrames(preserveView){
   elLabel.textContent='0/0';
 
   var lead=isHistoricalMode()?0:LEAD_SEC;
-  /* フレーム数固定・ステップ間隔を時間範囲に合わせて伸縮 → 総レイヤ数を12+12に保つ */
-  var radarFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*RADAR_INT)));
+  /* 全球モードはタイル数が多くiOSでクラッシュするためフレーム数を半減 */
+  var frameCount=currentArea==='fd'?FIXED_FRAME_COUNT_FD:FIXED_FRAME_COUNT;
+  /* フレーム数固定・ステップ間隔を時間範囲に合わせて伸縮 → 総レイヤ数を一定に保つ */
+  var radarFactor=Math.max(1,Math.round(timeRangeHours*3600/(frameCount*RADAR_INT)));
   var radarStepSec=radarFactor*RADAR_INT;
-  var satFactor=Math.max(1,Math.round(timeRangeHours*3600/(FIXED_FRAME_COUNT*params.interval)));
+  var satFactor=Math.max(1,Math.round(timeRangeHours*3600/(frameCount*params.interval)));
   var satStepSec=satFactor*params.interval;
 
   var bt=getHistoricalBaseTime(lead,radarStepSec);
   latestRadarTime=bt;
   var radarCands=[];
-  for(var j=FIXED_FRAME_COUNT-1;j>=0;j--)
+  for(var j=frameCount-1;j>=0;j--)
     radarCands.push({time:new Date(bt.getTime()-j*radarStepSec*1000)});
 
   var satBt=getHistoricalBaseTime(lead,satStepSec);
   latestSatTime=satBt;
   var satCands=[];
-  for(var i=FIXED_FRAME_COUNT-1;i>=0;i--)
+  for(var i=frameCount-1;i>=0;i--)
     satCands.push({time:new Date(satBt.getTime()-i*satStepSec*1000),
                 area:currentArea,nativeZoom:params.nativeZoom});
 
