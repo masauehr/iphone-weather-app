@@ -311,7 +311,7 @@ function makeSatLayer(f,band){
   var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
     minNativeZoom:f.nativeZoom,maxNativeZoom:f.nativeZoom,
     minZoom:4,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:6,pane:'satPane'
+    updateWhenIdle:false,keepBuffer:2,pane:'satPane'
   });
   l.on('tileload',function(){reapplyOpacity();});
   l.on('load',function(){reapplyOpacity();});
@@ -321,7 +321,7 @@ function makeRadarLayer(ymdhms,nMax){
   var l=L.tileLayer(radarUrl(ymdhms),{
     minNativeZoom:4,maxNativeZoom:nMax||10,
     minZoom:4,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:6,pane:'radarPane'
+    updateWhenIdle:false,keepBuffer:2,pane:'radarPane'
   });
   l.on('tileload',function(e){
     e.tile.style.imageRendering='pixelated';
