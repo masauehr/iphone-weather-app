@@ -1,5 +1,3 @@
-import { WORLD_COASTLINE_B64, JAPAN_COASTLINE_B64 } from './coastlineData';
-
 export const radarHtml = `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -231,13 +229,16 @@ var osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18,attribution:'© OpenStreetMap contributors'
 });
 
-/* ── 海岸線（世界ne_110m日本除外 + 日本高精度 常時表示）── */
+/* ── 海岸線（GitHub Raw から fetch で動的取得）── */
 (function(){
-  function addCoast(b64,style){
-    try{L.geoJSON(JSON.parse(atob(b64)),{pane:'coastPane',style:style}).addTo(map);}catch(e){}
+  var REPO='https://raw.githubusercontent.com/masauehr/iphone-weather-app/main/assets/geodata/';
+  function addCoast(url,style){
+    fetch(url).then(function(r){return r.json();})
+      .then(function(data){L.geoJSON(data,{pane:'coastPane',style:style}).addTo(map);})
+      .catch(function(){});
   }
-  addCoast('${WORLD_COASTLINE_B64}',{color:'#00cc44',weight:0.8,opacity:0.72,fill:false});
-  addCoast('${JAPAN_COASTLINE_B64}',{color:'#00cc44',weight:1.2,opacity:0.85,fill:false});
+  addCoast(REPO+'world_coastline.json',{color:'#00cc44',weight:0.8,opacity:0.72,fill:false});
+  addCoast(REPO+'japan_coastline.json',{color:'#00cc44',weight:1.2,opacity:0.85,fill:false});
 })();
 
 /* ── 状態変数 ── */
