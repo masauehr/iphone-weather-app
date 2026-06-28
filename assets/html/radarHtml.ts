@@ -243,7 +243,7 @@ var osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 
 /* ── 状態変数 ── */
 var satFrames=[],radarFrames=[];
-var satLayer=null,radarLayer=null;
+var satLayers=[],radarLayers=[];
 var currentIdx=-1,prevRadarIdx=-1;
 var timerId=null,playing=false,speedIdx=1;
 var isLoading=false;
@@ -251,6 +251,7 @@ var autoTimerId=null,pauseAt=0;
 var latestSatTime=null,latestRadarTime=null;
 var currentArea='jp',currentBand='ETC',displayMode='both';
 var _wasPlaying=false;
+var currentNativeMax=10;
 var timeRangeHours=2;
 var historicalOffsetMin=0;
 function isHistoricalMode(){return historicalOffsetMin>0;}
@@ -296,11 +297,65 @@ function radarUrl(ymdhms){
     ymdhms+'/none/'+ymdhms+'/surf/hrpns/{z}/{x}/{y}.png';
 }
 
+/* ── 奇数ズーム対策: maxNativeZoom を偶数に丸める ── */
+function getEffectiveRadarNativeMax(){
+  var z=map.getZoom();
+  var nMax=(z%2===1)?z-1:z;
+  if(nMax<4)nMax=4;
+  if(nMax>10)nMax=10;
+  return nMax;
+}
+
+/* ── Layer生成 ── */
+function makeSatLayer(f,band){
+  var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
+    minNativeZoom:f.nativeZoom,maxNativeZoom:f.nativeZoom,
+    minZoom:4,maxZoom:12,opacity:0,
+    updateWhenIdle:false,keepBuffer:2,pane:'satPane'
+  });
+  l.on('tileload',function(){reapplyOpacity();});
+  l.on('load',function(){reapplyOpacity();});
+  return l;
+}
+function makeRadarLayer(ymdhms,nMax){
+  var l=L.tileLayer(radarUrl(ymdhms),{
+    minNativeZoom:4,maxNativeZoom:nMax||10,
+    minZoom:4,maxZoom:12,opacity:0,
+    updateWhenIdle:false,keepBuffer:2,pane:'radarPane'
+  });
+  l.on('tileload',function(e){
+    e.tile.style.imageRendering='pixelated';
+    reapplyOpacity();
+  });
+  l.on('load',function(){reapplyOpacity();});
+  return l;
+}
+
+/* ── ズーム変化時にレーダー全レイヤを再構築 ── */
+function rebuildRadarLayersAtZoom(newMax){
+  var oldIdx=prevRadarIdx;
+  var i;
+  for(i=0;i<radarLayers.length;i++){
+    if(radarLayers[i])map.removeLayer(radarLayers[i]);
+    radarLayers[i]=makeRadarLayer(fmtUtc(radarFrames[i].time),newMax);
+    radarLayers[i].addTo(map);
+  }
+  currentNativeMax=newMax;
+  prevRadarIdx=-1;
+  if(oldIdx>=0&&radarLayers[oldIdx]){
+    radarLayers[oldIdx].setOpacity(radarOpacity());
+    prevRadarIdx=oldIdx;
+  }
+  reapplyOpacity();
+  if(_wasPlaying)play();
+}
+
 /* ── クリーンアップ ── */
 function cleanup(){
-  if(satLayer){map.removeLayer(satLayer);satLayer=null;}
-  if(radarLayer){map.removeLayer(radarLayer);radarLayer=null;}
-  satFrames=[];radarFrames=[];
+  var i;
+  for(i=0;i<satLayers.length;i++)if(satLayers[i])map.removeLayer(satLayers[i]);
+  for(i=0;i<radarLayers.length;i++)if(radarLayers[i])map.removeLayer(radarLayers[i]);
+  satLayers=[];radarLayers=[];satFrames=[];radarFrames=[];
   currentIdx=-1;prevRadarIdx=-1;
 }
 
@@ -340,41 +395,38 @@ function radarOpacity(){return displayMode==='sat'?0:(displayMode==='radar'?0.9:
 
 /* ── opacity再適用（zoomend・tileload共用） ── */
 function reapplyOpacity(){
-  if(satLayer&&currentIdx>=0)satLayer.setOpacity(satOpacity());
-  if(radarLayer){
-    if(prevRadarIdx>=0&&displayMode!=='sat')radarLayer.setOpacity(radarOpacity());
-    else radarLayer.setOpacity(0);
-  }
+  if(currentIdx>=0&&satLayers[currentIdx])
+    satLayers[currentIdx].setOpacity(satOpacity());
+  if(prevRadarIdx>=0&&radarLayers[prevRadarIdx])
+    radarLayers[prevRadarIdx].setOpacity(radarOpacity());
 }
 
-/* ── フレーム表示（URL swap方式 — レイヤーは常に2枚のみ）── */
+/* ── フレーム表示 ── */
 function showFrame(idx){
   if(!satFrames.length)return;
   idx=((idx%satFrames.length)+satFrames.length)%satFrames.length;
+  if(currentIdx>=0&&satLayers[currentIdx])satLayers[currentIdx].setOpacity(0);
   currentIdx=idx;
-  var f=satFrames[idx];
-  if(satLayer){
-    satLayer.options.minNativeZoom=f.nativeZoom;
-    satLayer.options.maxNativeZoom=f.nativeZoom;
-    satLayer.setUrl(satUrl(f.area,fmtUtc(f.time),currentBand));
-    satLayer.setOpacity(satOpacity());
-  }
-  if(radarFrames.length>0&&displayMode!=='sat'){
-    var ri=closestRadar(f.time);
-    prevRadarIdx=ri;
-    if(radarLayer){
-      radarLayer.setUrl(radarUrl(fmtUtc(radarFrames[ri].time)));
-      radarLayer.setOpacity(radarOpacity());
+  if(satLayers[idx])satLayers[idx].setOpacity(satOpacity());
+
+  var hasRadar=radarLayers.length>0;
+  if(hasRadar&&displayMode!=='sat'){
+    var ri=closestRadar(satFrames[idx].time);
+    if(ri!==prevRadarIdx){
+      if(prevRadarIdx>=0&&radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
+      if(radarLayers[ri])radarLayers[ri].setOpacity(radarOpacity());
+      prevRadarIdx=ri;
     }
   } else {
+    if(prevRadarIdx>=0&&radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
     prevRadarIdx=-1;
-    if(radarLayer)radarLayer.setOpacity(0);
   }
   elSlider.value=String(idx);
   elLabel.textContent=(idx+1)+'/'+satFrames.length;
-  elTime.textContent=fmtLocal(f.time);
+  elTime.textContent=fmtLocal(satFrames[idx].time);
+  /* アメダス: 10分バケットが変わったときだけ更新（同バケットの連続フレームはスキップ） */
   if(amedasOn){
-    var _jst=fmtJst(f.time);
+    var _jst=fmtJst(satFrames[idx].time);
     if(_jst!==lastAmedasJst) scheduleAmedasUpdate(50);
   }
 }
@@ -382,15 +434,18 @@ function showFrame(idx){
 /* ── 表示モード切替（現フレームに即反映） ── */
 function applyMode(){
   if(currentIdx<0)return;
-  if(satLayer)satLayer.setOpacity(satOpacity());
-  if(radarLayer){
-    if(displayMode==='sat'||radarFrames.length===0){
-      radarLayer.setOpacity(0);prevRadarIdx=-1;
+  if(satLayers[currentIdx])satLayers[currentIdx].setOpacity(satOpacity());
+  var hasRadar=radarLayers.length>0;
+  if(hasRadar){
+    if(displayMode==='sat'){
+      if(prevRadarIdx>=0&&radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
+      prevRadarIdx=-1;
     } else {
       var ri=closestRadar(satFrames[currentIdx].time);
+      if(prevRadarIdx>=0&&prevRadarIdx!==ri&&radarLayers[prevRadarIdx])
+        radarLayers[prevRadarIdx].setOpacity(0);
+      if(radarLayers[ri])radarLayers[ri].setOpacity(radarOpacity());
       prevRadarIdx=ri;
-      radarLayer.setUrl(radarUrl(fmtUtc(radarFrames[ri].time)));
-      radarLayer.setOpacity(radarOpacity());
     }
   }
 }
@@ -417,6 +472,14 @@ map.on('zoomstart',function(){
 });
 map.on('zoomend',function(){
   saveState();
+  /* レーダー: 奇数ズーム対策 — nativeMax が変化した場合は全レイヤ再構築 */
+  if(currentArea==='jp'&&radarLayers.length>0){
+    var newMax=getEffectiveRadarNativeMax();
+    if(newMax!==currentNativeMax){
+      rebuildRadarLayersAtZoom(newMax);
+      return;
+    }
+  }
   reapplyOpacity();
   setTimeout(function(){reapplyOpacity();if(_wasPlaying)play();},300);
   if(amedasOn) scheduleAmedasUpdate(500);
@@ -474,31 +537,49 @@ function probeRadar(candidates,onDone){
   });
 }
 
-/* ── フェーズ2: 表示レイヤーを2枚作成して即再生（URL swap方式）── */
+/* ── フェーズ2: 全レイヤープリロード ── */
 function loadAll(band,area){
-  if(!satFrames.length){isLoading=false;elStatus.textContent='有効な衛星フレームなし';return;}
-  var params=AREA_PARAMS[area];
-
-  /* 衛星レイヤー（1枚）*/
-  satLayer=L.tileLayer('',{
-    minNativeZoom:params.nativeZoom,maxNativeZoom:params.nativeZoom,
-    minZoom:2,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:2,pane:'satPane'
-  }).addTo(map);
-  satLayer.on('tileload',reapplyOpacity);
-
-  /* レーダーレイヤー（1枚）*/
-  radarLayer=L.tileLayer('',{
-    minNativeZoom:4,maxNativeZoom:10,
-    minZoom:4,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:2,pane:'radarPane'
-  }).addTo(map);
-  radarLayer.on('tileload',function(e){e.tile.style.imageRendering='pixelated';});
+  var needRadar=true;
+  var total=satFrames.length+(needRadar?radarFrames.length:0);
+  if(!total){isLoading=false;elStatus.textContent='レイヤなし';return;}
 
   elSlider.max=String(satFrames.length-1);
-  isLoading=false;clearLoadUI();
-  showFrame(satFrames.length-1);
-  play();
+  elSlider.value=String(satFrames.length-1);
+  elLabel.textContent=satFrames.length+'/'+satFrames.length;
+  setLoadUI(0,total);
+
+  var loaded=0;
+  function onReady(){
+    loaded++;
+    setLoadUI(loaded,total);
+    if(loaded===total){
+      setTimeout(function(){
+        isLoading=false;clearLoadUI();
+        showFrame(satFrames.length-1);play();
+      },400);
+    }
+  }
+
+  satLayers=new Array(satFrames.length).fill(null);
+  satFrames.forEach(function(f,i){
+    var l=makeSatLayer(f,band);
+    l.addTo(map);satLayers[i]=l;
+    var n=false;
+    l.on('load',function(){if(!n){n=true;onReady();}});
+    setTimeout(function(){if(!n){n=true;onReady();}},LOAD_TIMEOUT);
+  });
+
+  if(needRadar){
+    currentNativeMax=getEffectiveRadarNativeMax();
+    radarLayers=new Array(radarFrames.length).fill(null);
+    radarFrames.forEach(function(f,i){
+      var l=makeRadarLayer(fmtUtc(f.time),currentNativeMax);
+      l.addTo(map);radarLayers[i]=l;
+      var n=false;
+      l.on('load',function(){if(!n){n=true;onReady();}});
+      setTimeout(function(){if(!n){n=true;onReady();}},LOAD_TIMEOUT);
+    });
+  }
 }
 
 /* ── メイン: フレーム構築 ── */
