@@ -1,7 +1,3 @@
-import japanCoastline from '@/assets/geodata/japan_coastline.json';
-
-const _coastlineJson = JSON.stringify(japanCoastline);
-
 export const radarHtml = `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -233,11 +229,17 @@ var osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18,attribution:'© OpenStreetMap contributors'
 });
 
-/* ── 海岸線（日本周辺・高精度・インライン埋め込み）── */
-L.geoJSON(${_coastlineJson},{
-  pane:'coastPane',
-  style:{color:'#00cc44',weight:1.2,opacity:0.85,fill:false}
-}).addTo(map);
+/* ── 海岸線（GitHub Raw から fetch で動的取得）── */
+(function(){
+  var REPO='https://raw.githubusercontent.com/masauehr/iphone-weather-app/main/assets/geodata/';
+  function addCoast(url,style){
+    fetch(url).then(function(r){return r.json();})
+      .then(function(data){L.geoJSON(data,{pane:'coastPane',style:style}).addTo(map);})
+      .catch(function(){});
+  }
+  addCoast(REPO+'world_coastline.json',{color:'#00cc44',weight:0.8,opacity:0.72,fill:false});
+  addCoast(REPO+'japan_coastline.json',{color:'#00cc44',weight:1.2,opacity:0.85,fill:false});
+})();
 
 /* ── 状態変数 ── */
 var satFrames=[],radarFrames=[];
