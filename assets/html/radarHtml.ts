@@ -755,6 +755,7 @@ var amedasStations=null;
 var amedasDataCache={};
 var amedasCacheKeys=[];
 var amedasMarkers=[];
+var amedasPositions=[]; /* [{code,lat,lon,name}] — renderAmedas時に更新 */
 var amedasTimer=null;
 var lastAmedasJst='';
 var AMEDAS_CACHE_MAX=30;
@@ -872,6 +873,7 @@ function styledText(txt,color){
 function clearAmedasMarkers(){
   for(var i=0;i<amedasMarkers.length;i++) map.removeLayer(amedasMarkers[i]);
   amedasMarkers=[];
+  amedasPositions=[];
 }
 
 function renderAmedas(data){
@@ -912,6 +914,7 @@ function renderAmedas(data){
     if(selectedCodes&&!selectedCodes[code]) continue;
     var d=data[code];
     var html='',ax=0,ay=0;
+    var stName=st.kjName||'';
 
     if(cfg.isArrow){
       /* 矢羽（風向風速） */
@@ -950,8 +953,73 @@ function renderAmedas(data){
     var mk=L.marker([lat,lon],{icon:icon,interactive:false,keyboard:false});
     mk.addTo(map);
     amedasMarkers.push(mk);
+    amedasPositions.push({code:code,lat:lat,lon:lon,name:stName});
   }
 }
+
+/* ── アメダス地点インタラクション（interactive:false維持・マップレベルイベント）── */
+/* ツールチップDOM（1つだけ生成して再利用、メモリ効率優先） */
+var _amTooltip=(function(){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;background:rgba(10,30,60,0.92);color:#e0e0e0;'+
+    'border:1px solid #4a90e2;border-radius:4px;padding:3px 8px;font-size:12px;'+
+    'pointer-events:none;z-index:2000;display:none;white-space:nowrap;max-width:180px;';
+  document.body.appendChild(el);
+  return el;
+})();
+function showAmLabel(name,cx,cy){
+  var r=document.getElementById('map').getBoundingClientRect();
+  _amTooltip.textContent=name;
+  _amTooltip.style.left=(r.left+cx+14)+'px';
+  _amTooltip.style.top=(r.top+cy-30)+'px';
+  _amTooltip.style.display='block';
+}
+function hideAmLabel(){ _amTooltip.style.display='none'; }
+
+/* ピクセル距離で最寄りのアメダス地点を返す */
+function nearestAmedas(latlng,threshPx){
+  var best=null,bestD=threshPx||22;
+  var cp=map.latLngToContainerPoint(latlng);
+  for(var i=0;i<amedasPositions.length;i++){
+    var p=amedasPositions[i];
+    var sp=map.latLngToContainerPoint([p.lat,p.lon]);
+    var dx=cp.x-sp.x,dy=cp.y-sp.y;
+    var d=Math.sqrt(dx*dx+dy*dy);
+    if(d<bestD){bestD=d;best=p;}
+  }
+  return best;
+}
+
+/* PC: mousemove でホバー地点名表示（80ms throttle） */
+var _mmThrottle=null;
+map.on('mousemove',function(e){
+  if(!amedasOn||!amedasPositions.length){hideAmLabel();return;}
+  if(_mmThrottle) return;
+  _mmThrottle=setTimeout(function(){
+    _mmThrottle=null;
+    if(!amedasOn){hideAmLabel();return;}
+    var hit=nearestAmedas(e.latlng,22);
+    if(hit){var cp=map.latLngToContainerPoint(e.latlng);showAmLabel(hit.name,cp.x,cp.y);}
+    else hideAmLabel();
+  },80);
+});
+map.on('mouseout',function(){hideAmLabel();});
+
+/* ダブルクリック/ダブルタップ: アメダス地点近くなら気象庁ページを開く */
+map.on('dblclick',function(e){
+  if(!amedasOn||!amedasPositions.length) return;
+  var hit=nearestAmedas(e.latlng,25);
+  if(!hit) return;
+  L.DomEvent.stop(e); /* マップのダブルクリックズームを防止 */
+  hideAmLabel();
+  var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+hit.code;
+  /* RN WebView: postMessageでネイティブ側でLinkingを使って外部ブラウザを開く */
+  if(typeof window.ReactNativeWebView!=='undefined'){
+    window.ReactNativeWebView.postMessage(JSON.stringify({type:'openUrl',url:url}));
+  }else{
+    window.open(url,'_blank');
+  }
+});
 
 function scheduleAmedasUpdate(delay){
   clearTimeout(amedasTimer);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import { useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
@@ -35,6 +35,14 @@ export default function RadarScreen() {
         scrollEnabled={false}
         bounces={false}
         overScrollMode="never"
+        onMessage={(event) => {
+          try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.type === 'openUrl' && data.url) {
+              Linking.openURL(data.url);
+            }
+          } catch {}
+        }}
       />
     </View>
   );
