@@ -1,6 +1,4 @@
-import japanCoastline from '@/assets/geodata/japan_coastline.json';
-
-const _coastlineJson = JSON.stringify(japanCoastline);
+import { WORLD_COASTLINE_B64, JAPAN_COASTLINE_B64 } from './coastlineData';
 
 export const radarHtml = `<!DOCTYPE html>
 <html lang="ja">
@@ -174,7 +172,7 @@ var SAT_SEG = {
 };
 var AREA_PARAMS = {
   jp:{nativeZoom:6,interval:2.5*60,center:[35.5,137.0],zoom:6},
-  fd:{nativeZoom:5,interval:10*60, center:[26.2,127.7],zoom:5}
+  fd:{nativeZoom:5,interval:10*60, center:[0,140.7],zoom:3}
 };
 
 /* ── common.js インライン ── */
@@ -233,11 +231,14 @@ var osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18,attribution:'© OpenStreetMap contributors'
 });
 
-/* ── 海岸線（日本周辺・高精度・インライン埋め込み）── */
-L.geoJSON(${_coastlineJson},{
-  pane:'coastPane',
-  style:{color:'#00cc44',weight:1.2,opacity:0.85,fill:false}
-}).addTo(map);
+/* ── 海岸線（世界ne_110m日本除外 + 日本高精度 常時表示）── */
+(function(){
+  function addCoast(b64,style){
+    try{L.geoJSON(JSON.parse(atob(b64)),{pane:'coastPane',style:style}).addTo(map);}catch(e){}
+  }
+  addCoast('${WORLD_COASTLINE_B64}',{color:'#00cc44',weight:0.8,opacity:0.72,fill:false});
+  addCoast('${JAPAN_COASTLINE_B64}',{color:'#00cc44',weight:1.2,opacity:0.85,fill:false});
+})();
 
 /* ── 状態変数 ── */
 var satFrames=[],radarFrames=[];
@@ -308,7 +309,7 @@ function getEffectiveRadarNativeMax(){
 function makeSatLayer(f,band){
   var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
     minNativeZoom:f.nativeZoom,maxNativeZoom:f.nativeZoom,
-    minZoom:4,maxZoom:12,opacity:0,
+    minZoom:2,maxZoom:12,opacity:0,
     updateWhenIdle:false,keepBuffer:6,pane:'satPane'
   });
   l.on('tileload',function(){reapplyOpacity();});
@@ -586,6 +587,8 @@ function buildFrames(preserveView){
   isLoading=true;pause();cleanup();
 
   var params=AREA_PARAMS[currentArea];
+  /* 全球モードではズーム3まで引けるようにminZoomを調整 */
+  map.setMinZoom(currentArea==='fd'?2:4);
   if(!preserveView)map.setView(params.center,params.zoom);
 
   elSlider.min='0';elSlider.max='0';elSlider.value='0';
@@ -652,13 +655,14 @@ function scheduleAuto(){clearTimeout(autoTimerId);autoTimerId=setTimeout(autoLoo
 
 /* ── UI操作 ── */
 window.setArea=function(a,noRebuild){
+  var areaChanged=(a!==currentArea);
   currentArea=a;
   document.getElementById('aJP').className=a==='jp'?'active':'';
   document.getElementById('aFD').className=a==='fd'?'active':'';
   document.getElementById('mBoth').disabled=false;
   document.getElementById('mRadar').disabled=false;
   latestSatTime=null;latestRadarTime=null;
-  if(!noRebuild){saveState();buildFrames(true);}  /* ビュー位置を維持したまま再構築 */
+  if(!noRebuild){saveState();buildFrames(!areaChanged);}
 };
 
 window.setBand=function(b){
@@ -866,11 +870,11 @@ function styledText(txt,color){
   return '<div style="font-size:13px;font-weight:bold;color:'+color+
     ';text-shadow:'+sh+';white-space:nowrap;line-height:1.1">'+txt+'</div>';
 }
-/* アメダスリンク付きラベル: ホバーで地点名、クリックで気象庁観測ページを開く */
+/* アメダスリンク付きラベル: ホバーで地点名、ダブルクリックで気象庁観測ページを開く */
 function amedasLink(inner,stationCode,stationName){
   var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+stationCode;
-  return '<a href="'+url+'" title="'+stationName+'" target="_blank"'+
-    ' style="text-decoration:none;cursor:pointer;display:inline-block">'+inner+'</a>';
+  return '<span ondblclick="window.open(\\''+url+'\\',\\'_blank\\')" title="'+stationName+'"'+
+    ' style="text-decoration:none;cursor:pointer;display:inline-block">'+inner+'</span>';
 }
 
 function clearAmedasMarkers(){

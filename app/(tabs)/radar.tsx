@@ -26,7 +26,6 @@ export default function RadarScreen() {
         srcDoc={radarHtml}
         style={styles.iframe as any}
         title="レーダー+衛星"
-        sandbox="allow-scripts allow-same-origin allow-popups"
       />
     </View>
   );
