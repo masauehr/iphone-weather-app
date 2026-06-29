@@ -1162,12 +1162,12 @@ function fmtJst(d){
 var THIN = {6: 1.0, 7: 0.5, 8: 0.2};  // 度単位のグリッド幅
 ```
 
-間引き時は **2パス方式** で `humidity` 観測局を優先:
-1. 全局をスキャンし、各セル内の humidity 観測局を `cellBest` に登録（非humidity局が先にあっても上書き）
-2. `cellBest` から `selectedCodes` セットを作成
-3. メインループで `selectedCodes` に含まれる局のみ描画
+間引き時は **elemsスコア方式** で観測要素数が多い地点を優先:
+1. 全局をスキャンし、各セル内で `elems` フィールドの `'1'` の個数（elemsスコア）を算出
+2. 各グリッドセル内でスコアが最大の地点を `cellBest` に登録
+3. `cellBest` から `selectedCodes` セットを作成し、そのコードの局のみ描画
 
-これにより、露点温度表示時に間引き後の密度が最大になる（露点 = temp + humidity の計算値のため）。
+`elems` は気象庁 `amedastable.json` の各局エントリに含まれる文字列（例: `"11112010"`）。`'1'` は観測要素あり、`'0'` はなし、`'2'` は計算値を意味する。スコアが高い＝観測項目が多い主要局として優先的に表示される。
 
 | ズーム | グリッド幅 | 目安間隔 |
 |--------|-----------|---------|
@@ -1180,40 +1180,78 @@ var THIN = {6: 1.0, 7: 0.5, 8: 0.2};  // 度単位のグリッド幅
 
 取得済みデータは `amedasDataCache` オブジェクトに最大30タイムスタンプ分キャッシュ（`AMEDAS_CACHE_MAX=30`）。観測局リスト（`amedastable.json`）は初回1回のみ取得し `amedasStations` に保持。
 
-#### 地点名ホバー表示・クリックで観測ページを開く
+#### 地点名ホバー表示・ダブルクリック/ダブルタップで観測ページを開く
 
-各アメダスマーカー（矢羽・静穏丸・数値ラベル）を `<a>` タグでラップし、以下を実現する。
+マーカーに `interactive:false` を維持したまま、**マップレベルのイベント**で地点名表示とリンク開放を実現。マーカーへの個別リスナー登録を避けることでメモリ消費を抑制する。
 
 | 操作 | 動作 |
 |------|------|
-| マウスホバー（PC） | ブラウザネイティブのツールチップで地点名を表示（例：「大阪(おおさか)」） |
-| クリック（PC） | 気象庁アメダス観測ページを新しいタブで開く |
-| 長押し（スマホブラウザ） | 気象庁アメダス観測ページを開く |
+| マウスホバー（PC） | カスタムツールチップDOMで地点名を表示（例：「大阪」） |
+| ダブルクリック（PC） | 気象庁アメダス観測ページを新しいタブで開く |
+| ダブルタップ（スマホ・350ms/30px以内の2回タップ） | 気象庁アメダス観測ページを開く |
+
+**実装の仕組み**:
 
 ```javascript
-function amedasLink(inner, stationCode, stationName){
-  var url = 'https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno=' + stationCode;
-  return '<a href="' + url + '" title="' + stationName + '" target="_blank"'
-    + ' style="text-decoration:none;cursor:pointer;display:inline-block">' + inner + '</a>';
-}
-// 使用例（数値ラベル）
-html = amedasLink(styledText(cfg.fmt(val), c), code, st.kjName + '(' + st.knName + ')');
+// ① ツールチップDOM（1つだけ生成して再利用）
+var _amTooltip = (function(){
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;background:rgba(10,30,60,0.92);...pointer-events:none;z-index:2000;display:none;';
+  document.body.appendChild(el);
+  return el;
+})();
+
+// ② 最寄りアメダス地点をピクセル距離で検索
+function nearestAmedas(latlng, threshPx){ /* amedasPositions[] を線形探索 */ }
+
+// ③ PC: mousemove（80msスロットル）で地点名表示
+map.on('mousemove', function(e){ /* nearestAmedas(22px) → showAmLabel */ });
+
+// ④ PC: ダブルクリックでリンクを開く（マップズームを止める）
+map.on('dblclick', function(e){
+  var hit = nearestAmedas(e.latlng, 25);
+  if(!hit) return;
+  L.DomEvent.stop(e);  // dblclickによるズームインを防止
+  window.open('https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno=' + hit.code, '_blank');
+});
+
+// ⑤ スマホ: touchendで自前ダブルタップ検知
+//   Leaflet の tap:false 設定により dblclick イベントが発火しないため自前実装が必要
+document.getElementById('map').addEventListener('touchend', function(e){
+  // 350ms以内・30px以内の2回タップ → ダブルタップと判定
+  if(dt < DTAP_MS && dist < DTAP_PX){
+    var hit = nearestAmedas(ll, 25);
+    if(hit){
+      e.preventDefault();  // ダブルタップズームを防止
+      if(window.ReactNativeWebView){
+        window.ReactNativeWebView.postMessage(JSON.stringify({type:'openUrl', url:url}));
+      } else {
+        window.open(url, '_blank');  // Webブラウザ版
+      }
+    }
+  }
+}, {passive:false});
 ```
 
-**PC（Web版 iframe）での `allow-popups` 設定**:
+**スマホ WebView（iOS）でのURL開放**:
 
-Web版は `<iframe sandbox="...">` 内で動作するため、デフォルトの `allow-scripts allow-same-origin` だけでは `target="_blank"` がブロックされる。`radar.tsx` に `allow-popups` を追加することで解決。
+`radar.native.tsx` の `onMessage` ハンドラで `postMessage` を受け取り `Linking.openURL` で外部ブラウザを開く。
 
-```tsx
-// app/(tabs)/radar.tsx
-<iframe
-  srcDoc={radarHtml}
-  sandbox="allow-scripts allow-same-origin allow-popups"
-/>
+```typescript
+// app/(tabs)/radar.native.tsx
+onMessage={(event) => {
+  try {
+    const data = JSON.parse(event.nativeEvent.data);
+    if (data.type === 'openUrl' && data.url) {
+      Linking.openURL(data.url);
+    }
+  } catch {}
+}}
 ```
 
-- スマホ WebView（`radar.native.tsx`）は sandbox 制限を受けないため変更不要。
-- 参考実装: `/web/webapp/gmsRadarAmedasTileViewer/js/image_util.js`（`title` + `href` + `target=_blank` の `<a>` タグ方式）
+**なぜ `<a>` タグ方式を使わないか**:
+
+`<a>` タグ方式はタップ1回でリンクが開いてしまい、地図操作（スクロール・ズーム）と混在して使いにくい。また `interactive:false` を外すとマーカー生成時に Leaflet が DOM イベントリスナーを多数登録し、大量地点表示時のメモリ増加の原因となる。
 
 ---
 
@@ -1386,16 +1424,22 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 
 ---
 
-### 2026-06-26 アメダス地点インタラクション追加
+### 2026-06-29 アメダス地点インタラクション・クラッシュ対策・間引き優先度改善
 
-#### レーダー・衛星タブ（radarHtml.ts / radar.tsx）
+#### レーダー・衛星タブ（radarHtml.ts / radar.native.tsx）
 
 | 改修 | 内容 |
 |------|------|
-| アメダスマーカーに地点名ホバー表示を追加 | 各アメダスマーカー（矢羽・静穏丸・数値ラベル）を `<a>` タグでラップ。`title` 属性に「漢字名(かな名)」を設定し、PCブラウザでマウスホバー時にネイティブツールチップで地点名を表示 |
-| アメダスマーカーのクリックで観測ページを開く | `href` に `https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno={地点コード}` を設定。PC ではクリック、スマホブラウザでは長押しで気象庁のアメダス観測データページを新しいタブで開く |
-| Web版 iframe の sandbox に `allow-popups` を追加 | `radar.tsx` の `<iframe sandbox>` に `allow-popups` を追加。これがないと iframe 内の `target="_blank"` がブロックされ PC でリンクが開けなかった。スマホ WebView（`radar.native.tsx`）は sandbox 制限を受けないため変更不要 |
-| マーカーの `interactive:false` を除去 | クリックを受け付けるよう変更（`keyboard:false` は維持） |
+| アメダス地点名ホバー表示（新実装） | マーカーに `interactive:false` を維持したままマップレベルの `mousemove` イベントで処理。固定DOMツールチップ（`_amTooltip`）を1つだけ生成して再利用。80ms スロットルで `nearestAmedas()` を呼び、22px以内の最寄り地点名を表示 |
+| ダブルクリックで観測ページを開く（PC） | `map.on('dblclick')` でマップレベル検知。25px以内にアメダス地点があれば `L.DomEvent.stop(e)` でズームインをキャンセルし `window.open` でリンクを開く |
+| ダブルタップで観測ページを開く（スマホ） | Leaflet の `tap:false` 設定により `dblclick` が発火しないため自前実装。`touchend` で350ms・30px以内の2回タップを検知。`e.preventDefault()` でダブルタップズームを防止 |
+| スマホ WebView でのURL開放 | `window.ReactNativeWebView` 検出時は `postMessage({type:'openUrl', url})` を送信。`radar.native.tsx` の `onMessage` ハンドラが `Linking.openURL` で外部ブラウザを起動 |
+| ズームアウトクラッシュ対策 | `map.setMinZoom(4→5)` でズームアウト上限を制限。`keepBuffer:2→1` に削減してタイルメモリを圧縮。TileLayer の `minZoom:4→5` も統一 |
+| アメダス間引き優先度改善 | humidity優先2パス方式 → elemsスコア（`amedastable.json` の `elems` フィールドで `'1'` の個数）方式に変更。観測要素数が多い主要局（那覇・名護・久米島・糸数等）がズームアウト時も優先表示される |
+
+**背景・経緯**:
+
+初期実装（`<a>` タグ方式）は `interactive:false` 除去 + `<a>` タグラップで実装したが、タップ1回でリンクが開いて使いにくい・メモリ増加の懸念があったため廃止。現実装はマーカー自体を完全非インタラクティブに保ったまま、マップレベルのイベントのみで操作を完結させる。
 
 ---
 
@@ -1482,7 +1526,7 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 | 縁取り色の色依存化 | 青系の塗りつぶし色 → 白縁取り、それ以外 → 黒縁取り（暗背景での視認性向上） |
 | マーカーサイズ拡大 | 矢羽 14×22px → 18×28px、テキスト 11px → 13px に統一 |
 | デフォルトON | `amedasOn=true` に変更、起動時にボタンをアクティブ化 |
-| ズーム間引き | ズーム6〜8でグリッド間引き（1.0°/0.5°/0.2°）。humidity観測局を優先して残す2パス方式 |
+| ズーム間引き | ズーム6〜8でグリッド間引き（1.0°/0.5°/0.2°）。humidity観測局を優先する2パス方式（後日elemsスコア方式に改善、→ 2026-06-29節参照） |
 | 時刻同期 | `lastAmedasJst` でJST10分バケット変化時のみ再取得（アニメーション中の過剰リクエスト防止） |
 
 ### 2026-06-15 洪水キキクルズームバグ修正
@@ -1563,4 +1607,4 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 
 ---
 
-*最終更新: 2026-06-26（アメダス地点名ホバー・クリック観測ページ表示追加）*
+*最終更新: 2026-06-29（アメダス地点名ホバー・ダブルクリック/ダブルタップ実装、ズームクラッシュ対策、間引き優先度改善）*
