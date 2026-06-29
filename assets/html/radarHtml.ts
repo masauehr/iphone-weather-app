@@ -861,6 +861,13 @@ function fmtJst(d){
     pad2(j.getUTCHours())+pad2(j.getUTCMinutes())+'00';
 }
 
+/* アメダスリンクラッパー: title属性でホバー地点名、pointer-events:autoで親のnoneを上書き */
+function amedasLink(inner,code,name){
+  var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+code;
+  return '<a href="'+url+'" title="'+name+'" target="_blank"'+
+    ' style="text-decoration:none;display:inline-block;pointer-events:auto">'+inner+'</a>';
+}
+
 /* テキストラベルHTML（青系→白縁取り、それ以外→黒縁取り） */
 function styledText(txt,color){
   var oc=outlineColor(color);
@@ -949,6 +956,7 @@ function renderAmedas(data){
       ax=14;ay=7;
     }
     if(!html) continue;
+    html=amedasLink(html,code,stName); /* <a>タグでラップ: タップ/クリックで気象庁ページ、titleで地点名 */
     var icon=L.divIcon({html:html,className:'',iconSize:[0,0],iconAnchor:[ax,ay]});
     var mk=L.marker([lat,lon],{icon:icon,interactive:false,keyboard:false});
     mk.addTo(map);
