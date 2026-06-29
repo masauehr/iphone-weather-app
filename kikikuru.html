@@ -1,0 +1,1441 @@
+<!DOCTYPE html><html  lang="en"><head><title data-rh="true"></title><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><style id="expo-reset">#root,body,html{height:100%}body{overflow:hidden}#root{display:flex}</style><style id="react-native-stylesheet">[stylesheet-group="0"]{}
+body{margin:0;}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0;}
+html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+input::-webkit-search-cancel-button,input::-webkit-search-decoration,input::-webkit-search-results-button,input::-webkit-search-results-decoration{display:none;}
+[stylesheet-group="1"]{}
+.css-11aywtz{-moz-appearance:textfield;-webkit-appearance:none;background-color:rgba(0,0,0,0.00);border-bottom-left-radius:0px;border-bottom-right-radius:0px;border-top-left-radius:0px;border-top-right-radius:0px;border:0 solid black;box-sizing:border-box;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0px;padding:0px;resize:none;}
+.css-146c3p1{background-color:rgba(0,0,0,0.00);border:0 solid black;box-sizing:border-box;color:rgba(0,0,0,1.00);display:inline;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;list-style:none;margin:0px;padding:0px;position:relative;text-align:start;text-decoration:none;white-space:pre-wrap;word-wrap:break-word;}
+.css-1jxf684{background-color:rgba(0,0,0,0.00);border:0 solid black;box-sizing:border-box;color:inherit;display:inline;font:inherit;list-style:none;margin:0px;padding:0px;position:relative;text-align:inherit;text-decoration:none;white-space:inherit;word-wrap:break-word;}
+.css-9pa8cd{bottom:0px;height:100%;left:0px;opacity:0;position:absolute;right:0px;top:0px;width:100%;z-index:-1;}
+.css-g5y9jx{align-content:flex-start;align-items:stretch;background-color:rgba(0,0,0,0.00);border:0 solid black;box-sizing:border-box;display:flex;flex-basis:auto;flex-direction:column;flex-shrink:0;list-style:none;margin:0px;min-height:0px;min-width:0px;padding:0px;position:relative;text-decoration:none;z-index:0;}
+[stylesheet-group="2"]{}
+.r-11mg6pl{border-bottom-color:rgba(255,255,255,1.00);border-left-color:rgba(255,255,255,1.00);border-right-color:rgba(255,255,255,1.00);border-top-color:rgba(255,255,255,1.00);}
+.r-13awgt0{flex:1;}
+.r-146eth8{padding:3px;}
+.r-1867qdf{border-bottom-left-radius:16px;border-bottom-right-radius:16px;border-top-left-radius:16px;border-top-right-radius:16px;}
+.r-1awa8pu{border-bottom-color:rgba(101,119,134,1.00);border-left-color:rgba(101,119,134,1.00);border-right-color:rgba(101,119,134,1.00);border-top-color:rgba(101,119,134,1.00);}
+.r-1bq2mok{margin:3px;}
+.r-1d4xg89{border-bottom-color:rgba(170,184,194,1.00);border-left-color:rgba(170,184,194,1.00);border-right-color:rgba(170,184,194,1.00);border-top-color:rgba(170,184,194,1.00);}
+.r-1dzdj1l{border-bottom-left-radius:10px;border-bottom-right-radius:10px;border-top-left-radius:10px;border-top-right-radius:10px;}
+.r-1f0042m{border-bottom-left-radius:5px;border-bottom-right-radius:5px;border-top-left-radius:5px;border-top-right-radius:5px;}
+.r-1j16mh1{border-bottom-left-radius:100%;border-bottom-right-radius:100%;border-top-left-radius:100%;border-top-right-radius:100%;}
+.r-1jkafct{border-bottom-left-radius:2px;border-bottom-right-radius:2px;border-top-left-radius:2px;border-top-right-radius:2px;}
+.r-1jyn79y{border-bottom-color:rgba(0,150,136,1.00);border-left-color:rgba(0,150,136,1.00);border-right-color:rgba(0,150,136,1.00);border-top-color:rgba(0,150,136,1.00);}
+.r-1lecvlt{border-bottom-color:rgba(156,184,216,1.00);border-left-color:rgba(156,184,216,1.00);border-right-color:rgba(156,184,216,1.00);border-top-color:rgba(156,184,216,1.00);}
+.r-1pcd2l5{padding:20px;}
+.r-1phboty{border-bottom-style:solid;border-left-style:solid;border-right-style:solid;border-top-style:solid;}
+.r-1q9bdsx{border-bottom-left-radius:12px;border-bottom-right-radius:12px;border-top-left-radius:12px;border-top-right-radius:12px;}
+.r-1qsk4np{overflow-x:clip;overflow-y:clip;}
+.r-1rf8fdq{border-bottom-width:1.5px;border-left-width:1.5px;border-right-width:1.5px;border-top-width:1.5px;}
+.r-1rvyss1{border-bottom-color:rgba(255,255,255,0.20);border-left-color:rgba(255,255,255,0.20);border-right-color:rgba(255,255,255,0.20);border-top-color:rgba(255,255,255,0.20);}
+.r-1slz7xr{padding:14px;}
+.r-1sp51qo{padding:10px;}
+.r-1t74lqs{border-bottom-color:rgba(230,126,34,1.00);border-left-color:rgba(230,126,34,1.00);border-right-color:rgba(230,126,34,1.00);border-top-color:rgba(230,126,34,1.00);}
+.r-1udh08x{overflow-x:hidden;overflow-y:hidden;}
+.r-1uu6nss{padding:5px;}
+.r-1uzt0r1{border-bottom-color:rgba(74,144,226,1.00);border-left-color:rgba(74,144,226,1.00);border-right-color:rgba(74,144,226,1.00);border-top-color:rgba(74,144,226,1.00);}
+.r-1xfd6ze{border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:8px;border-top-right-radius:8px;}
+.r-3ov0d1{border-bottom-color:rgba(176,205,232,1.00);border-left-color:rgba(176,205,232,1.00);border-right-color:rgba(176,205,232,1.00);border-top-color:rgba(176,205,232,1.00);}
+.r-494qqr{padding:32px;}
+.r-4a18lf{border-bottom-color:rgba(255,0,0,1.00);border-left-color:rgba(255,0,0,1.00);border-right-color:rgba(255,0,0,1.00);border-top-color:rgba(255,0,0,1.00);}
+.r-60ke3l{border-bottom-color:rgba(0,128,0,1.00);border-left-color:rgba(0,128,0,1.00);border-right-color:rgba(0,128,0,1.00);border-top-color:rgba(0,128,0,1.00);}
+.r-6t2glc{border-bottom-left-radius:40px;border-bottom-right-radius:40px;border-top-left-radius:40px;border-top-right-radius:40px;}
+.r-9x6qib{border-bottom-color:rgba(204,214,221,1.00);border-left-color:rgba(204,214,221,1.00);border-right-color:rgba(204,214,221,1.00);border-top-color:rgba(204,214,221,1.00);}
+.r-crgep1{margin:0px;}
+.r-d045u9{border-bottom-width:2px;border-left-width:2px;border-right-width:2px;border-top-width:2px;}
+.r-d23pfw{padding:24px;}
+.r-dta0w2{flex:2;}
+.r-edyy15{padding:8px;}
+.r-fx7oqy{border-bottom-color:rgba(0,0,255,1.00);border-left-color:rgba(0,0,255,1.00);border-right-color:rgba(0,0,255,1.00);border-top-color:rgba(0,0,255,1.00);}
+.r-krxsd3{display:-webkit-box;}
+.r-nsbfu8{padding:16px;}
+.r-rs99b7{border-bottom-width:1px;border-left-width:1px;border-right-width:1px;border-top-width:1px;}
+.r-sax9pr{flex:1.5;}
+.r-t23y2h{border-bottom-left-radius:14px;border-bottom-right-radius:14px;border-top-left-radius:14px;border-top-right-radius:14px;}
+.r-t60dpp{padding:0px;}
+.r-wg31gx{border-bottom-color:rgba(49,53,56,1.00);border-left-color:rgba(49,53,56,1.00);border-right-color:rgba(49,53,56,1.00);border-top-color:rgba(49,53,56,1.00);}
+.r-xoduu5{display:inline-flex;}
+.r-y7w8ww{border-bottom-color:rgba(26,107,189,1.00);border-left-color:rgba(26,107,189,1.00);border-right-color:rgba(26,107,189,1.00);border-top-color:rgba(26,107,189,1.00);}
+.r-ywje51{margin:auto;}
+.r-z2wwpe{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-top-left-radius:4px;border-top-right-radius:4px;}
+[stylesheet-group="2.1"]{}
+.r-11f147o{padding-bottom:8px;padding-top:8px;}
+.r-11gswi8{padding-left:3px;padding-right:3px;}
+.r-17q4wm6{margin-left:5px;margin-right:5px;}
+.r-184id4b{margin-bottom:12px;margin-top:12px;}
+.r-1d7mnkm{padding-bottom:15px;padding-top:15px;}
+.r-1e084wi{padding-left:0px;padding-right:0px;}
+.r-1mmae3n{padding-bottom:12px;padding-top:12px;}
+.r-1ntr0p{padding-left:5px;padding-right:5px;}
+.r-1rsorjc{padding-left:36px;padding-right:36px;}
+.r-1ubuhtd{padding-left:10px;padding-right:10px;}
+.r-1yd117h{padding-bottom:7px;padding-top:7px;}
+.r-3o4zer{padding-left:12px;padding-right:12px;}
+.r-cnw61z{padding-bottom:4px;padding-top:4px;}
+.r-cxgwc0{padding-left:24px;padding-right:24px;}
+.r-f8sm7e{margin-left:auto;margin-right:auto;}
+.r-is05cd{padding-left:8px;padding-right:8px;}
+.r-jdiy1a{margin-left:11px;margin-right:11px;}
+.r-jusfrs{margin-left:12px;margin-right:12px;}
+.r-n5f61p{margin-bottom:3px;margin-top:3px;}
+.r-n7gxbd{padding-left:4px;padding-right:4px;}
+.r-u9wvl5{padding-left:20px;padding-right:20px;}
+.r-ugi1tw{padding-left:5%;padding-right:5%;}
+.r-vuvdlw{padding-bottom:6px;padding-top:6px;}
+.r-w7s2jr{padding-bottom:16px;padding-top:16px;}
+.r-xjggfu{padding-bottom:3px;padding-top:3px;}
+.r-ytbthy{padding-bottom:10px;padding-top:10px;}
+[stylesheet-group="2.2"]{}
+.r-10s2tm5{left:0%;}
+.r-16o8guy{right:100%;}
+.r-1a11zyx{margin-right:12px;}
+.r-1cwvpvk{margin-left:12px;}
+.r-1e97lx8{margin-right:3px;}
+.r-1euzeng{padding-left:24px;}
+.r-1g4tz6n{margin-right:-14.5px;}
+.r-1h31txp{padding-right:16px;}
+.r-1lhn9r{margin-left:-14.5px;}
+.r-1sqnqi2{margin-left:3px;}
+.r-1vl2501{padding-right:24px;}
+.r-9mo606{margin-right:10px;}
+.r-c59us2{left:-3px;}
+.r-dqe1q{right:0%;}
+.r-qb41rp{margin-right:5px;}
+.r-rci37q{left:100%;}
+.r-uhung1{margin-left:10px;}
+.r-vpmibe{right:-3px;}
+.r-w67my2{padding-left:16px;}
+.r-wizibn{margin-left:5px;}
+[stylesheet-group="3"]{}
+.r-105ug2t{pointer-events:auto!important;}
+.r-10ptun7{height:16px;}
+.r-10v3vxq{transform:scaleX(-1);}
+.r-10x49cs{font-size:10px;}
+.r-10xqauy{padding-top:env(safe-area-inset-top);}
+.r-11j9u27{visibility:hidden;}
+.r-11mpjr4{background-color:rgba(223,223,223,1.00);}
+.r-11t4n93{color:rgba(34,34,34,1.00);}
+.r-11udlyb{background-color:rgba(0,150,136,1.00);}
+.r-11v9fek{min-width:180px;}
+.r-11yh6sk{overflow-x:hidden;}
+.r-12bsgc{background-color:rgba(232,244,253,1.00);}
+.r-12f6czt{top:17px;}
+.r-12iwjzx{background-color:rgba(221,232,244,1.00);}
+.r-12vffkv>* {pointer-events:auto;}
+.r-12vffkv{pointer-events:none!important;}
+.r-135wba7{line-height:24px;}
+.r-13aq9py{animation-name:r-1iq689l;}
+.r-13qz1uu{width:100%;}
+.r-13tjlyg{transition-duration:0.1s;}
+.r-1472mwg{height:24px;}
+.r-14glzig{color:rgba(52,152,219,1.00);}
+.r-14gqq1x{margin-top:4px;}
+.r-14lw9ot{background-color:rgba(255,255,255,1.00);}
+.r-14sbq61{background-color:rgba(33,150,243,1.00);}
+.r-150rngu{-webkit-overflow-scrolling:touch;}
+.r-15d164r{margin-bottom:10px;}
+.r-15kcn5h{color:rgba(26,58,92,1.00);}
+.r-16y2uox{flex-grow:1;}
+.r-173mn98{align-self:flex-end;}
+.r-173mzie{transform:scaleY(-1);}
+.r-1777fci{justify-content:center;}
+.r-17bb2tj{animation-duration:0.75s;}
+.r-17dh15n{background-color:rgba(220,232,245,1.00);}
+.r-17leim2{background-repeat:repeat;}
+.r-17rnw9f{line-height:30px;}
+.r-17s6mgv{justify-content:flex-end;}
+.r-17tb59b{opacity:0.7;}
+.r-17tloay{opacity:0.6;}
+.r-17u3ijr{background-color:rgba(155,161,166,0.27);}
+.r-181bzza{color:rgba(85,85,85,1.00);}
+.r-184en5c{z-index:1;}
+.r-18nhz7w{top:-3px;}
+.r-18u1ve8{color:rgba(255,255,255,0.40);}
+.r-18u37iz{flex-direction:row;}
+.r-18v0ysc{color:rgba(231,76,60,1.00);}
+.r-19h5ruw{margin-top:15px;}
+.r-19oahor{font-size:64px;}
+.r-19wmn03{width:20px;}
+.r-19z077z{touch-action:none;}
+.r-1a2p6p6{-webkit-text-decoration-style:solid;text-decoration-style:solid;}
+.r-1abnn5w{animation-play-state:paused;}
+.r-1acpoxo{width:36px;}
+.r-1aiqnjv{font-family:monospace,monospace;}
+.r-1aockid{width:40px;}
+.r-1awozwy{align-items:center;}
+.r-1ay1djp{animation-duration:1s;}
+.r-1b43r93{font-size:14px;}
+.r-1bymd8e{margin-top:2px;}
+.r-1c6unfx{forced-color-adjust:none;}
+.r-1c85bru{width:270px;}
+.r-1cmwbt1{gap:8px;}
+.r-1d2f490{left:0px;}
+.r-1d5kdc7{flex-direction:column-reverse;}
+.r-1ddef8g{-webkit-text-decoration-line:underline;text-decoration-line:underline;}
+.r-1dernwh{height:70%;}
+.r-1dinhj7{background-color:rgba(240,244,248,1.00);}
+.r-1dnsj32{color:rgba(128,128,128,1.00);}
+.r-1ei5mc7{cursor:inherit;}
+.r-1enofrn{font-size:12px;}
+.r-1euycsn{flex-direction:row-reverse;}
+.r-1ewcgjf{box-shadow:0px 1px 3px rgba(0,0,0,0.5);}
+.r-1ff274t{text-align:right;}
+.r-1ffj0ar{background-color:rgba(0,0,0,0.40);}
+.r-1g80hic{opacity:0.8;}
+.r-1ge9hsw{max-width:960px;}
+.r-1ghxqbu{font-variant:tabular-nums;}
+.r-1gkfh8e{font-size:11px;}
+.r-1h0z5md{justify-content:flex-start;}
+.r-1h2t8mc{width:0px;}
+.r-1habvwh{align-items:flex-start;}
+.r-1i10wst{font-size:18px;}
+.r-1i6wzkk{-moz-transition-property:opacity;-webkit-transition-property:opacity;transition-property:opacity;}
+.r-1i71y14{gap:14px;}
+.r-1ikidpy{letter-spacing:0.5px;}
+.r-1iln25a{word-wrap:normal;}
+.r-1inkyih{font-size:17px;}
+.r-1iusvr4{flex-basis:0px;}
+.r-1iuttuq{bottom:-90px;}
+.r-1janqcz{width:16px;}
+.r-1jkjb{margin-left:8px;}
+.r-1kb76zh{margin-right:8px;}
+.r-1kfrs79{font-weight:600;}
+.r-1khnkhu{color:rgba(51,51,51,1.00);}
+.r-1kihuf0{align-self:center;}
+.r-1kl1mp1{height:250px;}
+.r-1ld3bg{top:-4px;}
+.r-1ldzwu0{animation-timing-function:linear;}
+.r-1loqt21{cursor:pointer;}
+.r-1mlwlqe{flex-basis:auto;}
+.r-1mrlafo{background-position:0;}
+.r-1muvv40{animation-iteration-count:infinite;}
+.r-1niwhzg{background-color:rgba(0,0,0,0.00);}
+.r-1nlw0im{bottom:8px;}
+.r-1no09lo{margin-top:28px;}
+.r-1nxhmzv{margin-bottom:28px;}
+.r-1ny4l3l{outline-style:none;}
+.r-1ocf4r9{scroll-snap-type:y mandatory;}
+.r-1onu96p{border-curve:continuous;}
+.r-1oszu61{align-items:stretch;}
+.r-1otgn73{touch-action:manipulation;}
+.r-1p0dtai{bottom:0px;}
+.r-1pi2tsx{height:100%;}
+.r-1pm8pkb{font-family:Courier;}
+.r-1qd0xha{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.r-1qulhi1{animation-name:r-1pzkwqh;}
+.r-1r4fvd0{color:rgba(82,169,255,1.00);}
+.r-1r74h94{left:8px;}
+.r-1r8g8re{height:36px;}
+.r-1rnoaur{overflow-y:auto;}
+.r-1s2bzr4{margin-top:12px;}
+.r-1sg8ghl{z-index:1000;}
+.r-1srvcxg{color:rgba(170,170,170,1.00);}
+.r-1ssbvtb{gap:12px;}
+.r-1sxrcry{background-size:auto;}
+.r-1udbk01{text-overflow:ellipsis;}
+.r-1ui5ee8{font-size:32px;}
+.r-1v78gzs{color:rgba(10,126,164,1.00);}
+.r-1vkfoo1{background-color:rgba(74,144,226,1.00);}
+.r-1vr29t4{font-weight:800;}
+.r-1w2pmg{height:0px;}
+.r-1w6e6rj{flex-wrap:wrap;}
+.r-1wbh5a2{flex-shrink:1;}
+.r-1wtj0ep{justify-content:space-between;}
+.r-1wyyakw{z-index:-1;}
+.r-1x0uki6{margin-top:20px;}
+.r-1xcajam{position:fixed;}
+.r-1xce0ei{width:25%;}
+.r-1xnzce8{-moz-user-select:text;-webkit-user-select:text;user-select:text;}
+.r-1xpsq9i{box-shadow:0px 3px 3px rgba(0, 0, 0, 0.33);}
+.r-1xzupcd{width:13px;}
+.r-1yef0xd{animation-name:r-11cv4x;}
+.r-1yv2962{box-shadow:0px 0px 4px rgba(0,0,0,0.05);}
+.r-2eszeu::-webkit-scrollbar{display:none}
+.r-2eszeu{scrollbar-width:none;}
+.r-30o5oe{-moz-appearance:none;-ms-appearance:none;-webkit-appearance:none;appearance:none;}
+.r-356f0p{letter-spacing:0.35px;}
+.r-37tt59{line-height:32px;}
+.r-3mc0re{right:8px;}
+.r-3s2u2q{white-space:nowrap;}
+.r-417010{z-index:0;}
+.r-4gszlv{background-size:cover;}
+.r-4v7adb{height:5px;}
+.r-5753bg{background-color:rgba(26,26,46,1.00);}
+.r-5oul0u{margin-bottom:8px;}
+.r-60vfwk{min-width:1px;}
+.r-633pao>* {pointer-events:none;}
+.r-633pao{pointer-events:none!important;}
+.r-6dt33c{opacity:1;}
+.r-6gpygo{margin-bottom:12px;}
+.r-6taxm2:-ms-input-placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6taxm2::-moz-placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6taxm2::-webkit-input-placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6taxm2::placeholder{color:var(--placeholderTextColor);opacity:1;}
+.r-6uxfom{margin-left:24px;}
+.r-726pan{width:31px;}
+.r-76blku{height:21px;}
+.r-7cikom{font-size:inherit;}
+.r-7q8q6z{cursor:default;}
+.r-8akbws{-webkit-box-orient:vertical;}
+.r-8ay8q1{letter-spacing:0.1px;}
+.r-97e31f{padding-bottom:env(safe-area-inset-bottom);}
+.r-9aw3ui{gap:4px;}
+.r-9daxd3{animation-duration:250ms;}
+.r-a023e6{font-size:15px;}
+.r-adyw6z{font-size:20px;}
+.r-agouwx{transform:translateZ(0);}
+.r-ah5dr5>* {pointer-events:none;}
+.r-ah5dr5{pointer-events:auto!important;}
+.r-aruset{font-weight:200;}
+.r-bcqeeo{min-width:0px;}
+.r-bi4vy9{transform:translateY(100%);}
+.r-bt1l66{min-height:20px;}
+.r-buy8e9{overflow-y:hidden;}
+.r-bv2aro{padding-left:env(safe-area-inset-left);}
+.r-c68hjy{color:rgba(161,161,161,1.00);}
+.r-cl8hbx{background-color:rgba(26,107,189,1.00);}
+.r-cpa5s6{scroll-snap-align:start;}
+.r-cqee49{color:rgba(0,0,0,1.00);}
+.r-cqzzvf{border-top-right-radius:20px;}
+.r-dkge59{background-color:rgba(170,184,194,1.00);}
+.r-dnmrzs{max-width:100%;}
+.r-drfeu3{background-color:rgba(0,0,0,0.50);}
+.r-ea455c{border:none;}
+.r-eafdt9{transition-duration:0.15s;}
+.r-ebwn4k{animation-name:r-q67da2;}
+.r-ehq7j7{background-size:contain;}
+.r-eqz5dr{flex-direction:column;}
+.r-eu3ka{height:40px;}
+.r-evnaw{font-size:22px;}
+.r-f1w8kp{border-top-left-radius:20px;}
+.r-f4gmv6{gap:16px;}
+.r-f4l0r{color:rgba(204,221,238,1.00);}
+.r-f9v2oj{max-height:80%;}
+.r-fdjqy7{text-align:left;}
+.r-g3mlsw{animation-name:r-t2lo5v;}
+.r-ghxds0{transform:translateY(0%);}
+.r-gtdqiz{position:-webkit-sticky;position:sticky;}
+.r-h0d30l{height:28px;}
+.r-howw7u{color:rgba(255,0,0,1.00);}
+.r-hxflta{padding-right:env(safe-area-inset-right);}
+.r-icoktb{opacity:0.5;}
+.r-ipm5af{top:0px;}
+.r-jwli3a{color:rgba(255,255,255,1.00);}
+.r-k200y{align-self:flex-start;}
+.r-kc8jnq{margin-top:6px;}
+.r-kemksi{background-color:rgba(0,0,0,1.00);}
+.r-kizejy{color:rgba(155,161,166,1.00);}
+.r-knv0ih{margin-top:8px;}
+.r-krg9a9{color:rgba(74,144,226,1.00);}
+.r-leqjx2{animation-timing-function:cubic-bezier(0.215, 0.61, 0.355, 1);}
+.r-lltvgl{overflow-x:auto;}
+.r-lpb231{height:168px;}
+.r-lrsllp{width:24px;}
+.r-lrvibr{-moz-user-select:none;-webkit-user-select:none;user-select:none;}
+.r-m6qmqv{color:rgba(221,238,255,1.00);}
+.r-majxgm{font-weight:500;}
+.r-mfh4gg{scroll-snap-type:x mandatory;}
+.r-mhe3cw{z-index:10;}
+.r-mro3nb{background-color:rgba(21,23,24,1.00);}
+.r-n6v787{font-size:13px;}
+.r-o4n3w5{width:23px;}
+.r-obd0qt{align-items:flex-end;}
+.r-ojf8lh{gap:6px;}
+.r-orgf3d{opacity:0;}
+.r-q4m81j{text-align:center;}
+.r-qfi6ny{top:30000px;}
+.r-qklmqi{border-bottom-width:1px;}
+.r-qn3fzs{padding-bottom:24px;}
+.r-qsh48c{left:-35px;}
+.r-rjixqe{line-height:20px;}
+.r-rs94m5{background-image:url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIgogICB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIgogICB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgdmVyc2lvbj0iMS4xIgogICB2aWV3Qm94PSIwIDAgMSAxIgogICBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWluWU1pbiBtZWV0Ij4KICA8cGF0aAogICAgIGQ9Ik0gMC4wNDAzODA1OSwwLjYyNjc3NjcgMC4xNDY0NDY2MSwwLjUyMDcxMDY4IDAuNDI5Mjg5MzIsMC44MDM1NTMzOSAwLjMyMzIyMzMsMC45MDk2MTk0MSB6IE0gMC4yMTcxNTcyOSwwLjgwMzU1MzM5IDAuODUzNTUzMzksMC4xNjcxNTcyOSAwLjk1OTYxOTQxLDAuMjczMjIzMyAwLjMyMzIyMzMsMC45MDk2MTk0MSB6IgogICAgIGlkPSJyZWN0Mzc4MCIKICAgICBzdHlsZT0iZmlsbDojZmZmZmZmO2ZpbGwtb3BhY2l0eToxO3N0cm9rZTpub25lIiAvPgo8L3N2Zz4K");}
+.r-s62m2j{animation-timing-function:cubic-bezier(0.47, 0, 0.745, 0.715);}
+.r-sfbmgh{z-index:9999;}
+.r-so7y2g{line-height:64px;}
+.r-tsynxw{text-transform:uppercase;}
+.r-u04ygo{padding-top:60px;}
+.r-u6sd8q{background-repeat:no-repeat;}
+.r-u8s1d{position:absolute;}
+.r-u92y06{background-color:rgba(255,165,0,1.00);}
+.r-ubezar{font-size:16px;}
+.r-uho16t{font-size:34px;}
+.r-v9ozmu{background-color:rgba(230,126,34,1.00);}
+.r-vacyoi{padding-bottom:64px;}
+.r-van48c{caret-color:transparent;}
+.r-vboj7i{top:-7px;}
+.r-vvn4in{background-position:center;}
+.r-vw2c0b{font-weight:bold;}
+.r-wfqgy4{transition-duration:100ms;}
+.r-ws9h79{left:4px;}
+.r-x11e5r{font-family:SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+.r-x3cy2q{background-size:100% 100%;}
+.r-xdvzot{color:rgba(136,136,136,1.00);}
+.r-xx3c9p{animation-name:r-imtty0;}
+.r-y7v2we{background-color:rgba(32,36,37,1.00);}
+.r-z80fyv{height:20px;}
+.r-zchlnj{right:0px;}
+.r-zl2h9q{margin-bottom:2px;}
+.r-zz5t5d{font-size:28px;}
+@-webkit-keyframes r-11cv4x{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+@-webkit-keyframes r-1iq689l{0%{transform:translateY(0%);}100%{transform:translateY(100%);}}
+@-webkit-keyframes r-1pzkwqh{0%{transform:translateY(100%);}100%{transform:translateY(0%);}}
+@-webkit-keyframes r-imtty0{0%{opacity:0;}100%{opacity:1;}}
+@-webkit-keyframes r-q67da2{0%{transform:translateX(-100%);}100%{transform:translateX(400%);}}
+@-webkit-keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}
+@keyframes r-11cv4x{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+@keyframes r-1iq689l{0%{transform:translateY(0%);}100%{transform:translateY(100%);}}
+@keyframes r-1pzkwqh{0%{transform:translateY(100%);}100%{transform:translateY(0%);}}
+@keyframes r-imtty0{0%{opacity:0;}100%{opacity:1;}}
+@keyframes r-q67da2{0%{transform:translateX(-100%);}100%{transform:translateX(400%);}}
+@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script><link rel="icon" href="/iphone-weather-app/favicon.ico" /></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"><!--$--><div style="position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;visibility:hidden"></div><div class="css-g5y9jx r-13awgt0"><div class="css-g5y9jx r-13awgt0 r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af" style="background-color:rgba(242,242,242,1.00);display:flex"><div class="css-g5y9jx r-13awgt0"><div class="css-g5y9jx r-13awgt0"><!--$--><div style="position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;visibility:hidden"></div><div class="css-g5y9jx r-13awgt0" style="flex-direction:column"><div class="css-g5y9jx r-13awgt0 r-1udh08x"><div class="css-g5y9jx r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af" style="z-index:0"><div class="css-g5y9jx r-13awgt0" style="background-color:rgba(242,242,242,1.00)"><div class="css-g5y9jx r-13awgt0"><!--$--><div class="css-g5y9jx r-5753bg r-13awgt0"><iframe srcDoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ja&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;/&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,user-scalable=no,minimum-scale=1,maximum-scale=1&quot;/&gt;
+&lt;title&gt;キキクル&lt;/title&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.css&quot;/&gt;
+&lt;style&gt;
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh;background:#1a1a2e;color:#e0e0e0;font-family:sans-serif;font-size:12px}
+.leaflet-container{background:#333333!important}
+#header{padding:4px 8px;background:#0f3460;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#header .title{font-weight:bold;font-size:13px}
+#timeDisp{font-size:11px;color:#90caf9}
+#controls{padding:4px 6px;background:#16213e;flex-shrink:0;display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px}
+.ctrl-row{display:contents}
+button{padding:4px 8px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0;border-radius:4px;font-size:11px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button.active{background:#4a90e2;color:#fff;border-color:#4a90e2}
+button.act-rain{background:#9933cc;border-color:#cc55ff;color:#fff}
+button.act-land{background:#cc3300;border-color:#ff5533;color:#fff}
+button.act-inund{background:#0066bb;border-color:#0099ff;color:#fff}
+button.act-flood{background:#337722;border-color:#55aa33;color:#fff}
+button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
+.sep{color:#555;font-size:10px}
+#map{flex:1;background:#000;touch-action:none}
+#bottom{padding:4px 6px;background:#0f3460;flex-shrink:0}
+#sliderRow{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+#frameSlider{flex:1;accent-color:#4a90e2;height:24px;cursor:pointer}
+#frameLabel{font-size:10px;white-space:nowrap;color:#90caf9;min-width:36px;text-align:right}
+#loadRow{display:flex;align-items:center;gap:6px;height:14px}
+.load-bar{flex:1;height:4px;background:#333;border-radius:2px;overflow:hidden}
+.load-bar-fill{height:100%;background:#4a90e2;transition:width 0.2s;width:0%}
+#loadStatus{font-size:10px;color:#aaa;min-width:120px}
+#legendPanel{position:fixed;bottom:64px;left:6px;z-index:900;background:rgba(10,30,60,0.95);border:1px solid #4a90e2;border-radius:8px;padding:6px 8px;display:none;max-width:240px}
+.leg-hdr{font-size:11px;font-weight:bold;color:#90caf9;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.leg-img{width:224px;height:auto;display:block}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div id=&quot;header&quot;&gt;
+  &lt;span class=&quot;title&quot;&gt;⚠️ キキクル&lt;/span&gt;
+  &lt;span id=&quot;timeDisp&quot;&gt;-&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;div id=&quot;controls&quot;&gt;
+  &lt;div class=&quot;ctrl-row&quot;&gt;
+    &lt;button id=&quot;btnRain&quot;       class=&quot;act-rain&quot; onclick=&quot;toggleLayer(&#x27;rain_mesh&#x27;)&quot;&gt;大雨&lt;/button&gt;
+    &lt;button id=&quot;btnLand&quot;  class=&quot;act-land&quot;  onclick=&quot;toggleLayer(&#x27;land&#x27;)&quot;&gt;土砂&lt;/button&gt;
+    &lt;button id=&quot;btnInund&quot; class=&quot;act-inund&quot; onclick=&quot;toggleLayer(&#x27;inund&#x27;)&quot;&gt;浸水&lt;/button&gt;
+    &lt;button id=&quot;btnFlood&quot; class=&quot;act-flood&quot; onclick=&quot;toggleLayer(&#x27;flood&#x27;)&quot;&gt;洪水&lt;/button&gt;
+    &lt;button id=&quot;btnInundFlood&quot; class=&quot;active&quot; onclick=&quot;toggleInundFlood()&quot;&gt;浸水+洪水&lt;/button&gt;
+    &lt;span class=&quot;sep&quot;&gt;|&lt;/span&gt;
+    &lt;button id=&quot;btnRadar&quot;                       onclick=&quot;toggleLayer(&#x27;radar&#x27;)&quot;&gt;雨雲&lt;/button&gt;
+    &lt;span class=&quot;sep&quot;&gt;|&lt;/span&gt;
+    &lt;button id=&quot;btnBaseMap&quot;                     onclick=&quot;toggleBaseMap()&quot;&gt;地図中&lt;/button&gt;
+    &lt;select id=&quot;speedSel&quot; onchange=&quot;onSpeedChange(this.value)&quot; style=&quot;padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0;border-radius:4px;font-size:11px&quot;&gt;
+      &lt;option value=&quot;0&quot;&gt;遅い&lt;/option&gt;
+      &lt;option value=&quot;1&quot; selected&gt;普通&lt;/option&gt;
+      &lt;option value=&quot;2&quot;&gt;速い&lt;/option&gt;
+    &lt;/select&gt;
+    &lt;button onclick=&quot;onBuild()&quot;&gt;更新&lt;/button&gt;
+    &lt;button id=&quot;legendBtn&quot; onclick=&quot;toggleLegend()&quot;&gt;凡例&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;ctrl-row&quot;&gt;
+    &lt;button id=&quot;t1h&quot; onclick=&quot;setTimeRange(1)&quot;&gt;1時間&lt;/button&gt;
+    &lt;button id=&quot;t2h&quot; class=&quot;active&quot; onclick=&quot;setTimeRange(2)&quot;&gt;2時間&lt;/button&gt;
+    &lt;button id=&quot;t3h&quot; onclick=&quot;setTimeRange(3)&quot;&gt;3時間&lt;/button&gt;
+    &lt;span class=&quot;sep&quot;&gt;|&lt;/span&gt;
+    &lt;button onclick=&quot;stepBack(360)&quot;&gt;◀6h&lt;/button&gt;
+    &lt;button onclick=&quot;stepBack(60)&quot;&gt;◀1h&lt;/button&gt;
+    &lt;button id=&quot;btnFwd&quot; onclick=&quot;stepForward(60)&quot; style=&quot;display:none&quot;&gt;1h▶&lt;/button&gt;
+    &lt;button id=&quot;btnNow&quot; onclick=&quot;goNow()&quot; style=&quot;display:none;background:#c62828;border-color:#e53935&quot;&gt;▶現在&lt;/button&gt;
+    &lt;span id=&quot;histLabel&quot; style=&quot;font-size:10px;color:#ffb74d;margin-left:2px&quot;&gt;&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id=&quot;map&quot;&gt;&lt;/div&gt;
+
+&lt;div id=&quot;bottom&quot;&gt;
+  &lt;div id=&quot;sliderRow&quot;&gt;
+    &lt;button style=&quot;padding:4px 10px&quot; onclick=&quot;onPlay()&quot;&gt;▶&lt;/button&gt;
+    &lt;button style=&quot;padding:4px 10px&quot; onclick=&quot;onPause()&quot;&gt;⏸&lt;/button&gt;
+    &lt;input id=&quot;frameSlider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;0&quot; value=&quot;0&quot; oninput=&quot;onSlider(this.value)&quot;/&gt;
+    &lt;span id=&quot;frameLabel&quot;&gt;0/0&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div id=&quot;loadRow&quot;&gt;
+    &lt;span id=&quot;loadStatus&quot;&gt;&lt;/span&gt;
+    &lt;div class=&quot;load-bar&quot;&gt;&lt;div id=&quot;loadBarFill&quot; class=&quot;load-bar-fill&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id=&quot;legendPanel&quot;&gt;
+  &lt;div class=&quot;leg-hdr&quot;&gt;
+    &lt;span id=&quot;legTitle&quot;&gt;凡例&lt;/span&gt;
+    &lt;button onclick=&quot;toggleLegend()&quot; style=&quot;padding:0 4px;border:none;background:none;color:#aaa;font-size:13px;cursor:pointer;line-height:1&quot;&gt;✕&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div id=&quot;legSvgWrap&quot; style=&quot;width:224px;overflow:hidden&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;&quot;use strict&quot;;function __$strToBlobUri(t,e,r){try{return window.URL.createObjectURL(new Blob([Uint8Array.from(t.split(&quot;&quot;).map(function(t){return t.charCodeAt(0)}))],{type:e}))}catch(i){return&quot;data:&quot;+e+(r?&quot;;base64,&quot;:&quot;,&quot;)+t}}function Pbf(t){this.buf=ArrayBuffer.isView&amp;&amp;ArrayBuffer.isView(t)?t:new Uint8Array(t||0),this.pos=0,this.type=0,this.length=this.buf.length}function readVarintRemainder(t,e,r){var i,n,o=r.buf;if(n=o[r.pos++],i=(112&amp;n)&gt;&gt;4,n&lt;128)return toNum(t,i,e);if(n=o[r.pos++],i|=(127&amp;n)&lt;&lt;3,n&lt;128)return toNum(t,i,e);if(n=o[r.pos++],i|=(127&amp;n)&lt;&lt;10,n&lt;128)return toNum(t,i,e);if(n=o[r.pos++],i|=(127&amp;n)&lt;&lt;17,n&lt;128)return toNum(t,i,e);if(n=o[r.pos++],i|=(127&amp;n)&lt;&lt;24,n&lt;128)return toNum(t,i,e);if(n=o[r.pos++],i|=(1&amp;n)&lt;&lt;31,n&lt;128)return toNum(t,i,e);throw new Error(&quot;Expected varint not more than 10 bytes&quot;)}function readPackedEnd(t){return t.type===Pbf.Bytes?t.readVarint()+t.pos:t.pos+1}function toNum(t,e,r){return r?4294967296*e+(t&gt;&gt;&gt;0):4294967296*(e&gt;&gt;&gt;0)+(t&gt;&gt;&gt;0)}function writeBigVarint(t,e){var r,i;if(t&gt;=0?(r=t%4294967296|0,i=t/4294967296|0):(r=~(-t%4294967296),i=~(-t/4294967296),4294967295^r?r=r+1|0:(r=0,i=i+1|0)),t&gt;=0x10000000000000000||t&lt;-0x10000000000000000)throw new Error(&quot;Given varint doesn&#x27;t fit into 10 bytes&quot;);e.realloc(10),writeBigVarintLow(r,i,e),writeBigVarintHigh(i,e)}function writeBigVarintLow(t,e,r){r.buf[r.pos++]=127&amp;t|128,t&gt;&gt;&gt;=7,r.buf[r.pos++]=127&amp;t|128,t&gt;&gt;&gt;=7,r.buf[r.pos++]=127&amp;t|128,t&gt;&gt;&gt;=7,r.buf[r.pos++]=127&amp;t|128,t&gt;&gt;&gt;=7,r.buf[r.pos]=127&amp;t}function writeBigVarintHigh(t,e){var r=(7&amp;t)&lt;&lt;4;e.buf[e.pos++]|=r|((t&gt;&gt;&gt;=3)?128:0),t&amp;&amp;(e.buf[e.pos++]=127&amp;t|((t&gt;&gt;&gt;=7)?128:0),t&amp;&amp;(e.buf[e.pos++]=127&amp;t|((t&gt;&gt;&gt;=7)?128:0),t&amp;&amp;(e.buf[e.pos++]=127&amp;t|((t&gt;&gt;&gt;=7)?128:0),t&amp;&amp;(e.buf[e.pos++]=127&amp;t|((t&gt;&gt;&gt;=7)?128:0),t&amp;&amp;(e.buf[e.pos++]=127&amp;t)))))}function makeRoomForExtraLength(t,e,r){var i=e&lt;=16383?1:e&lt;=2097151?2:e&lt;=268435455?3:Math.ceil(Math.log(e)/(7*Math.LN2));r.realloc(i);for(var n=r.pos-1;n&gt;=t;n--)r.buf[n+i]=r.buf[n]}function writePackedVarint(t,e){for(var r=0;r&lt;t.length;r++)e.writeVarint(t[r])}function writePackedSVarint(t,e){for(var r=0;r&lt;t.length;r++)e.writeSVarint(t[r])}function writePackedFloat(t,e){for(var r=0;r&lt;t.length;r++)e.writeFloat(t[r])}function writePackedDouble(t,e){for(var r=0;r&lt;t.length;r++)e.writeDouble(t[r])}function writePackedBoolean(t,e){for(var r=0;r&lt;t.length;r++)e.writeBoolean(t[r])}function writePackedFixed32(t,e){for(var r=0;r&lt;t.length;r++)e.writeFixed32(t[r])}function writePackedSFixed32(t,e){for(var r=0;r&lt;t.length;r++)e.writeSFixed32(t[r])}function writePackedFixed64(t,e){for(var r=0;r&lt;t.length;r++)e.writeFixed64(t[r])}function writePackedSFixed64(t,e){for(var r=0;r&lt;t.length;r++)e.writeSFixed64(t[r])}function readUInt32(t,e){return(t[e]|t[e+1]&lt;&lt;8|t[e+2]&lt;&lt;16)+16777216*t[e+3]}function writeInt32(t,e,r){t[r]=e,t[r+1]=e&gt;&gt;&gt;8,t[r+2]=e&gt;&gt;&gt;16,t[r+3]=e&gt;&gt;&gt;24}function readInt32(t,e){return(t[e]|t[e+1]&lt;&lt;8|t[e+2]&lt;&lt;16)+(t[e+3]&lt;&lt;24)}function readUtf8(t,e,r){for(var i=&quot;&quot;,n=e;n&lt;r;){var o=t[n],s=null,a=o&gt;239?4:o&gt;223?3:o&gt;191?2:1;if(n+a&gt;r)break;var u,h,l;1===a?o&lt;128&amp;&amp;(s=o):2===a?128==(192&amp;(u=t[n+1]))&amp;&amp;(s=(31&amp;o)&lt;&lt;6|63&amp;u)&lt;=127&amp;&amp;(s=null):3===a?(u=t[n+1],h=t[n+2],128==(192&amp;u)&amp;&amp;128==(192&amp;h)&amp;&amp;((s=(15&amp;o)&lt;&lt;12|(63&amp;u)&lt;&lt;6|63&amp;h)&lt;=2047||s&gt;=55296&amp;&amp;s&lt;=57343)&amp;&amp;(s=null)):4===a&amp;&amp;(u=t[n+1],h=t[n+2],l=t[n+3],128==(192&amp;u)&amp;&amp;128==(192&amp;h)&amp;&amp;128==(192&amp;l)&amp;&amp;((s=(15&amp;o)&lt;&lt;18|(63&amp;u)&lt;&lt;12|(63&amp;h)&lt;&lt;6|63&amp;l)&lt;=65535||s&gt;=1114112)&amp;&amp;(s=null)),null===s?(s=65533,a=1):s&gt;65535&amp;&amp;(s-=65536,i+=String.fromCharCode(s&gt;&gt;&gt;10&amp;1023|55296),s=56320|1023&amp;s),i+=String.fromCharCode(s),n+=a}return i}function writeUtf8(t,e,r){for(var i,n,o=0;o&lt;e.length;o++){if((i=e.charCodeAt(o))&gt;55295&amp;&amp;i&lt;57344){if(!n){i&gt;56319||o+1===e.length?(t[r++]=239,t[r++]=191,t[r++]=189):n=i;continue}if(i&lt;56320){t[r++]=239,t[r++]=191,t[r++]=189,n=i;continue}i=n-55296&lt;&lt;10|i-56320|65536,n=null}else n&amp;&amp;(t[r++]=239,t[r++]=191,t[r++]=189,n=null);i&lt;128?t[r++]=i:(i&lt;2048?t[r++]=i&gt;&gt;6|192:(i&lt;65536?t[r++]=i&gt;&gt;12|224:(t[r++]=i&gt;&gt;18|240,t[r++]=i&gt;&gt;12&amp;63|128),t[r++]=i&gt;&gt;6&amp;63|128),t[r++]=63&amp;i|128)}return r}function Point$1(t,e){this.x=t,this.y=e}function VectorTileFeature$2(t,e,r,i,n){this.properties={},this.extent=r,this.type=0,this._pbf=t,this._geometry=-1,this._keys=i,this._values=n,t.readFields(readFeature,this,e)}function readFeature(t,e,r){1==t?e.id=r.readVarint():2==t?readTag(r,e):3==t?e.type=r.readVarint():4==t&amp;&amp;(e._geometry=r.pos)}function readTag(t,e){for(var r=t.readVarint()+t.pos;t.pos&lt;r;){var i=e._keys[t.readVarint()],n=e._values[t.readVarint()];e.properties[i]=n}}function classifyRings(t){var e=t.length;if(e&lt;=1)return[t];for(var r,i,n=[],o=0;o&lt;e;o++){var s=signedArea(t[o]);0!==s&amp;&amp;(void 0===i&amp;&amp;(i=s&lt;0),i===s&lt;0?(r&amp;&amp;n.push(r),r=[t[o]]):r.push(t[o]))}return r&amp;&amp;n.push(r),n}function signedArea(t){for(var e,r,i=0,n=0,o=t.length,s=o-1;n&lt;o;s=n++)e=t[n],r=t[s],i+=(r.x-e.x)*(e.y+r.y);return i}function VectorTileLayer$2(t,e){this.version=1,this.name=null,this.extent=4096,this.length=0,this._pbf=t,this._keys=[],this._values=[],this._features=[],t.readFields(readLayer,this,e),this.length=this._features.length}function readLayer(t,e,r){15===t?e.version=r.readVarint():1===t?e.name=r.readString():5===t?e.extent=r.readVarint():2===t?e._features.push(r.pos):3===t?e._keys.push(r.readString()):4===t&amp;&amp;e._values.push(readValueMessage(r))}function readValueMessage(t){for(var e=null,r=t.readVarint()+t.pos;t.pos&lt;r;){var i=t.readVarint()&gt;&gt;3;e=1===i?t.readString():2===i?t.readFloat():3===i?t.readDouble():4===i?t.readVarint64():5===i?t.readVarint():6===i?t.readSVarint():7===i?t.readBoolean():null}return e}function VectorTile$1(t,e){this.layers=t.readFields(readTile,{},e)}function readTile(t,e,r){if(3===t){var i=new VectorTileLayer$1(r,r.readVarint()+r.pos);i.length&amp;&amp;(e[i.name]=i)}}!function(t){function e(t){if(&quot;string&quot;!=typeof t&amp;&amp;(t=String(t)),/[^a-z0-9\-#$%&amp;&#x27;*+.\^_`|~]/i.test(t))throw new TypeError(&quot;Invalid character in header field name&quot;);return t.toLowerCase()}function r(t){return&quot;string&quot;!=typeof t&amp;&amp;(t=String(t)),t}function i(t){var e={next:function(){var e=t.shift();return{done:void 0===e,value:e}}};return v.iterable&amp;&amp;(e[Symbol.iterator]=function(){return e}),e}function n(t){this.map={},t instanceof n?t.forEach(function(t,e){this.append(e,t)},this):Array.isArray(t)?t.forEach(function(t){this.append(t[0],t[1])},this):t&amp;&amp;Object.getOwnPropertyNames(t).forEach(function(e){this.append(e,t[e])},this)}function o(t){if(t.bodyUsed)return Promise.reject(new TypeError(&quot;Already read&quot;));t.bodyUsed=!0}function s(t){return new Promise(function(e,r){t.onload=function(){e(t.result)},t.onerror=function(){r(t.error)}})}function a(t){var e=new FileReader,r=s(e);return e.readAsArrayBuffer(t),r}function u(t){var e=new FileReader,r=s(e);return e.readAsText(t),r}function h(t){for(var e=new Uint8Array(t),r=new Array(e.length),i=0;i&lt;e.length;i++)r[i]=String.fromCharCode(e[i]);return r.join(&quot;&quot;)}function l(t){if(t.slice)return t.slice(0);var e=new Uint8Array(t.byteLength);return e.set(new Uint8Array(t)),e.buffer}function c(){return this.bodyUsed=!1,this._initBody=function(t){if(this._bodyInit=t,t)if(&quot;string&quot;==typeof t)this._bodyText=t;else if(v.blob&amp;&amp;Blob.prototype.isPrototypeOf(t))this._bodyBlob=t;else if(v.formData&amp;&amp;FormData.prototype.isPrototypeOf(t))this._bodyFormData=t;else if(v.searchParams&amp;&amp;URLSearchParams.prototype.isPrototypeOf(t))this._bodyText=t.toString();else if(v.arrayBuffer&amp;&amp;v.blob&amp;&amp;b(t))this._bodyArrayBuffer=l(t.buffer),this._bodyInit=new Blob([this._bodyArrayBuffer]);else{if(!v.arrayBuffer||!ArrayBuffer.prototype.isPrototypeOf(t)&amp;&amp;!w(t))throw new Error(&quot;unsupported BodyInit type&quot;);this._bodyArrayBuffer=l(t)}else this._bodyText=&quot;&quot;;this.headers.get(&quot;content-type&quot;)||(&quot;string&quot;==typeof t?this.headers.set(&quot;content-type&quot;,&quot;text/plain;charset=UTF-8&quot;):this._bodyBlob&amp;&amp;this._bodyBlob.type?this.headers.set(&quot;content-type&quot;,this._bodyBlob.type):v.searchParams&amp;&amp;URLSearchParams.prototype.isPrototypeOf(t)&amp;&amp;this.headers.set(&quot;content-type&quot;,&quot;application/x-www-form-urlencoded;charset=UTF-8&quot;))},v.blob&amp;&amp;(this.blob=function(){var t=o(this);if(t)return t;if(this._bodyBlob)return Promise.resolve(this._bodyBlob);if(this._bodyArrayBuffer)return Promise.resolve(new Blob([this._bodyArrayBuffer]));if(this._bodyFormData)throw new Error(&quot;could not read FormData body as blob&quot;);return Promise.resolve(new Blob([this._bodyText]))},this.arrayBuffer=function(){return this._bodyArrayBuffer?o(this)||Promise.resolve(this._bodyArrayBuffer):this.blob().then(a)}),this.text=function(){var t=o(this);if(t)return t;if(this._bodyBlob)return u(this._bodyBlob);if(this._bodyArrayBuffer)return Promise.resolve(h(this._bodyArrayBuffer));if(this._bodyFormData)throw new Error(&quot;could not read FormData body as text&quot;);return Promise.resolve(this._bodyText)},v.formData&amp;&amp;(this.formData=function(){return this.text().then(d)}),this.json=function(){return this.text().then(JSON.parse)},this}function f(t){var e=t.toUpperCase();return _.indexOf(e)&gt;-1?e:t}function p(t,e){e=e||{};var r=e.body;if(t instanceof p){if(t.bodyUsed)throw new TypeError(&quot;Already read&quot;);this.url=t.url,this.credentials=t.credentials,e.headers||(this.headers=new n(t.headers)),this.method=t.method,this.mode=t.mode,r||null==t._bodyInit||(r=t._bodyInit,t.bodyUsed=!0)}else this.url=String(t);if(this.credentials=e.credentials||this.credentials||&quot;omit&quot;,!e.headers&amp;&amp;this.headers||(this.headers=new n(e.headers)),this.method=f(e.method||this.method||&quot;GET&quot;),this.mode=e.mode||this.mode||null,this.referrer=null,(&quot;GET&quot;===this.method||&quot;HEAD&quot;===this.method)&amp;&amp;r)throw new TypeError(&quot;Body not allowed for GET or HEAD requests&quot;);this._initBody(r)}function d(t){var e=new FormData;return t.trim().split(&quot;&amp;&quot;).forEach(function(t){if(t){var r=t.split(&quot;=&quot;),i=r.shift().replace(/\+/g,&quot; &quot;),n=r.join(&quot;=&quot;).replace(/\+/g,&quot; &quot;);e.append(decodeURIComponent(i),decodeURIComponent(n))}}),e}function y(t){var e=new n;return t.split(/\r?\n/).forEach(function(t){var r=t.split(&quot;:&quot;),i=r.shift().trim();if(i){var n=r.join(&quot;:&quot;).trim();e.append(i,n)}}),e}function m(t,e){e||(e={}),this.type=&quot;default&quot;,this.status=&quot;status&quot;in e?e.status:200,this.ok=this.status&gt;=200&amp;&amp;this.status&lt;300,this.statusText=&quot;statusText&quot;in e?e.statusText:&quot;OK&quot;,this.headers=new n(e.headers),this.url=e.url||&quot;&quot;,this._initBody(t)}if(!t.fetch){var v={searchParams:&quot;URLSearchParams&quot;in t,iterable:&quot;Symbol&quot;in t&amp;&amp;&quot;iterator&quot;in Symbol,blob:&quot;FileReader&quot;in t&amp;&amp;&quot;Blob&quot;in t&amp;&amp;function(){try{return new Blob,!0}catch(t){return!1}}(),formData:&quot;FormData&quot;in t,arrayBuffer:&quot;ArrayBuffer&quot;in t};if(v.arrayBuffer)var g=[&quot;[object Int8Array]&quot;,&quot;[object Uint8Array]&quot;,&quot;[object Uint8ClampedArray]&quot;,&quot;[object Int16Array]&quot;,&quot;[object Uint16Array]&quot;,&quot;[object Int32Array]&quot;,&quot;[object Uint32Array]&quot;,&quot;[object Float32Array]&quot;,&quot;[object Float64Array]&quot;],b=function(t){return t&amp;&amp;DataView.prototype.isPrototypeOf(t)},w=ArrayBuffer.isView||function(t){return t&amp;&amp;g.indexOf(Object.prototype.toString.call(t))&gt;-1};n.prototype.append=function(t,i){t=e(t),i=r(i);var n=this.map[t];this.map[t]=n?n+&quot;,&quot;+i:i},n.prototype.delete=function(t){delete this.map[e(t)]},n.prototype.get=function(t){return t=e(t),this.has(t)?this.map[t]:null},n.prototype.has=function(t){return this.map.hasOwnProperty(e(t))},n.prototype.set=function(t,i){this.map[e(t)]=r(i)},n.prototype.forEach=function(t,e){var r=this;for(var i in this.map)r.map.hasOwnProperty(i)&amp;&amp;t.call(e,r.map[i],i,r)},n.prototype.keys=function(){var t=[];return this.forEach(function(e,r){t.push(r)}),i(t)},n.prototype.values=function(){var t=[];return this.forEach(function(e){t.push(e)}),i(t)},n.prototype.entries=function(){var t=[];return this.forEach(function(e,r){t.push([r,e])}),i(t)},v.iterable&amp;&amp;(n.prototype[Symbol.iterator]=n.prototype.entries);var _=[&quot;DELETE&quot;,&quot;GET&quot;,&quot;HEAD&quot;,&quot;OPTIONS&quot;,&quot;POST&quot;,&quot;PUT&quot;];p.prototype.clone=function(){return new p(this,{body:this._bodyInit})},c.call(p.prototype),c.call(m.prototype),m.prototype.clone=function(){return new m(this._bodyInit,{status:this.status,statusText:this.statusText,headers:new n(this.headers),url:this.url})},m.error=function(){var t=new m(null,{status:0,statusText:&quot;&quot;});return t.type=&quot;error&quot;,t};var x=[301,302,303,307,308];m.redirect=function(t,e){if(-1===x.indexOf(e))throw new RangeError(&quot;Invalid status code&quot;);return new m(null,{status:e,headers:{location:t}})},t.Headers=n,t.Request=p,t.Response=m,t.fetch=function(t,e){return new Promise(function(r,i){var n=new p(t,e),o=new XMLHttpRequest;o.onload=function(){var t={status:o.status,statusText:o.statusText,headers:y(o.getAllResponseHeaders()||&quot;&quot;)};t.url=&quot;responseURL&quot;in o?o.responseURL:t.headers.get(&quot;X-Request-URL&quot;);var e=&quot;response&quot;in o?o.response:o.responseText;r(new m(e,t))},o.onerror=function(){i(new TypeError(&quot;Network request failed&quot;))},o.ontimeout=function(){i(new TypeError(&quot;Network request failed&quot;))},o.open(n.method,n.url,!0),&quot;include&quot;===n.credentials&amp;&amp;(o.withCredentials=!0),&quot;responseType&quot;in o&amp;&amp;v.blob&amp;&amp;(o.responseType=&quot;blob&quot;),n.headers.forEach(function(t,e){o.setRequestHeader(e,t)}),o.send(void 0===n._bodyInit?null:n._bodyInit)})},t.fetch.polyfill=!0}}(&quot;undefined&quot;!=typeof self?self:void 0);var read=function(t,e,r,i,n){var o,s,a=8*n-i-1,u=(1&lt;&lt;a)-1,h=u&gt;&gt;1,l=-7,c=r?n-1:0,f=r?-1:1,p=t[e+c];for(c+=f,o=p&amp;(1&lt;&lt;-l)-1,p&gt;&gt;=-l,l+=a;l&gt;0;o=256*o+t[e+c],c+=f,l-=8);for(s=o&amp;(1&lt;&lt;-l)-1,o&gt;&gt;=-l,l+=i;l&gt;0;s=256*s+t[e+c],c+=f,l-=8);if(0===o)o=1-h;else{if(o===u)return s?NaN:1/0*(p?-1:1);s+=Math.pow(2,i),o-=h}return(p?-1:1)*s*Math.pow(2,o-i)},write=function(t,e,r,i,n,o){var s,a,u,h=8*o-n-1,l=(1&lt;&lt;h)-1,c=l&gt;&gt;1,f=23===n?Math.pow(2,-24)-Math.pow(2,-77):0,p=i?0:o-1,d=i?1:-1,y=e&lt;0||0===e&amp;&amp;1/e&lt;0?1:0;for(e=Math.abs(e),isNaN(e)||e===1/0?(a=isNaN(e)?1:0,s=l):(s=Math.floor(Math.log(e)/Math.LN2),e*(u=Math.pow(2,-s))&lt;1&amp;&amp;(s--,u*=2),e+=s+c&gt;=1?f/u:f*Math.pow(2,1-c),e*u&gt;=2&amp;&amp;(s++,u/=2),s+c&gt;=l?(a=0,s=l):s+c&gt;=1?(a=(e*u-1)*Math.pow(2,n),s+=c):(a=e*Math.pow(2,c-1)*Math.pow(2,n),s=0));n&gt;=8;t[r+p]=255&amp;a,p+=d,a/=256,n-=8);for(s=s&lt;&lt;n|a,h+=n;h&gt;0;t[r+p]=255&amp;s,p+=d,s/=256,h-=8);t[r+p-d]|=128*y},index$1={read:read,write:write},index=Pbf,ieee754=index$1;Pbf.Varint=0,Pbf.Fixed64=1,Pbf.Bytes=2,Pbf.Fixed32=5;var SHIFT_LEFT_32=4294967296,SHIFT_RIGHT_32=1/SHIFT_LEFT_32;Pbf.prototype={destroy:function(){this.buf=null},readFields:function(t,e,r){var i=this;for(r=r||this.length;this.pos&lt;r;){var n=i.readVarint(),o=n&gt;&gt;3,s=i.pos;i.type=7&amp;n,t(o,e,i),i.pos===s&amp;&amp;i.skip(n)}return e},readMessage:function(t,e){return this.readFields(t,e,this.readVarint()+this.pos)},readFixed32:function(){var t=readUInt32(this.buf,this.pos);return this.pos+=4,t},readSFixed32:function(){var t=readInt32(this.buf,this.pos);return this.pos+=4,t},readFixed64:function(){var t=readUInt32(this.buf,this.pos)+readUInt32(this.buf,this.pos+4)*SHIFT_LEFT_32;return this.pos+=8,t},readSFixed64:function(){var t=readUInt32(this.buf,this.pos)+readInt32(this.buf,this.pos+4)*SHIFT_LEFT_32;return this.pos+=8,t},readFloat:function(){var t=ieee754.read(this.buf,this.pos,!0,23,4);return this.pos+=4,t},readDouble:function(){var t=ieee754.read(this.buf,this.pos,!0,52,8);return this.pos+=8,t},readVarint:function(t){var e,r,i=this.buf;return r=i[this.pos++],e=127&amp;r,r&lt;128?e:(r=i[this.pos++],e|=(127&amp;r)&lt;&lt;7,r&lt;128?e:(r=i[this.pos++],e|=(127&amp;r)&lt;&lt;14,r&lt;128?e:(r=i[this.pos++],e|=(127&amp;r)&lt;&lt;21,r&lt;128?e:(r=i[this.pos],e|=(15&amp;r)&lt;&lt;28,readVarintRemainder(e,t,this)))))},readVarint64:function(){return this.readVarint(!0)},readSVarint:function(){var t=this.readVarint();return t%2==1?(t+1)/-2:t/2},readBoolean:function(){return Boolean(this.readVarint())},readString:function(){var t=this.readVarint()+this.pos,e=readUtf8(this.buf,this.pos,t);return this.pos=t,e},readBytes:function(){var t=this.readVarint()+this.pos,e=this.buf.subarray(this.pos,t);return this.pos=t,e},readPackedVarint:function(t,e){var r=this,i=readPackedEnd(this);for(t=t||[];this.pos&lt;i;)t.push(r.readVarint(e));return t},readPackedSVarint:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readSVarint());return t},readPackedBoolean:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readBoolean());return t},readPackedFloat:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readFloat());return t},readPackedDouble:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readDouble());return t},readPackedFixed32:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readFixed32());return t},readPackedSFixed32:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readSFixed32());return t},readPackedFixed64:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readFixed64());return t},readPackedSFixed64:function(t){var e=this,r=readPackedEnd(this);for(t=t||[];this.pos&lt;r;)t.push(e.readSFixed64());return t},skip:function(t){var e=7&amp;t;if(e===Pbf.Varint)for(;this.buf[this.pos++]&gt;127;);else if(e===Pbf.Bytes)this.pos=this.readVarint()+this.pos;else if(e===Pbf.Fixed32)this.pos+=4;else{if(e!==Pbf.Fixed64)throw new Error(&quot;Unimplemented type: &quot;+e);this.pos+=8}},writeTag:function(t,e){this.writeVarint(t&lt;&lt;3|e)},realloc:function(t){for(var e=this.length||16;e&lt;this.pos+t;)e*=2;if(e!==this.length){var r=new Uint8Array(e);r.set(this.buf),this.buf=r,this.length=e}},finish:function(){return this.length=this.pos,this.pos=0,this.buf.subarray(0,this.length)},writeFixed32:function(t){this.realloc(4),writeInt32(this.buf,t,this.pos),this.pos+=4},writeSFixed32:function(t){this.realloc(4),writeInt32(this.buf,t,this.pos),this.pos+=4},writeFixed64:function(t){this.realloc(8),writeInt32(this.buf,-1&amp;t,this.pos),writeInt32(this.buf,Math.floor(t*SHIFT_RIGHT_32),this.pos+4),this.pos+=8},writeSFixed64:function(t){this.realloc(8),writeInt32(this.buf,-1&amp;t,this.pos),writeInt32(this.buf,Math.floor(t*SHIFT_RIGHT_32),this.pos+4),this.pos+=8},writeVarint:function(t){if((t=+t||0)&gt;268435455||t&lt;0)return void writeBigVarint(t,this);this.realloc(4),this.buf[this.pos++]=127&amp;t|(t&gt;127?128:0),t&lt;=127||(this.buf[this.pos++]=127&amp;(t&gt;&gt;&gt;=7)|(t&gt;127?128:0),t&lt;=127||(this.buf[this.pos++]=127&amp;(t&gt;&gt;&gt;=7)|(t&gt;127?128:0),t&lt;=127||(this.buf[this.pos++]=t&gt;&gt;&gt;7&amp;127)))},writeSVarint:function(t){this.writeVarint(t&lt;0?2*-t-1:2*t)},writeBoolean:function(t){this.writeVarint(Boolean(t))},writeString:function(t){t=String(t),this.realloc(4*t.length),this.pos++;var e=this.pos;this.pos=writeUtf8(this.buf,t,this.pos);var r=this.pos-e;r&gt;=128&amp;&amp;makeRoomForExtraLength(e,r,this),this.pos=e-1,this.writeVarint(r),this.pos+=r},writeFloat:function(t){this.realloc(4),ieee754.write(this.buf,t,this.pos,!0,23,4),this.pos+=4},writeDouble:function(t){this.realloc(8),ieee754.write(this.buf,t,this.pos,!0,52,8),this.pos+=8},writeBytes:function(t){var e=this,r=t.length;this.writeVarint(r),this.realloc(r);for(var i=0;i&lt;r;i++)e.buf[e.pos++]=t[i]},writeRawMessage:function(t,e){this.pos++;var r=this.pos;t(e,this);var i=this.pos-r;i&gt;=128&amp;&amp;makeRoomForExtraLength(r,i,this),this.pos=r-1,this.writeVarint(i),this.pos+=i},writeMessage:function(t,e,r){this.writeTag(t,Pbf.Bytes),this.writeRawMessage(e,r)},writePackedVarint:function(t,e){this.writeMessage(t,writePackedVarint,e)},writePackedSVarint:function(t,e){this.writeMessage(t,writePackedSVarint,e)},writePackedBoolean:function(t,e){this.writeMessage(t,writePackedBoolean,e)},writePackedFloat:function(t,e){this.writeMessage(t,writePackedFloat,e)},writePackedDouble:function(t,e){this.writeMessage(t,writePackedDouble,e)},writePackedFixed32:function(t,e){this.writeMessage(t,writePackedFixed32,e)},writePackedSFixed32:function(t,e){this.writeMessage(t,writePackedSFixed32,e)},writePackedFixed64:function(t,e){this.writeMessage(t,writePackedFixed64,e)},writePackedSFixed64:function(t,e){this.writeMessage(t,writePackedSFixed64,e)},writeBytesField:function(t,e){this.writeTag(t,Pbf.Bytes),this.writeBytes(e)},writeFixed32Field:function(t,e){this.writeTag(t,Pbf.Fixed32),this.writeFixed32(e)},writeSFixed32Field:function(t,e){this.writeTag(t,Pbf.Fixed32),this.writeSFixed32(e)},writeFixed64Field:function(t,e){this.writeTag(t,Pbf.Fixed64),this.writeFixed64(e)},writeSFixed64Field:function(t,e){this.writeTag(t,Pbf.Fixed64),this.writeSFixed64(e)},writeVarintField:function(t,e){this.writeTag(t,Pbf.Varint),this.writeVarint(e)},writeSVarintField:function(t,e){this.writeTag(t,Pbf.Varint),this.writeSVarint(e)},writeStringField:function(t,e){this.writeTag(t,Pbf.Bytes),this.writeString(e)},writeFloatField:function(t,e){this.writeTag(t,Pbf.Fixed32),this.writeFloat(e)},writeDoubleField:function(t,e){this.writeTag(t,Pbf.Fixed64),this.writeDouble(e)},writeBooleanField:function(t,e){this.writeVarintField(t,Boolean(e))}};var index$5=Point$1;Point$1.prototype={clone:function(){return new Point$1(this.x,this.y)},add:function(t){return this.clone()._add(t)},sub:function(t){return this.clone()._sub(t)},mult:function(t){return this.clone()._mult(t)},div:function(t){return this.clone()._div(t)},rotate:function(t){return this.clone()._rotate(t)},matMult:function(t){return this.clone()._matMult(t)},unit:function(){return this.clone()._unit()},perp:function(){return this.clone()._perp()},round:function(){return this.clone()._round()},mag:function(){return Math.sqrt(this.x*this.x+this.y*this.y)},equals:function(t){return this.x===t.x&amp;&amp;this.y===t.y},dist:function(t){return Math.sqrt(this.distSqr(t))},distSqr:function(t){var e=t.x-this.x,r=t.y-this.y;return e*e+r*r},angle:function(){return Math.atan2(this.y,this.x)},angleTo:function(t){return Math.atan2(this.y-t.y,this.x-t.x)},angleWith:function(t){return this.angleWithSep(t.x,t.y)},angleWithSep:function(t,e){return Math.atan2(this.x*e-this.y*t,this.x*t+this.y*e)},_matMult:function(t){var e=t[0]*this.x+t[1]*this.y,r=t[2]*this.x+t[3]*this.y;return this.x=e,this.y=r,this},_add:function(t){return this.x+=t.x,this.y+=t.y,this},_sub:function(t){return this.x-=t.x,this.y-=t.y,this},_mult:function(t){return this.x*=t,this.y*=t,this},_div:function(t){return this.x/=t,this.y/=t,this},_unit:function(){return this._div(this.mag()),this},_perp:function(){var t=this.y;return this.y=this.x,this.x=-t,this},_rotate:function(t){var e=Math.cos(t),r=Math.sin(t),i=e*this.x-r*this.y,n=r*this.x+e*this.y;return this.x=i,this.y=n,this},_round:function(){return this.x=Math.round(this.x),this.y=Math.round(this.y),this}},Point$1.convert=function(t){return t instanceof Point$1?t:Array.isArray(t)?new Point$1(t[0],t[1]):t};var Point=index$5,vectortilefeature=VectorTileFeature$2;VectorTileFeature$2.types=[&quot;Unknown&quot;,&quot;Point&quot;,&quot;LineString&quot;,&quot;Polygon&quot;],VectorTileFeature$2.prototype.loadGeometry=function(){var t=this._pbf;t.pos=this._geometry;for(var e,r=t.readVarint()+t.pos,i=1,n=0,o=0,s=0,a=[];t.pos&lt;r;){if(!n){var u=t.readVarint();i=7&amp;u,n=u&gt;&gt;3}if(n--,1===i||2===i)o+=t.readSVarint(),s+=t.readSVarint(),1===i&amp;&amp;(e&amp;&amp;a.push(e),e=[]),e.push(new Point(o,s));else{if(7!==i)throw new Error(&quot;unknown command &quot;+i);e&amp;&amp;e.push(e[0].clone())}}return e&amp;&amp;a.push(e),a},VectorTileFeature$2.prototype.bbox=function(){var t=this._pbf;t.pos=this._geometry;for(var e=t.readVarint()+t.pos,r=1,i=0,n=0,o=0,s=1/0,a=-1/0,u=1/0,h=-1/0;t.pos&lt;e;){if(!i){var l=t.readVarint();r=7&amp;l,i=l&gt;&gt;3}if(i--,1===r||2===r)n+=t.readSVarint(),o+=t.readSVarint(),n&lt;s&amp;&amp;(s=n),n&gt;a&amp;&amp;(a=n),o&lt;u&amp;&amp;(u=o),o&gt;h&amp;&amp;(h=o);else if(7!==r)throw new Error(&quot;unknown command &quot;+r)}return[s,u,a,h]},VectorTileFeature$2.prototype.toGeoJSON=function(t,e,r){function i(t){for(var e=0;e&lt;t.length;e++){var r=t[e],i=180-360*(r.y+u)/s;t[e]=[360*(r.x+a)/s-180,360/Math.PI*Math.atan(Math.exp(i*Math.PI/180))-90]}}var n,o,s=this.extent*Math.pow(2,r),a=this.extent*t,u=this.extent*e,h=this.loadGeometry(),l=VectorTileFeature$2.types[this.type];switch(this.type){case 1:var c=[];for(n=0;n&lt;h.length;n++)c[n]=h[n][0];h=c,i(h);break;case 2:for(n=0;n&lt;h.length;n++)i(h[n]);break;case 3:for(h=classifyRings(h),n=0;n&lt;h.length;n++)for(o=0;o&lt;h[n].length;o++)i(h[n][o])}1===h.length?h=h[0]:l=&quot;Multi&quot;+l;var f={type:&quot;Feature&quot;,geometry:{type:l,coordinates:h},properties:this.properties};return&quot;id&quot;in this&amp;&amp;(f.id=this.id),f};var VectorTileFeature$1=vectortilefeature,vectortilelayer=VectorTileLayer$2;VectorTileLayer$2.prototype.feature=function(t){if(t&lt;0||t&gt;=this._features.length)throw new Error(&quot;feature index out of bounds&quot;);this._pbf.pos=this._features[t];var e=this._pbf.readVarint()+this._pbf.pos;return new VectorTileFeature$1(this._pbf,e,this.extent,this._keys,this._values)};var VectorTileLayer$1=vectortilelayer,vectortile=VectorTile$1,VectorTile=vectortile;L.SVG.Tile=L.SVG.extend({initialize:function(t,e,r){L.SVG.prototype.initialize.call(this,r),this._tileCoord=t,this._size=e,this._initContainer(),this._container.setAttribute(&quot;width&quot;,this._size.x),this._container.setAttribute(&quot;height&quot;,this._size.y),this._container.setAttribute(&quot;viewBox&quot;,[0,0,this._size.x,this._size.y].join(&quot; &quot;)),this._layers={}},getCoord:function(){return this._tileCoord},getContainer:function(){return this._container},onAdd:L.Util.falseFn,addTo:function(t){if(this._map=t,this.options.interactive)for(var e in this._layers){var r=this._layers[e];r._path.style.pointerEvents=&quot;auto&quot;,this._map._targets[L.stamp(r._path)]=r}},removeFrom:function(t){if(this.options.interactive)for(var e in this._layers){var r=this._layers[e];delete this._map._targets[L.stamp(r._path)]}delete this._map},_initContainer:function(){L.SVG.prototype._initContainer.call(this);L.SVG.create(&quot;rect&quot;)},_addPath:function(t){this._rootGroup.appendChild(t._path),this._layers[L.stamp(t)]=t},_updateIcon:function(t){var e=t._path=L.SVG.create(&quot;image&quot;),r=t.options.icon,i=r.options,n=L.point(i.iconSize),o=i.iconAnchor||n&amp;&amp;n.divideBy(2,!0),s=t._point.subtract(o);e.setAttribute(&quot;x&quot;,s.x),e.setAttribute(&quot;y&quot;,s.y),e.setAttribute(&quot;width&quot;,n.x+&quot;px&quot;),e.setAttribute(&quot;height&quot;,n.y+&quot;px&quot;),e.setAttribute(&quot;href&quot;,i.iconUrl)}}),L.svg.tile=function(t,e,r){return new L.SVG.Tile(t,e,r)};var Symbolizer=L.Class.extend({render:function(t,e){this._renderer=t,this.options=e,t._initPath(this),t._updateStyle(this)},updateStyle:function(t,e){this.options=e,t._updateStyle(this)},_getPixelBounds:function(){for(var t=this._parts,e=L.bounds([]),r=0;r&lt;t.length;r++)for(var i=t[r],n=0;n&lt;i.length;n++)e.extend(i[n]);var o=this._clickTolerance(),s=new L.Point(o,o);return e.min._subtract(s),e.max._add(s),e},_clickTolerance:L.Path.prototype._clickTolerance}),PolyBase={_makeFeatureParts:function(t,e){var r,i=t.geometry;this._parts=[];for(var n=0;n&lt;i.length;n++){for(var o=i[n],s=[],a=0;a&lt;o.length;a++)r=o[a],s.push(L.point(r).scaleBy(e));this._parts.push(s)}},makeInteractive:function(){this._pxBounds=this._getPixelBounds()}},PointSymbolizer=L.CircleMarker.extend({includes:Symbolizer.prototype,statics:{iconCache:{}},initialize:function(t,e){this.properties=t.properties,this._makeFeatureParts(t,e)},render:function(t,e){Symbolizer.prototype.render.call(this,t,e),this._radius=e.radius||L.CircleMarker.prototype.options.radius,this._updatePath()},_makeFeatureParts:function(t,e){var r=t.geometry[0];&quot;object&quot;==typeof r[0]&amp;&amp;&quot;x&quot;in r[0]?(this._point=L.point(r[0]).scaleBy(e),this._empty=L.Util.falseFn):(this._point=L.point(r).scaleBy(e),this._empty=L.Util.falseFn)},makeInteractive:function(){this._updateBounds()},updateStyle:function(t,e){return this._radius=e.radius||this._radius,this._updateBounds(),Symbolizer.prototype.updateStyle.call(this,t,e)},_updateBounds:function(){var t=this.options.icon;if(t){var e=L.point(t.options.iconSize),r=t.options.iconAnchor||e&amp;&amp;e.divideBy(2,!0),i=this._point.subtract(r);this._pxBounds=new L.Bounds(i,i.add(t.options.iconSize))}else L.CircleMarker.prototype._updateBounds.call(this)},_updatePath:function(){this.options.icon?this._renderer._updateIcon(this):L.CircleMarker.prototype._updatePath.call(this)},_getImage:function(){if(this.options.icon){var t=this.options.icon.options.iconUrl,e=PointSymbolizer.iconCache[t];if(!e){var r=this.options.icon;e=PointSymbolizer.iconCache[t]=r.createIcon()}return e}return null},_containsPoint:function(t){return this.options.icon?this._pxBounds.contains(t):L.CircleMarker.prototype._containsPoint.call(this,t)}}),LineSymbolizer=L.Polyline.extend({includes:[Symbolizer.prototype,PolyBase],initialize:function(t,e){this.properties=t.properties,this._makeFeatureParts(t,e)},render:function(t,e){e.fill=!1,Symbolizer.prototype.render.call(this,t,e),this._updatePath()},updateStyle:function(t,e){e.fill=!1,Symbolizer.prototype.updateStyle.call(this,t,e)}}),FillSymbolizer=L.Polygon.extend({includes:[Symbolizer.prototype,PolyBase],initialize:function(t,e){this.properties=t.properties,this._makeFeatureParts(t,e)},render:function(t,e){Symbolizer.prototype.render.call(this,t,e),this._updatePath()}});L.VectorGrid=L.GridLayer.extend({options:{rendererFactory:L.svg.tile,vectorTileLayerStyles:{},interactive:!1},initialize:function(t){L.setOptions(this,t),L.GridLayer.prototype.initialize.apply(this,arguments),this.options.getFeatureId&amp;&amp;(this._vectorTiles={},this._overriddenStyles={},this.on(&quot;tileunload&quot;,function(t){var e=this._tileCoordsToKey(t.coords),r=this._vectorTiles[e];r&amp;&amp;this._map&amp;&amp;r.removeFrom(this._map),delete this._vectorTiles[e]},this)),this._dataLayerNames={}},createTile:function(t,e){var r=this.options.getFeatureId,i=this.getTileSize(),n=this.options.rendererFactory(t,i,this.options),o=this._getVectorTilePromise(t);return r&amp;&amp;(this._vectorTiles[this._tileCoordsToKey(t)]=n,n._features={}),o.then(function(i){for(var o in i.layers){this._dataLayerNames[o]=!0;for(var s=i.layers[o],a=this.getTileSize().divideBy(s.extent),u=this.options.vectorTileLayerStyles[o]||L.Path.prototype.options,h=0;h&lt;s.features.length;h++){var l,c=s.features[h],f=u;if(r){l=this.options.getFeatureId(c);var p=this._overriddenStyles[l];p&amp;&amp;(f=p[o]?p[o]:p)}if(f instanceof Function&amp;&amp;(f=f(c.properties,t.z)),f instanceof Array||(f=[f]),f.length){for(var d=this._createLayer(c,a),y=0;y&lt;f.length;y++){var m=L.extend({},L.Path.prototype.options,f[y]);d.render(n,m),n._addPath(d)}this.options.interactive&amp;&amp;d.makeInteractive(),r&amp;&amp;(n._features[l]={layerName:o,feature:d})}}}null!=this._map&amp;&amp;n.addTo(this._map),L.Util.requestAnimFrame(e.bind(t,null,null))}.bind(this)),n.getContainer()},setFeatureStyle:function(t,e){this._overriddenStyles[t]=e;for(var r in this._vectorTiles){var i=this._vectorTiles[r],n=i._features,o=n[t];if(o){var s=o.feature,a=e;e[o.layerName]&amp;&amp;(a=e[o.layerName]),this._updateStyles(s,i,a)}}return this},resetFeatureStyle:function(t){delete this._overriddenStyles[t];for(var e in this._vectorTiles){var r=this._vectorTiles[e],i=r._features,n=i[t];if(n){var o=n.feature,s=this.options.vectorTileLayerStyles[n.layerName]||L.Path.prototype.options;this._updateStyles(o,r,s)}}return this},getDataLayerNames:function(){return Object.keys(this._dataLayerNames)},_updateStyles:function(t,e,r){(r=r instanceof Function?r(t.properties,e.getCoord().z):r)instanceof Array||(r=[r]);for(var i=0;i&lt;r.length;i++){var n=L.extend({},L.Path.prototype.options,r[i]);t.updateStyle(e,n)}},_createLayer:function(t,e,r){var i;switch(t.type){case 1:i=new PointSymbolizer(t,e);break;case 2:i=new LineSymbolizer(t,e);break;case 3:i=new FillSymbolizer(t,e)}return this.options.interactive&amp;&amp;i.addEventParent(this),i}}),L.vectorGrid=function(t){return new L.VectorGrid(t)},L.VectorGrid.Protobuf=L.VectorGrid.extend({options:{subdomains:&quot;abc&quot;,fetchOptions:{}},initialize:function(t,e){this._url=t,L.VectorGrid.prototype.initialize.call(this,e)},setUrl:function(t,e){return this._url=t,e||this.redraw(),this},_getSubdomain:L.TileLayer.prototype._getSubdomain,_getVectorTilePromise:function(t){var e={s:this._getSubdomain(t),x:t.x,y:t.y,z:t.z};if(this._map&amp;&amp;!this._map.options.crs.infinite){var r=this._globalTileRange.max.y-t.y;this.options.tms&amp;&amp;(e.y=r),e[&quot;-y&quot;]=r}var i=L.Util.template(this._url,L.extend(e,this.options));return fetch(i,this.options.fetchOptions).then(function(t){return t.ok?t.blob().then(function(t){var e=new FileReader;return new Promise(function(r){e.addEventListener(&quot;loadend&quot;,function(){var t=new index(e.result);return r(new VectorTile(t))}),e.readAsArrayBuffer(t)})}):{layers:[]}}).then(function(t){for(var e in t.layers){for(var r=[],i=0;i&lt;t.layers[e].length;i++){var n=t.layers[e].feature(i);n.geometry=n.loadGeometry(),r.push(n)}t.layers[e].features=r}return t})}}),L.vectorGrid.protobuf=function(t,e){return new L.VectorGrid.Protobuf(t,e)}
+;var workerCode=__$strToBlobUri(&#x27;&quot;use strict&quot;;function simplify$1(e,t){var r,n,o,i,a=t*t,s=e.length,l=0,u=s-1,c=[];for(e[l][2]=1,e[u][2]=1;u;){for(n=0,r=l+1;r&lt;u;r++)(o=getSqSegDist(e[r],e[l],e[u]))&gt;n&amp;&amp;(i=r,n=o);n&gt;a?(e[i][2]=n,c.push(l),c.push(i),l=i):(u=c.pop(),l=c.pop())}}function getSqSegDist(e,t,r){var n=t[0],o=t[1],i=r[0],a=r[1],s=e[0],l=e[1],u=i-n,c=a-o;if(0!==u||0!==c){var f=((s-n)*u+(l-o)*c)/(u*u+c*c);f&gt;1?(n=i,o=a):f&gt;0&amp;&amp;(n+=u*f,o+=c*f)}return u=s-n,c=l-o,u*u+c*c}function convert$1(e,t){var r=[];if(&quot;FeatureCollection&quot;===e.type)for(var n=0;n&lt;e.features.length;n++)convertFeature(r,e.features[n],t);else&quot;Feature&quot;===e.type?convertFeature(r,e,t):convertFeature(r,{geometry:e},t);return r}function convertFeature(e,t,r){if(null!==t.geometry){var n,o,i,a,s=t.geometry,l=s.type,u=s.coordinates,c=t.properties;if(&quot;Point&quot;===l)e.push(create(c,1,[projectPoint(u)]));else if(&quot;MultiPoint&quot;===l)e.push(create(c,1,project(u)));else if(&quot;LineString&quot;===l)e.push(create(c,2,[project(u,r)]));else if(&quot;MultiLineString&quot;===l||&quot;Polygon&quot;===l){for(i=[],n=0;n&lt;u.length;n++)a=project(u[n],r),&quot;Polygon&quot;===l&amp;&amp;(a.outer=0===n),i.push(a);e.push(create(c,&quot;Polygon&quot;===l?3:2,i))}else if(&quot;MultiPolygon&quot;===l){for(i=[],n=0;n&lt;u.length;n++)for(o=0;o&lt;u[n].length;o++)a=project(u[n][o],r),a.outer=0===o,i.push(a);e.push(create(c,3,i))}else{if(&quot;GeometryCollection&quot;!==l)throw new Error(&quot;Input data is not a valid GeoJSON object.&quot;);for(n=0;n&lt;s.geometries.length;n++)convertFeature(e,{geometry:s.geometries[n],properties:c},r)}}}function create(e,t,r){var n={geometry:r,type:t,tags:e||null,min:[2,1],max:[-1,0]};return calcBBox(n),n}function project(e,t){for(var r=[],n=0;n&lt;e.length;n++)r.push(projectPoint(e[n]));return t&amp;&amp;(simplify(r,t),calcSize(r)),r}function projectPoint(e){var t=Math.sin(e[1]*Math.PI/180),r=e[0]/360+.5,n=.5-.25*Math.log((1+t)/(1-t))/Math.PI;return n=n&lt;0?0:n&gt;1?1:n,[r,n,0]}function calcSize(e){for(var t,r,n=0,o=0,i=0;i&lt;e.length-1;i++)t=r||e[i],r=e[i+1],n+=t[0]*r[1]-r[0]*t[1],o+=Math.abs(r[0]-t[0])+Math.abs(r[1]-t[1]);e.area=Math.abs(n/2),e.dist=o}function calcBBox(e){var t=e.geometry,r=e.min,n=e.max;if(1===e.type)calcRingBBox(r,n,t);else for(var o=0;o&lt;t.length;o++)calcRingBBox(r,n,t[o]);return e}function calcRingBBox(e,t,r){for(var n,o=0;o&lt;r.length;o++)n=r[o],e[0]=Math.min(n[0],e[0]),t[0]=Math.max(n[0],t[0]),e[1]=Math.min(n[1],e[1]),t[1]=Math.max(n[1],t[1])}function transformTile(e,t){if(e.transformed)return e;var r,n,o,i=e.z2,a=e.x,s=e.y;for(r=0;r&lt;e.features.length;r++){var l=e.features[r],u=l.geometry;if(1===l.type)for(n=0;n&lt;u.length;n++)u[n]=transformPoint(u[n],t,i,a,s);else for(n=0;n&lt;u.length;n++){var c=u[n];for(o=0;o&lt;c.length;o++)c[o]=transformPoint(c[o],t,i,a,s)}}return e.transformed=!0,e}function transformPoint(e,t,r,n,o){return[Math.round(t*(e[0]*r-n)),Math.round(t*(e[1]*r-o))]}function clip$1(e,t,r,n,o,i,a,s){if(r/=t,n/=t,a&gt;=r&amp;&amp;s&lt;=n)return e;if(a&gt;n||s&lt;r)return null;for(var l=[],u=0;u&lt;e.length;u++){var c,f,p=e[u],h=p.geometry,m=p.type;if(c=p.min[o],f=p.max[o],c&gt;=r&amp;&amp;f&lt;=n)l.push(p);else if(!(c&gt;n||f&lt;r)){var g=1===m?clipPoints(h,r,n,o):clipGeometry(h,r,n,o,i,3===m);g.length&amp;&amp;l.push({geometry:g,type:m,tags:e[u].tags||null,min:p.min,max:p.max})}}return l.length?l:null}function clipPoints(e,t,r,n){for(var o=[],i=0;i&lt;e.length;i++){var a=e[i],s=a[n];s&gt;=t&amp;&amp;s&lt;=r&amp;&amp;o.push(a)}return o}function clipGeometry(e,t,r,n,o,i){for(var a=[],s=0;s&lt;e.length;s++){var l,u,c,f=0,p=0,h=null,m=e[s],g=m.area,d=m.dist,v=m.outer,y=m.length,x=[];for(u=0;u&lt;y-1;u++)l=h||m[u],h=m[u+1],f=p||l[n],p=h[n],f&lt;t?p&gt;r?(x.push(o(l,h,t),o(l,h,r)),i||(x=newSlice(a,x,g,d,v))):p&gt;=t&amp;&amp;x.push(o(l,h,t)):f&gt;r?p&lt;t?(x.push(o(l,h,r),o(l,h,t)),i||(x=newSlice(a,x,g,d,v))):p&lt;=r&amp;&amp;x.push(o(l,h,r)):(x.push(l),p&lt;t?(x.push(o(l,h,t)),i||(x=newSlice(a,x,g,d,v))):p&gt;r&amp;&amp;(x.push(o(l,h,r)),i||(x=newSlice(a,x,g,d,v))));l=m[y-1],f=l[n],f&gt;=t&amp;&amp;f&lt;=r&amp;&amp;x.push(l),c=x[x.length-1],i&amp;&amp;c&amp;&amp;(x[0][0]!==c[0]||x[0][1]!==c[1])&amp;&amp;x.push(x[0]),newSlice(a,x,g,d,v)}return a}function newSlice(e,t,r,n,o){return t.length&amp;&amp;(t.area=r,t.dist=n,void 0!==o&amp;&amp;(t.outer=o),e.push(t)),[]}function wrap$1(e,t,r){var n=e,o=clip$2(e,1,-1-t,t,0,r,-1,2),i=clip$2(e,1,1-t,2+t,0,r,-1,2);return(o||i)&amp;&amp;(n=clip$2(e,1,-t,1+t,0,r,-1,2),o&amp;&amp;(n=shiftFeatureCoords(o,1).concat(n)),i&amp;&amp;(n=n.concat(shiftFeatureCoords(i,-1)))),n}function shiftFeatureCoords(e,t){for(var r=[],n=0;n&lt;e.length;n++){var o,i=e[n],a=i.type;if(1===a)o=shiftCoords(i.geometry,t);else{o=[];for(var s=0;s&lt;i.geometry.length;s++)o.push(shiftCoords(i.geometry[s],t))}r.push({geometry:o,type:a,tags:i.tags,min:[i.min[0]+t,i.min[1]],max:[i.max[0]+t,i.max[1]]})}return r}function shiftCoords(e,t){var r=[];r.area=e.area,r.dist=e.dist;for(var n=0;n&lt;e.length;n++)r.push([e[n][0]+t,e[n][1],e[n][2]]);return r}function createTile$1(e,t,r,n,o,i){for(var a={features:[],numPoints:0,numSimplified:0,numFeatures:0,source:null,x:r,y:n,z2:t,transformed:!1,min:[2,1],max:[-1,0]},s=0;s&lt;e.length;s++){a.numFeatures++,addFeature(a,e[s],o,i);var l=e[s].min,u=e[s].max;l[0]&lt;a.min[0]&amp;&amp;(a.min[0]=l[0]),l[1]&lt;a.min[1]&amp;&amp;(a.min[1]=l[1]),u[0]&gt;a.max[0]&amp;&amp;(a.max[0]=u[0]),u[1]&gt;a.max[1]&amp;&amp;(a.max[1]=u[1])}return a}function addFeature(e,t,r,n){var o,i,a,s,l=t.geometry,u=t.type,c=[],f=r*r;if(1===u)for(o=0;o&lt;l.length;o++)c.push(l[o]),e.numPoints++,e.numSimplified++;else for(o=0;o&lt;l.length;o++)if(a=l[o],n||!(2===u&amp;&amp;a.dist&lt;r||3===u&amp;&amp;a.area&lt;f)){var p=[];for(i=0;i&lt;a.length;i++)s=a[i],(n||s[2]&gt;f)&amp;&amp;(p.push(s),e.numSimplified++),e.numPoints++;3===u&amp;&amp;rewind(p,a.outer),c.push(p)}else e.numPoints+=a.length;c.length&amp;&amp;e.features.push({geometry:c,type:u,tags:t.tags||null})}function rewind(e,t){signedArea(e)&lt;0===t&amp;&amp;e.reverse()}function signedArea(e){for(var t,r,n=0,o=0,i=e.length,a=i-1;o&lt;i;a=o++)t=e[o],r=e[a],n+=(r[0]-t[0])*(t[1]+r[1]);return n}function geojsonvt(e,t){return new GeoJSONVT(e,t)}function GeoJSONVT(e,t){t=this.options=extend(Object.create(this.options),t);var r=t.debug;r&amp;&amp;console.time(&quot;preprocess data&quot;);var n=1&lt;&lt;t.maxZoom,o=convert(e,t.tolerance/(n*t.extent));this.tiles={},this.tileCoords=[],r&amp;&amp;(console.timeEnd(&quot;preprocess data&quot;),console.log(&quot;index: maxZoom: %d, maxPoints: %d&quot;,t.indexMaxZoom,t.indexMaxPoints),console.time(&quot;generate tiles&quot;),this.stats={},this.total=0),o=wrap(o,t.buffer/t.extent,intersectX),o.length&amp;&amp;this.splitTile(o,0,0,0),r&amp;&amp;(o.length&amp;&amp;console.log(&quot;features: %d, points: %d&quot;,this.tiles[0].numFeatures,this.tiles[0].numPoints),console.timeEnd(&quot;generate tiles&quot;),console.log(&quot;tiles generated:&quot;,this.total,JSON.stringify(this.stats)))}function toID(e,t,r){return 32*((1&lt;&lt;e)*r+t)+e}function intersectX(e,t,r){return[r,(r-e[0])*(t[1]-e[1])/(t[0]-e[0])+e[1],1]}function intersectY(e,t,r){return[(r-e[1])*(t[0]-e[0])/(t[1]-e[1])+e[0],r,1]}function extend(e,t){for(var r in t)e[r]=t[r];return e}function isClippedSquare(e,t,r){var n=e.source;if(1!==n.length)return!1;var o=n[0];if(3!==o.type||o.geometry.length&gt;1)return!1;var i=o.geometry[0].length;if(5!==i)return!1;for(var a=0;a&lt;i;a++){var s=transform.point(o.geometry[0][a],t,e.z2,e.x,e.y);if(s[0]!==-r&amp;&amp;s[0]!==t+r||s[1]!==-r&amp;&amp;s[1]!==t+r)return!1}return!0}function feature$1(e,t){var r=t.id,n=t.bbox,o=null==t.properties?{}:t.properties,i=object(e,t);return null==r&amp;&amp;null==n?{type:&quot;Feature&quot;,properties:o,geometry:i}:null==n?{type:&quot;Feature&quot;,id:r,properties:o,geometry:i}:{type:&quot;Feature&quot;,id:r,bbox:n,properties:o,geometry:i}}function object(e,t){function r(e,t){t.length&amp;&amp;t.pop();for(var r=u[e&lt;0?~e:e],n=0,o=r.length;n&lt;o;++n)t.push(l(r[n].slice(),n));e&lt;0&amp;&amp;reverse(t,o)}function n(e){return l(e.slice())}function o(e){for(var t=[],n=0,o=e.length;n&lt;o;++n)r(e[n],t);return t.length&lt;2&amp;&amp;t.push(t[0].slice()),t}function i(e){for(var t=o(e);t.length&lt;4;)t.push(t[0].slice());return t}function a(e){return e.map(i)}function s(e){var t,r=e.type;switch(r){case&quot;GeometryCollection&quot;:return{type:r,geometries:e.geometries.map(s)};case&quot;Point&quot;:t=n(e.coordinates);break;case&quot;MultiPoint&quot;:t=e.coordinates.map(n);break;case&quot;LineString&quot;:t=o(e.arcs);break;case&quot;MultiLineString&quot;:t=e.arcs.map(o);break;case&quot;Polygon&quot;:t=a(e.arcs);break;case&quot;MultiPolygon&quot;:t=e.arcs.map(a);break;default:return null}return{type:r,coordinates:t}}var l=transform$3(e),u=e.arcs;return s(t)}function extractArcs(e,t,r){function n(e){var t=e&lt;0?~e:e;(c[t]||(c[t]=[])).push({i:e,g:l})}function o(e){e.forEach(n)}function i(e){e.forEach(o)}function a(e){e.forEach(i)}function s(e){switch(l=e,e.type){case&quot;GeometryCollection&quot;:e.geometries.forEach(s);break;case&quot;LineString&quot;:o(e.arcs);break;case&quot;MultiLineString&quot;:case&quot;Polygon&quot;:i(e.arcs);break;case&quot;MultiPolygon&quot;:a(e.arcs)}}var l,u=[],c=[];return s(t),c.forEach(null==r?function(e){u.push(e[0].i)}:function(e){r(e[0].g,e[e.length-1].g)&amp;&amp;u.push(e[0].i)}),u}function planarRingArea(e){for(var t,r=-1,n=e.length,o=e[n-1],i=0;++r&lt;n;)t=o,o=e[r],i+=t[0]*o[1]-t[1]*o[0];return Math.abs(i)}var simplify_1=simplify$1,convert_1=convert$1,simplify=simplify_1,tile=transformTile,point=transformPoint,transform$1={tile:tile,point:point},clip_1=clip$1,clip$2=clip_1,wrap_1=wrap$1,tile$1=createTile$1,index=geojsonvt,convert=convert_1,transform=transform$1,clip=clip_1,wrap=wrap_1,createTile=tile$1;GeoJSONVT.prototype.options={maxZoom:14,indexMaxZoom:5,indexMaxPoints:1e5,solidChildren:!1,tolerance:3,extent:4096,buffer:64,debug:0},GeoJSONVT.prototype.splitTile=function(e,t,r,n,o,i,a){for(var s=this,l=[e,t,r,n],u=this.options,c=u.debug,f=null;l.length;){n=l.pop(),r=l.pop(),t=l.pop(),e=l.pop();var p=1&lt;&lt;t,h=toID(t,r,n),m=s.tiles[h],g=t===u.maxZoom?0:u.tolerance/(p*u.extent);if(!m&amp;&amp;(c&gt;1&amp;&amp;console.time(&quot;creation&quot;),m=s.tiles[h]=createTile(e,p,r,n,g,t===u.maxZoom),s.tileCoords.push({z:t,x:r,y:n}),c)){c&gt;1&amp;&amp;(console.log(&quot;tile z%d-%d-%d (features: %d, points: %d, simplified: %d)&quot;,t,r,n,m.numFeatures,m.numPoints,m.numSimplified),console.timeEnd(&quot;creation&quot;));var d=&quot;z&quot;+t;s.stats[d]=(s.stats[d]||0)+1,s.total++}if(m.source=e,o){if(t===u.maxZoom||t===o)continue;var v=1&lt;&lt;o-t;if(r!==Math.floor(i/v)||n!==Math.floor(a/v))continue}else if(t===u.indexMaxZoom||m.numPoints&lt;=u.indexMaxPoints)continue;if(u.solidChildren||!isClippedSquare(m,u.extent,u.buffer)){m.source=null,c&gt;1&amp;&amp;console.time(&quot;clipping&quot;);var y,x,b,M,P,S,w=.5*u.buffer/u.extent,$=.5-w,C=.5+w,F=1+w;y=x=b=M=null,P=clip(e,p,r-w,r+C,0,intersectX,m.min[0],m.max[0]),S=clip(e,p,r+$,r+F,0,intersectX,m.min[0],m.max[0]),P&amp;&amp;(y=clip(P,p,n-w,n+C,1,intersectY,m.min[1],m.max[1]),x=clip(P,p,n+$,n+F,1,intersectY,m.min[1],m.max[1])),S&amp;&amp;(b=clip(S,p,n-w,n+C,1,intersectY,m.min[1],m.max[1]),M=clip(S,p,n+$,n+F,1,intersectY,m.min[1],m.max[1])),c&gt;1&amp;&amp;console.timeEnd(&quot;clipping&quot;),y&amp;&amp;l.push(y,t+1,2*r,2*n),x&amp;&amp;l.push(x,t+1,2*r,2*n+1),b&amp;&amp;l.push(b,t+1,2*r+1,2*n),M&amp;&amp;l.push(M,t+1,2*r+1,2*n+1)}else o&amp;&amp;(f=t)}return f},GeoJSONVT.prototype.getTile=function(e,t,r){var n=this,o=this.options,i=o.extent,a=o.debug,s=1&lt;&lt;e;t=(t%s+s)%s;var l=toID(e,t,r);if(this.tiles[l])return transform.tile(this.tiles[l],i);a&gt;1&amp;&amp;console.log(&quot;drilling down to z%d-%d-%d&quot;,e,t,r);for(var u,c=e,f=t,p=r;!u&amp;&amp;c&gt;0;)c--,f=Math.floor(f/2),p=Math.floor(p/2),u=n.tiles[toID(c,f,p)];if(!u||!u.source)return null;if(a&gt;1&amp;&amp;console.log(&quot;found parent tile z%d-%d-%d&quot;,c,f,p),isClippedSquare(u,i,o.buffer))return transform.tile(u,i);a&gt;1&amp;&amp;console.time(&quot;drilling down&quot;);var h=this.splitTile(u.source,c,f,p,e,t,r);if(a&gt;1&amp;&amp;console.timeEnd(&quot;drilling down&quot;),null!==h){var m=1&lt;&lt;e-h;l=toID(h,Math.floor(t/m),Math.floor(r/m))}return this.tiles[l]?transform.tile(this.tiles[l],i):null};var identity=function(e){return e},transform$3=function(e){if(null==(t=e.transform))return identity;var t,r,n,o=t.scale[0],i=t.scale[1],a=t.translate[0],s=t.translate[1];return function(e,t){return t||(r=n=0),e[0]=(r+=e[0])*o+a,e[1]=(n+=e[1])*i+s,e}},bbox=function(e){function t(e){s[0]=e[0],s[1]=e[1],a(s),s[0]&lt;l&amp;&amp;(l=s[0]),s[0]&gt;c&amp;&amp;(c=s[0]),s[1]&lt;u&amp;&amp;(u=s[1]),s[1]&gt;f&amp;&amp;(f=s[1])}function r(e){switch(e.type){case&quot;GeometryCollection&quot;:e.geometries.forEach(r);break;case&quot;Point&quot;:t(e.coordinates);break;case&quot;MultiPoint&quot;:e.coordinates.forEach(t)}}var n=e.bbox;if(!n){var o,i,a=transform$3(e),s=new Array(2),l=1/0,u=l,c=-l,f=-l;e.arcs.forEach(function(e){for(var t=-1,r=e.length;++t&lt;r;)o=e[t],s[0]=o[0],s[1]=o[1],a(s,t),s[0]&lt;l&amp;&amp;(l=s[0]),s[0]&gt;c&amp;&amp;(c=s[0]),s[1]&lt;u&amp;&amp;(u=s[1]),s[1]&gt;f&amp;&amp;(f=s[1])});for(i in e.objects)r(e.objects[i]);n=e.bbox=[l,u,c,f]}return n},reverse=function(e,t){for(var r,n=e.length,o=n-t;o&lt;--n;)r=e[o],e[o++]=e[n],e[n]=r},feature=function(e,t){return&quot;GeometryCollection&quot;===t.type?{type:&quot;FeatureCollection&quot;,features:t.geometries.map(function(t){return feature$1(e,t)})}:feature$1(e,t)},stitch=function(e,t){function r(t){var r,n=e.arcs[t&lt;0?~t:t],o=n[0];return e.transform?(r=[0,0],n.forEach(function(e){r[0]+=e[0],r[1]+=e[1]})):r=n[n.length-1],t&lt;0?[r,o]:[o,r]}function n(e,t){for(var r in e){var n=e[r];delete t[n.start],delete n.start,delete n.end,n.forEach(function(e){o[e&lt;0?~e:e]=1}),s.push(n)}}var o={},i={},a={},s=[],l=-1;return t.forEach(function(r,n){var o,i=e.arcs[r&lt;0?~r:r];i.length&lt;3&amp;&amp;!i[1][0]&amp;&amp;!i[1][1]&amp;&amp;(o=t[++l],t[l]=r,t[n]=o)}),t.forEach(function(e){var t,n,o=r(e),s=o[0],l=o[1];if(t=a[s])if(delete a[t.end],t.push(e),t.end=l,n=i[l]){delete i[n.start];var u=n===t?t:t.concat(n);i[u.start=t.start]=a[u.end=n.end]=u}else i[t.start]=a[t.end]=t;else if(t=i[l])if(delete i[t.start],t.unshift(e),t.start=s,n=a[s]){delete a[n.end];var c=n===t?t:n.concat(t);i[c.start=n.start]=a[c.end=t.end]=c}else i[t.start]=a[t.end]=t;else t=[e],i[t.start=s]=a[t.end=l]=t}),n(a,i),n(i,a),t.forEach(function(e){o[e&lt;0?~e:e]||s.push([e])}),s},bisect=function(e,t){for(var r=0,n=e.length;r&lt;n;){var o=r+n&gt;&gt;&gt;1;e[o]&lt;t?r=o+1:n=o}return r},slicers={},options;onmessage=function(e){if(&quot;slice&quot;===e.data[0]){var t=e.data[1];if(options=e.data[2],t.type&amp;&amp;&quot;Topology&quot;===t.type)for(var r in t.objects)slicers[r]=index(feature(t,t.objects[r]),options);else slicers[options.vectorTileLayerName]=index(t,options)}else if(&quot;get&quot;===e.data[0]){var n=e.data[1],o={};for(var r in slicers){var i=slicers[r].getTile(n.z,n.x,n.y);if(i){var a={features:[],extent:options.extent,name:options.vectorTileLayerName,length:i.features.length};for(var s in i.features){var l={geometry:i.features[s].geometry,properties:i.features[s].tags,type:i.features[s].type};a.features.push(l)}o[r]=a}}postMessage({layers:o,coords:n})}};\n&#x27;,&quot;text/plain; charset=us-ascii&quot;,!1);L.VectorGrid.Slicer=L.VectorGrid.extend({options:{vectorTileLayerName:&quot;sliced&quot;,extent:4096,maxZoom:14},initialize:function(t,e){L.VectorGrid.prototype.initialize.call(this,e);var e={};for(var r in this.options)&quot;rendererFactory&quot;!==r&amp;&amp;&quot;vectorTileLayerStyles&quot;!==r&amp;&amp;&quot;function&quot;!=typeof this.options[r]&amp;&amp;(e[r]=this.options[r]);this._worker=new Worker(workerCode),this._worker.postMessage([&quot;slice&quot;,t,e])},_getVectorTilePromise:function(t){var e=this,r=new Promise(function(r){e._worker.addEventListener(&quot;message&quot;,function i(n){n.data.coords&amp;&amp;n.data.coords.x===t.x&amp;&amp;n.data.coords.y===t.y&amp;&amp;n.data.coords.z===t.z&amp;&amp;(r(n.data),e._worker.removeEventListener(&quot;message&quot;,i))})});return this._worker.postMessage([&quot;get&quot;,t]),r}}),L.vectorGrid.slicer=function(t,e){return new L.VectorGrid.Slicer(t,e)},L.Canvas.Tile=L.Canvas.extend({initialize:function(t,e,r){L.Canvas.prototype.initialize.call(this,r),this._tileCoord=t,this._size=e,this._initContainer(),this._container.setAttribute(&quot;width&quot;,this._size.x),this._container.setAttribute(&quot;height&quot;,this._size.y),this._layers={},this._drawnLayers={},this._drawing=!0,r.interactive&amp;&amp;(this._container.style.pointerEvents=&quot;auto&quot;)},getCoord:function(){return this._tileCoord},getContainer:function(){return this._container},getOffset:function(){return this._tileCoord.scaleBy(this._size).subtract(this._map.getPixelOrigin())},onAdd:L.Util.falseFn,addTo:function(t){this._map=t},removeFrom:function(t){delete this._map},_onClick:function(t){var e,r,i=this._map.mouseEventToLayerPoint(t).subtract(this.getOffset());for(var n in this._layers)e=this._layers[n],e.options.interactive&amp;&amp;e._containsPoint(i)&amp;&amp;!this._map._draggableMoved(e)&amp;&amp;(r=e);r&amp;&amp;(L.DomEvent.fakeStop(t),this._fireEvent([r],t))},_onMouseMove:function(t){if(this._map&amp;&amp;!this._map.dragging.moving()&amp;&amp;!this._map._animatingZoom){var e=this._map.mouseEventToLayerPoint(t).subtract(this.getOffset());this._handleMouseHover(t,e)}},_updateIcon:function(t){if(this._drawing){var e=t.options.icon,r=e.options,i=L.point(r.iconSize),n=r.iconAnchor||i&amp;&amp;i.divideBy(2,!0),o=t._point.subtract(n),s=this._ctx,a=t._getImage();a.complete?s.drawImage(a,o.x,o.y,i.x,i.y):L.DomEvent.on(a,&quot;load&quot;,function(){s.drawImage(a,o.x,o.y,i.x,i.y)}),this._drawnLayers[t._leaflet_id]=t}}}),L.canvas.tile=function(t,e,r){return new L.Canvas.Tile(t,e,r)};
+&lt;/script&gt;
+&lt;script&gt;
+(function(){
+&#x27;use strict&#x27;;
+
+/* ── 定数 ── */
+var LEAD_SEC      = 11 * 60;
+var INTERVAL_SEC  = 10 * 60;
+var LOAD_TIMEOUT  = 10000;
+var SPEEDS        = [1200, 600, 300];
+var AUTO_INTERVAL = 10 * 60 * 1000;
+
+/* 時間範囲・過去モード */
+var timeRangeHours     = 2;
+var historicalOffsetMin = 0;
+function isHistoricalMode(){ return historicalOffsetMin &gt; 0; }
+
+/* 洪水キキクルの河川線幅 */
+var FLOOD_LINE_WIDTH = [1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 5, 6, 8, 8, 8, 10, 12, 14, 16];
+
+/* 凡例定義 */
+var LEGEND = {
+  rain_mesh: { url: &#x27;https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_heavyrain.svg&#x27;, name: &#x27;大雨キキクル&#x27; },
+  land:      { url: &#x27;https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_land.svg&#x27;,      name: &#x27;土砂キキクル&#x27; },
+  inund:     { url: &#x27;https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_inund.svg&#x27;,     name: &#x27;浸水キキクル&#x27; },
+  flood:     { url: &#x27;https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_flood.svg&#x27;,     name: &#x27;洪水キキクル&#x27; }
+};
+
+/* ── ユーティリティ ── */
+function pad2(n){ return n&lt;10?&#x27;0&#x27;+n:&#x27;&#x27;+n; }
+function fmtUtc(d){
+  return &#x27;&#x27;+d.getUTCFullYear()+pad2(d.getUTCMonth()+1)+pad2(d.getUTCDate())+
+    pad2(d.getUTCHours())+pad2(d.getUTCMinutes())+pad2(d.getUTCSeconds());
+}
+function fmtLocal(d){
+  return d.getFullYear()+&#x27;-&#x27;+pad2(d.getMonth()+1)+&#x27;-&#x27;+pad2(d.getDate())+&#x27; &#x27;+
+    pad2(d.getHours())+&#x27;:&#x27;+pad2(d.getMinutes())+&#x27; JST&#x27;;
+}
+function getBaseTime(leadSec, intervalSec){
+  var t = Date.now() - (isHistoricalMode() ? historicalOffsetMin*60000 : leadSec*1000);
+  t = t - (t % (intervalSec*1000));
+  var d = new Date(t);
+  return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),
+    d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()));
+}
+
+/* ── Leaflet地図 ── */
+var map = L.map(&#x27;map&#x27;,{
+  zoomControl:true, scrollWheelZoom:true,
+  fadeAnimation:false, zoomAnimation:false, tap:false
+}).setView([35.5,137.0],6);
+map.setMinZoom(4); map.setMaxZoom(14);
+
+/* 国土地理院白地図 */
+/* pale タイル（参考コード kikikuruViewer 準拠）
+   grayscale+brightness フィルターで：陸地=薄灰色、海=暗い灰色 に変換 */
+var BASE_CHIRIIN = &#x27;https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png&#x27;;
+var BASE_FILTERS  = [&#x27;grayscale(100%) brightness(0.45)&#x27;, &#x27;grayscale(100%) brightness(0.55)&#x27;, &#x27;grayscale(100%) brightness(0.65)&#x27;];
+var BASE_OPACITIES = [0.8, 0.9, 1.0];
+var BASE_LABELS    = [&#x27;地図暗&#x27;, &#x27;地図中&#x27;, &#x27;地図明&#x27;];
+var baseOpacityIdx = 1;
+var baseLayer = L.tileLayer(BASE_CHIRIIN,{
+  maxZoom:18, opacity:BASE_OPACITIES[baseOpacityIdx],
+  attribution:&#x27;© 国土地理院&#x27;
+}).addTo(map);
+baseLayer.on(&#x27;tileload&#x27;, function(e){
+  e.tile.style.filter = BASE_FILTERS[baseOpacityIdx];
+});
+
+/* ペイン定義 */
+map.createPane(&#x27;rainPane&#x27;);      map.getPane(&#x27;rainPane&#x27;).style.zIndex      = 201;
+map.createPane(&#x27;landPane&#x27;);      map.getPane(&#x27;landPane&#x27;).style.zIndex      = 202;
+map.createPane(&#x27;inundPane&#x27;);     map.getPane(&#x27;inundPane&#x27;).style.zIndex     = 203;
+map.createPane(&#x27;floodBasePane&#x27;); map.getPane(&#x27;floodBasePane&#x27;).style.zIndex = 204;
+map.createPane(&#x27;floodRiskPane&#x27;); map.getPane(&#x27;floodRiskPane&#x27;).style.zIndex = 205;
+map.createPane(&#x27;designatedRiverPane&#x27;);      map.getPane(&#x27;designatedRiverPane&#x27;).style.zIndex      = 300;
+map.createPane(&#x27;radarPane&#x27;);               map.getPane(&#x27;radarPane&#x27;).style.zIndex               = 350;
+map.createPane(&#x27;designatedRiverLabelPane&#x27;); map.getPane(&#x27;designatedRiverLabelPane&#x27;).style.zIndex = 600;
+/* pane レベルで multiply 設定（canvas 個別だと pane の stacking context で効かない） */
+map.getPane(&#x27;rainPane&#x27;).style.mixBlendMode  = &#x27;multiply&#x27;;
+map.getPane(&#x27;landPane&#x27;).style.mixBlendMode  = &#x27;multiply&#x27;;
+map.getPane(&#x27;inundPane&#x27;).style.mixBlendMode = &#x27;multiply&#x27;;
+
+/* ── 状態 ── */
+var frames = [];
+/* 全キキクルは Canvas GridLayer で管理 / radar のみラスタータイル */
+var layers = { radar: [] };
+var currentIdx = -1;
+var timerId = null, playing = false, speedIdx = 1;
+var isLoading = false;
+var autoTimerId = null;
+var latestBaseTime = null;
+var _wasPlaying = false;
+
+/* 各レイヤーの表示ON/OFF（初期: 大雨・土砂・浸水・洪水ON） */
+var visible = { rain_mesh:true, land:true, inund:true, flood:true, radar:false };
+
+/* 指定河川洪水予報の線幅テーブル（ズームレベル0〜18）・危険度カラー */
+var DESIGNATED_RIVER_WIDTHS = [2, 2, 2, 2, 2, 2, 2, 8, 8, 10, 10, 10, 12, 14, 16, 16, 16, 16, 16];
+var DESIGNATED_RIVER_COLORS = { 1:&#x27;#3cffff&#x27;, 2:&#x27;#f2e700&#x27;, 3:&#x27;#ff2800&#x27;, 4:&#x27;#aa00aa&#x27;, 5:&#x27;#0c000c&#x27; };
+var designatedRiverStaticData = null;    /* map_designated_river（全河川、常時水色） */
+var designatedRiverStaticOuter = null;   /* L.geoJson：全河川 外側黒 */
+var designatedRiverStaticInner = null;   /* L.geoJson：全河川 内側水色 */
+var designatedRiverCache = {};           /* ymdhms → 動的GeoJSON | null */
+var designatedRiverDynOuterLayers = [];  /* 動的（危険度2以上）外側 */
+var designatedRiverDynInnerLayers = [];  /* 動的（危険度2以上）内側 */
+var designatedRiverLabelLayers = [];     /* 名称ラベル */
+var designatedRiverTimer = null;
+var designatedRiverCurrentYmdhms = null;
+function drW(){ return DESIGNATED_RIVER_WIDTHS[Math.min(map.getZoom(), DESIGNATED_RIVER_WIDTHS.length-1)]; }
+
+/* 静的河川PNGタイル（洪水ON時のみ表示） */
+var riverBaseLayer = L.tileLayer(
+  &#x27;https://www.jma.go.jp/bosai/jmatile/data/map/none/none/none/surf/flood/{z}/{x}/{y}.png&#x27;,
+  { pane:&#x27;floodBasePane&#x27;, minNativeZoom:4, maxNativeZoom:13,
+    minZoom:4, maxZoom:14, opacity:0.85 }
+);
+function updateRiverBaseLayer(){
+  if(visible[&#x27;flood&#x27;]){
+    if(!map.hasLayer(riverBaseLayer)) riverBaseLayer.addTo(map);
+  } else {
+    if(map.hasLayer(riverBaseLayer)) map.removeLayer(riverBaseLayer);
+  }
+}
+
+/* ── 指定河川洪水予報（静的水色常時 ＋ 動的危険度色フレーム連動） ── */
+
+/* 静的レイヤー：全河川を水色で常時表示（一度だけ構築） */
+function initDesignatedRiverStatic(){
+  if(designatedRiverStaticOuter || !designatedRiverStaticData || !visible[&#x27;flood&#x27;]) return;
+  var w = drW();
+  designatedRiverStaticOuter = L.geoJson(designatedRiverStaticData, {
+    pane:&#x27;designatedRiverPane&#x27;,
+    style:{color:&#x27;#000000&#x27;, weight:w, opacity:1, fill:false, lineCap:&#x27;butt&#x27;}
+  }).addTo(map);
+  designatedRiverStaticInner = L.geoJson(designatedRiverStaticData, {
+    pane:&#x27;designatedRiverPane&#x27;,
+    style:{color:&#x27;#3cffff&#x27;, weight:Math.max(1,w-2), opacity:1, fill:false, lineCap:&#x27;butt&#x27;}
+  }).addTo(map);
+}
+function removeDesignatedRiverStatic(){
+  if(designatedRiverStaticOuter){ map.removeLayer(designatedRiverStaticOuter); designatedRiverStaticOuter=null; }
+  if(designatedRiverStaticInner){ map.removeLayer(designatedRiverStaticInner); designatedRiverStaticInner=null; }
+}
+
+/* 動的レイヤー：危険度2以上の河川のみをフレーム連動で描画 */
+function clearDesignatedRiverDynamic(){
+  designatedRiverDynOuterLayers.forEach(function(l){ if(map.hasLayer(l)) map.removeLayer(l); });
+  designatedRiverDynInnerLayers.forEach(function(l){ if(map.hasLayer(l)) map.removeLayer(l); });
+  designatedRiverLabelLayers.forEach(function(l){ if(map.hasLayer(l)) map.removeLayer(l); });
+  designatedRiverDynOuterLayers=[]; designatedRiverDynInnerLayers=[]; designatedRiverLabelLayers=[];
+}
+function drawDesignatedRiverDynamic(data){
+  clearDesignatedRiverDynamic();
+  if(!visible[&#x27;flood&#x27;] || !data || !data.features) return;
+  var zoom = map.getZoom();
+  var w = drW();
+  data.features.forEach(function(obj){
+    var props = obj.properties;
+    var level = props.level || 1;
+    if(level &lt; 2) return; /* 危険度1は静的レイヤー（水色）が担当 */
+    var color = DESIGNATED_RIVER_COLORS[level] || &#x27;#3cffff&#x27;;
+    designatedRiverDynOuterLayers.push(L.geoJson(obj, {
+      pane:&#x27;designatedRiverPane&#x27;,
+      style:{color:&#x27;#000000&#x27;, weight:w, opacity:1, fill:false, lineCap:&#x27;butt&#x27;}
+    }).addTo(map));
+    designatedRiverDynInnerLayers.push(L.geoJson(obj, {
+      pane:&#x27;designatedRiverPane&#x27;,
+      style:{color:color, weight:Math.max(1,w-2), opacity:1, fill:false, lineCap:&#x27;butt&#x27;}
+    }).addTo(map));
+    var labelLat = props.labelLat, labelLon = props.labelLon;
+    var name = props.fcstAreaNameJP || &#x27;&#x27;;
+    if(zoom &gt;= 8 &amp;&amp; labelLat != null &amp;&amp; labelLon != null &amp;&amp; name){
+      var textColor = level &gt;= 4 ? &#x27;#ffffff&#x27; : color;
+      designatedRiverLabelLayers.push(L.marker([labelLat, labelLon], {
+        icon: L.divIcon({
+          html: &#x27;&lt;div style=&quot;color:&#x27;+textColor+&#x27;;font-size:11px;font-weight:bold;white-space:nowrap;&#x27;+
+            &#x27;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,&#x27;+
+            &#x27;-2px 0 0 #000,2px 0 0 #000,0 -2px 0 #000,0 2px 0 #000&quot;&gt;&#x27;+name+&#x27;&lt;/div&gt;&#x27;,
+          className:&#x27;&#x27;, iconAnchor:[-5,10]
+        }),
+        interactive:false, pane:&#x27;designatedRiverLabelPane&#x27;
+      }).addTo(map));
+    }
+  });
+}
+
+/* 静的＋動的を全クリア（洪水OFFやcleanupで使用） */
+function clearDesignatedRiverLayers(){
+  removeDesignatedRiverStatic();
+  clearDesignatedRiverDynamic();
+}
+
+function applyDesignatedRiverToYmdhms(ymdhms){
+  designatedRiverCurrentYmdhms = ymdhms;
+  if(!visible[&#x27;flood&#x27;] || !ymdhms){ clearDesignatedRiverLayers(); return; }
+  if(!designatedRiverStaticData) return; /* 静的データ未取得 → fetch完了後に再呼び出し */
+  initDesignatedRiverStatic();
+  if(ymdhms in designatedRiverCache){
+    drawDesignatedRiverDynamic(designatedRiverCache[ymdhms]);
+    return;
+  }
+  clearDesignatedRiverDynamic(); /* fetch中は動的クリア（静的は維持） */
+  var url = &#x27;https://www.jma.go.jp/bosai/jmatile/data/risk/&#x27;+ymdhms+&#x27;/none/&#x27;+ymdhms+&#x27;/surf/designated_river/data.geojson?id=designated_river&#x27;;
+  fetch(url)
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){
+      designatedRiverCache[ymdhms] = d;
+      if(designatedRiverCurrentYmdhms === ymdhms) drawDesignatedRiverDynamic(d);
+    })
+    .catch(function(){ designatedRiverCache[ymdhms] = null; });
+}
+function scheduleDesignatedRiverToFrame(ymdhms){
+  clearTimeout(designatedRiverTimer);
+  designatedRiverTimer = setTimeout(function(){ applyDesignatedRiverToYmdhms(ymdhms); }, 50);
+}
+function refreshDesignatedRiverStyle(){
+  var w = drW();
+  if(designatedRiverStaticOuter) designatedRiverStaticOuter.setStyle({weight:w});
+  if(designatedRiverStaticInner) designatedRiverStaticInner.setStyle({weight:Math.max(1,w-2)});
+  /* 動的：ズーム8境界でラベルON/OFFが切り替わるので再描画 */
+  if(designatedRiverCurrentYmdhms &amp;&amp; designatedRiverCache[designatedRiverCurrentYmdhms]){
+    drawDesignatedRiverDynamic(designatedRiverCache[designatedRiverCurrentYmdhms]);
+  } else {
+    designatedRiverDynOuterLayers.forEach(function(l){ l.setStyle({weight:w}); });
+    designatedRiverDynInnerLayers.forEach(function(l){ l.setStyle({weight:Math.max(1,w-2)}); });
+  }
+}
+
+/* ── 座標変換ユーティリティ ──
+   nativeMax 上限 + 偶数ズーム丸め。displayZ &gt; nativeMax の場合は
+   nativeMax の親タイルを scale 倍拡大描画する（全 Canvas GridLayer 共通）。 */
+function calcFetchCoords(displayZ, x, y, nativeMax){
+  var fetchZ = (displayZ % 2 === 1) ? displayZ - 1 : displayZ;
+  if(fetchZ &gt; nativeMax) fetchZ = nativeMax;
+  if(fetchZ &lt; 4) fetchZ = 4;
+  var scale = Math.round(Math.pow(2, displayZ - fetchZ));
+  var fetchX = Math.floor(x / scale);
+  var fetchY = Math.floor(y / scale);
+  return { z:fetchZ, x:fetchX, y:fetchY, qx:x - fetchX*scale, qy:y - fetchY*scale, scale:scale };
+}
+
+/* ── 洪水キキクル危険度: Canvas GridLayer（PBF）── */
+var FLOOD_NATIVE_MAX = 10;
+var floodPbfCache = {};
+var floodCurrentYmdhms = null;
+var floodCanvasGrid = null;
+var floodFrameTimer = null;
+
+function floodTileUrl(ymdhms, z, x, y){
+  return &#x27;https://www.jma.go.jp/bosai/jmatile/data/risk/&#x27;+ymdhms+&#x27;/none/&#x27;+ymdhms+&#x27;/surf/flood/&#x27;+z+&#x27;/&#x27;+x+&#x27;/&#x27;+y+&#x27;.pbf&#x27;;
+}
+
+function drawFloodOnCanvas(canvas, buffer, z, quadX, quadY, scale){
+  try {
+    var vt = new VectorTile(new Pbf(new Uint8Array(buffer)));
+    var lay = vt.layers[&#x27;flood&#x27;];
+    var ctx = canvas.getContext(&#x27;2d&#x27;);
+    ctx.clearRect(0, 0, 256, 256);
+    if(!lay) return;
+    var lw = FLOOD_LINE_WIDTH[Math.min(z, FLOOD_LINE_WIDTH.length-1)] || 4;
+    ctx.save();
+    if(scale &gt; 1){
+      var tileSize = 256 / scale;
+      ctx.scale(scale, scale);
+      ctx.translate(-quadX * tileSize, -quadY * tileSize);
+      lw = lw / scale;
+    }
+    ctx.lineJoin=&#x27;round&#x27;;
+    ctx.strokeStyle=&#x27;#333&#x27;; ctx.lineWidth=lw;
+    for(var i=0; i&lt;lay.length; i++){
+      var geom=lay.feature(i).loadGeometry();
+      ctx.beginPath();
+      for(var j=0;j&lt;geom.length;j++) for(var k=0;k&lt;geom[j].length;k++){
+        var p=geom[j][k],x=p.x/4096*256,y=p.y/4096*256;
+        if(k) ctx.lineTo(x,y); else ctx.moveTo(x,y);
+      }
+      ctx.stroke();
+    }
+    for(var i=0; i&lt;lay.length; i++){
+      var feat=lay.feature(i), level=feat.properties.level;
+      var c=&#x27;#3cffff&#x27;;
+      if(level==1) c=&#x27;#f2e700&#x27;;
+      if(level==2) c=&#x27;#ff2800&#x27;;
+      if(level==3) c=&#x27;#aa00aa&#x27;;
+      if(level==4) c=&#x27;#0c000c&#x27;;
+      ctx.strokeStyle=c; ctx.lineWidth=Math.max(0.5,(lw-2));
+      var geom=feat.loadGeometry();
+      ctx.beginPath();
+      for(var j=0;j&lt;geom.length;j++) for(var k=0;k&lt;geom[j].length;k++){
+        var p=geom[j][k],x=p.x/4096*256,y=p.y/4096*256;
+        if(k) ctx.lineTo(x,y); else ctx.moveTo(x,y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  } catch(e){}
+}
+
+function initFloodCanvasGrid(){
+  if(floodCanvasGrid) return;
+  var FloodLayer = L.GridLayer.extend({
+    createTile: function(coords, done){
+      var canvas = document.createElement(&#x27;canvas&#x27;);
+      canvas.width = 256; canvas.height = 256;
+      if(!floodCurrentYmdhms || !visible[&#x27;flood&#x27;]){
+        setTimeout(function(){ done(null, canvas); }, 0);
+        return canvas;
+      }
+      var fc = calcFetchCoords(coords.z, coords.x, coords.y, FLOOD_NATIVE_MAX);
+      var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
+      var c = canvas, qx = fc.qx, qy = fc.qy, lz = fc.z, sc = fc.scale;
+      if(floodPbfCache[url]){
+        drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, sc);
+        setTimeout(function(){ done(null, c); }, 0);
+      } else if(floodPbfCache[url] === false){
+        setTimeout(function(){ done(null, c); }, 0);
+      } else {
+        fetch(url).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
+          if(buf.byteLength &gt; 0){ floodPbfCache[url]=buf; drawFloodOnCanvas(c,buf,lz,qx,qy,sc); }
+          else floodPbfCache[url]=false;
+          done(null, c);
+        }).catch(function(){ floodPbfCache[url]=false; done(null, c); });
+      }
+      return canvas;
+    }
+  });
+  floodCanvasGrid = new FloodLayer({ pane:&#x27;floodRiskPane&#x27;, minZoom:4, maxZoom:14, tileSize:256 });
+}
+
+function redrawFloodCanvases(){
+  if(!floodCanvasGrid || !floodCurrentYmdhms) return;
+  var tiles = floodCanvasGrid._tiles;
+  if(!tiles) return;
+  for(var key in tiles){
+    var tile = tiles[key];
+    if(!tile || !tile.el || typeof tile.el.getContext !== &#x27;function&#x27;) continue;
+    var co = tile.coords;
+    var fc = calcFetchCoords(co.z, co.x, co.y, FLOOD_NATIVE_MAX);
+    var url = floodTileUrl(floodCurrentYmdhms, fc.z, fc.x, fc.y);
+    var c = tile.el, qx = fc.qx, qy = fc.qy, lz = fc.z, sc = fc.scale;
+    if(floodPbfCache[url]){
+      drawFloodOnCanvas(c, floodPbfCache[url], lz, qx, qy, sc);
+    } else if(floodPbfCache[url] !== false){
+      (function(cv, z2, qx2, qy2, sc2, u){ fetch(u).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
+        if(buf.byteLength&gt;0){ floodPbfCache[u]=buf; drawFloodOnCanvas(cv,buf,z2,qx2,qy2,sc2); }
+        else floodPbfCache[u]=false;
+      }).catch(function(){ floodPbfCache[u]=false; }); })(c, lz, qx, qy, sc, url);
+    }
+  }
+}
+
+function applyFloodToYmdhms(ymdhms){
+  clearTimeout(floodFrameTimer); floodFrameTimer = null;
+  floodCurrentYmdhms = ymdhms || null;
+  if(!visible[&#x27;flood&#x27;] || !ymdhms){
+    if(floodCanvasGrid &amp;&amp; map.hasLayer(floodCanvasGrid)) map.removeLayer(floodCanvasGrid);
+    return;
+  }
+  initFloodCanvasGrid();
+  if(!map.hasLayer(floodCanvasGrid)) floodCanvasGrid.addTo(map);
+  redrawFloodCanvases();
+}
+function scheduleFloodToFrame(ymdhms){
+  clearTimeout(floodFrameTimer);
+  floodFrameTimer = setTimeout(function(){ applyFloodToYmdhms(ymdhms); }, 50);
+}
+function updateFloodBaseLayer(){
+  var idx = (currentIdx &gt;= 0 &amp;&amp; currentIdx &lt; frames.length) ? currentIdx : frames.length - 1;
+  applyFloodToYmdhms(frames.length ? frames[idx].ymdhms : null);
+}
+
+/* ── 大雨・土砂・浸水キキクル: Canvas GridLayer（PNG + mix-blend-mode透過）──
+   getImageData は iframe の CORS 制限で使えないため、
+   mix-blend-mode: multiply で白背景を透過に見せる。
+   白(255,255,255) × 地図色 = 地図色 → 白が消えて下の地図が透けて見える。
+   危険度色（黄・赤・紫・黒）はそのまま重なって表示される。
+   cache値: undefined=未取得, false=404確認済み, ArrayBuffer=データあり */
+var RISK_PNG_NATIVE_MAX = { rain_mesh:10, land:10, inund:10 };
+var RISK_PNG_PANE       = { rain_mesh:&#x27;rainPane&#x27;, land:&#x27;landPane&#x27;, inund:&#x27;inundPane&#x27; };
+
+var riskPngCache    = { rain_mesh:{}, land:{}, inund:{} };
+var riskCurrentYmd  = { rain_mesh:null, land:null, inund:null };
+var riskCanvasGrid  = { rain_mesh:null, land:null, inund:null };
+var riskFrameTimer  = { rain_mesh:null, land:null, inund:null };
+
+function riskPngTileUrl(type, ymdhms, z, x, y){
+  return &#x27;https://www.jma.go.jp/bosai/jmatile/data/risk/&#x27;+ymdhms+&#x27;/none/&#x27;+ymdhms+&#x27;/surf/&#x27;+type+&#x27;/&#x27;+z+&#x27;/&#x27;+x+&#x27;/&#x27;+y+&#x27;.png&#x27;;
+}
+
+/* PNG ArrayBuffer → canvas 描画。mix-blend-mode:multiply で白背景を透過表示 */
+function drawRiskPngFromBuffer(canvas, buffer, scale, quadX, quadY, onComplete){
+  var blob = new Blob([buffer], {type:&#x27;image/png&#x27;});
+  var blobUrl = URL.createObjectURL(blob);
+  var img = new Image();
+  img.onload = function(){
+    var ctx = canvas.getContext(&#x27;2d&#x27;);
+    ctx.clearRect(0, 0, 256, 256);
+    ctx.save();
+    if(scale &gt; 1){
+      var ts = 256 / scale;
+      ctx.scale(scale, scale);
+      ctx.translate(-quadX * ts, -quadY * ts);
+    }
+    ctx.drawImage(img, 0, 0, 256, 256);
+    ctx.restore();
+    URL.revokeObjectURL(blobUrl);
+    if(onComplete) onComplete();
+  };
+  img.onerror = function(){ URL.revokeObjectURL(blobUrl); if(onComplete) onComplete(); };
+  img.src = blobUrl;
+}
+
+/* 土砂・浸水・大雨の Canvas GridLayer を初期化 */
+function initRiskCanvasGrid(type){
+  var nMax  = RISK_PNG_NATIVE_MAX[type];
+  var pane  = RISK_PNG_PANE[type];
+  var cache = riskPngCache[type];
+  var Layer = L.GridLayer.extend({
+    createTile: function(coords, done){
+      var canvas = document.createElement(&#x27;canvas&#x27;);
+      canvas.width = 256; canvas.height = 256;
+      var ymd = riskCurrentYmd[type];
+      if(!ymd || !visible[type]){
+        setTimeout(function(){ done(null, canvas); }, 0);
+        return canvas;
+      }
+      var fc  = calcFetchCoords(coords.z, coords.x, coords.y, nMax);
+      var url = riskPngTileUrl(type, ymd, fc.z, fc.x, fc.y);
+      var c = canvas, qx = fc.qx, qy = fc.qy, sc = fc.scale;
+      if(cache[url]){
+        drawRiskPngFromBuffer(c, cache[url], sc, qx, qy, function(){ done(null, c); });
+      } else if(cache[url] === false){
+        setTimeout(function(){ done(null, c); }, 0);
+      } else {
+        fetch(url).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
+          if(buf.byteLength &gt; 0){
+            cache[url] = buf;
+            drawRiskPngFromBuffer(c, buf, sc, qx, qy, function(){ done(null, c); });
+          } else {
+            cache[url] = false; done(null, c);
+          }
+        }).catch(function(){ cache[url] = false; done(null, c); });
+      }
+      return canvas;
+    }
+  });
+  var grid = new Layer({ pane:pane, minZoom:4, maxZoom:14, tileSize:256 });
+  riskCanvasGrid[type] = grid;
+}
+
+/* 既存タイルを現在の ymdhms で再描画 */
+function redrawRiskCanvases(type){
+  var nMax  = RISK_PNG_NATIVE_MAX[type];
+  var grid  = riskCanvasGrid[type];
+  var cache = riskPngCache[type];
+  var ymd   = riskCurrentYmd[type];
+  if(!grid || !ymd) return;
+  var tiles = grid._tiles;
+  if(!tiles) return;
+  for(var key in tiles){
+    var tile = tiles[key];
+    if(!tile || !tile.el || typeof tile.el.getContext !== &#x27;function&#x27;) continue;
+    var co  = tile.coords;
+    var fc  = calcFetchCoords(co.z, co.x, co.y, nMax);
+    var url = riskPngTileUrl(type, ymd, fc.z, fc.x, fc.y);
+    (function(cv, fc2, u){
+      if(cache[u]){
+        drawRiskPngFromBuffer(cv, cache[u], fc2.scale, fc2.qx, fc2.qy, null);
+      } else if(cache[u] !== false){
+        fetch(u).then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(r.status); }).then(function(buf){
+          if(buf.byteLength &gt; 0){ cache[u]=buf; drawRiskPngFromBuffer(cv,buf,fc2.scale,fc2.qx,fc2.qy,null); }
+          else cache[u]=false;
+        }).catch(function(){ cache[u]=false; });
+      }
+    })(tile.el, fc, url);
+  }
+}
+
+function applyRiskToYmdhms(type, ymdhms){
+  clearTimeout(riskFrameTimer[type]); riskFrameTimer[type]=null;
+  riskCurrentYmd[type] = ymdhms || null;
+  var grid = riskCanvasGrid[type];
+  if(!visible[type] || !ymdhms){
+    if(grid &amp;&amp; map.hasLayer(grid)) map.removeLayer(grid);
+    return;
+  }
+  if(!grid){ initRiskCanvasGrid(type); grid=riskCanvasGrid[type]; }
+  if(!map.hasLayer(grid)) grid.addTo(map);
+  redrawRiskCanvases(type);
+}
+function scheduleRiskToFrame(type, ymdhms){
+  clearTimeout(riskFrameTimer[type]);
+  riskFrameTimer[type] = setTimeout(function(){ applyRiskToYmdhms(type, ymdhms); }, 50);
+}
+function updateRiskBaseLayer(type){
+  var idx = (currentIdx &gt;= 0 &amp;&amp; currentIdx &lt; frames.length) ? currentIdx : frames.length - 1;
+  applyRiskToYmdhms(type, frames.length ? frames[idx].ymdhms : null);
+}
+
+/* ── radar のみラスタータイル ── */
+var RADAR_NATIVE_MAX = 10;
+function radarUrl(ymdhms){
+  return &#x27;https://www.jma.go.jp/bosai/jmatile/data/nowc/&#x27;+
+    ymdhms+&#x27;/none/&#x27;+ymdhms+&#x27;/surf/hrpns/{z}/{x}/{y}.png&#x27;;
+}
+
+/* ── 表示位置の保存/復元 ── */
+function saveState(){
+  try{
+    var c=map.getCenter();
+    localStorage.setItem(&#x27;kikikuruState&#x27;,JSON.stringify({
+      lat:c.lat,lng:c.lng,zoom:map.getZoom()
+    }));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    var s=localStorage.getItem(&#x27;kikikuruState&#x27;);
+    return s?JSON.parse(s):null;
+  }catch(e){return null;}
+}
+
+/* ── DOM ── */
+var elTime   = document.getElementById(&#x27;timeDisp&#x27;);
+var elSlider = document.getElementById(&#x27;frameSlider&#x27;);
+var elLabel  = document.getElementById(&#x27;frameLabel&#x27;);
+var elFill   = document.getElementById(&#x27;loadBarFill&#x27;);
+var elStatus = document.getElementById(&#x27;loadStatus&#x27;);
+
+function clearLoadUI(){ elFill.style.width=&#x27;0%&#x27;; elStatus.textContent=&#x27;&#x27;; }
+
+/* ── radar ラスタータイルレイヤー作成 ── */
+function makeRadarLayer(ymdhms){
+  var fc = calcFetchCoords(map.getZoom(), 0, 0, RADAR_NATIVE_MAX); /* nMax計算用 */
+  var nMax = fc.z; /* ズームに応じたnMax */
+  var l = L.tileLayer(radarUrl(ymdhms),{
+    minNativeZoom:4, maxNativeZoom:nMax,
+    minZoom:4, maxZoom:14, opacity:0,
+    updateWhenIdle:false, keepBuffer:4, pane:&#x27;radarPane&#x27;
+  });
+  l.on(&#x27;tileload&#x27;, function(e){
+    e.tile.style.imageRendering=&#x27;pixelated&#x27;;
+    reapplyOpacity();
+  });
+  l.on(&#x27;load&#x27;, function(){ reapplyOpacity(); });
+  return l;
+}
+
+/* ── クリーンアップ ── */
+function cleanup(){
+  layers.radar.forEach(function(l){ if(l &amp;&amp; map.hasLayer(l)) map.removeLayer(l); });
+  layers.radar = [];
+  if(floodCanvasGrid &amp;&amp; map.hasLayer(floodCanvasGrid)) map.removeLayer(floodCanvasGrid);
+  floodCurrentYmdhms = null;
+  [&#x27;rain_mesh&#x27;,&#x27;land&#x27;,&#x27;inund&#x27;].forEach(function(tp){
+    var g = riskCanvasGrid[tp];
+    if(g &amp;&amp; map.hasLayer(g)) map.removeLayer(g);
+    riskCurrentYmd[tp] = null;
+  });
+  clearDesignatedRiverLayers();
+  designatedRiverCurrentYmdhms = null;
+  frames=[]; currentIdx=-1;
+}
+
+/* ── フレーム表示 ── */
+function reapplyOpacity(){
+  if(currentIdx&lt;0) return;
+  for(var i=0;i&lt;layers.radar.length;i++){
+    if(!layers.radar[i] || !map.hasLayer(layers.radar[i])) continue;
+    layers.radar[i].setOpacity( (i===currentIdx &amp;&amp; visible[&#x27;radar&#x27;]) ? 0.4 : 0 );
+  }
+}
+
+function showFrame(idx){
+  if(!frames.length) return;
+  idx = ((idx % frames.length) + frames.length) % frames.length;
+  var prevIdx = currentIdx;
+  currentIdx = idx;
+
+  /* radar はラスタータイル管理 */
+  if(!layers.radar[idx]) layers.radar[idx] = makeRadarLayer(frames[idx].ymdhms);
+  if(visible[&#x27;radar&#x27;]){
+    if(!map.hasLayer(layers.radar[idx])) layers.radar[idx].addTo(map);
+    layers.radar[idx].setOpacity(0.4);
+  } else {
+    if(map.hasLayer(layers.radar[idx])) map.removeLayer(layers.radar[idx]);
+  }
+  if(prevIdx &gt;= 0 &amp;&amp; prevIdx !== idx &amp;&amp; layers.radar[prevIdx] &amp;&amp; map.hasLayer(layers.radar[prevIdx])){
+    map.removeLayer(layers.radar[prevIdx]);
+  }
+  /* 次フレームを先読み */
+  var nextIdx = (idx + 1) % frames.length;
+  if(frames.length &gt; 1 &amp;&amp; nextIdx !== idx){
+    if(!layers.radar[nextIdx]) layers.radar[nextIdx] = makeRadarLayer(frames[nextIdx].ymdhms);
+    if(!map.hasLayer(layers.radar[nextIdx])) layers.radar[nextIdx].addTo(map);
+    layers.radar[nextIdx].setOpacity(0);
+  }
+
+  elSlider.value = String(idx);
+  elLabel.textContent = (idx+1)+&#x27;/&#x27;+frames.length;
+  elTime.textContent = fmtLocal(frames[idx].time);
+
+  /* Canvas GridLayer のフレーム切替 */
+  if(visible[&#x27;flood&#x27;])    { scheduleFloodToFrame(frames[idx].ymdhms); scheduleDesignatedRiverToFrame(frames[idx].ymdhms); }
+  if(visible[&#x27;rain_mesh&#x27;]){ scheduleRiskToFrame(&#x27;rain_mesh&#x27;, frames[idx].ymdhms); }
+  if(visible[&#x27;land&#x27;])     { scheduleRiskToFrame(&#x27;land&#x27;,  frames[idx].ymdhms); }
+  if(visible[&#x27;inund&#x27;])    { scheduleRiskToFrame(&#x27;inund&#x27;, frames[idx].ymdhms); }
+}
+
+/* ── 再生制御 ── */
+function play(){
+  if(playing || !frames.length || isLoading) return;
+  playing=true;
+  (function tick(){
+    if(!playing) return;
+    var nextIdx = (currentIdx+1) % frames.length;
+    showFrame(nextIdx);
+    // 最新フレーム到達時は1秒停止してからループ
+    var delay = nextIdx === frames.length - 1 ? 1000 : SPEEDS[speedIdx];
+    timerId = setTimeout(tick, delay);
+  })();
+}
+function pause(){ playing=false; clearTimeout(timerId); timerId=null; }
+
+/* ── フレーム構築 ── */
+function buildFrames(){
+  if(isLoading) return;
+  isLoading=true; pause(); cleanup();
+
+  var bt = getBaseTime(LEAD_SEC, INTERVAL_SEC);
+  latestBaseTime = bt;
+
+  var frameCount = timeRangeHours * 6;
+  var i;
+  for(i=frameCount-1; i&gt;=0; i--){
+    var t = new Date(bt.getTime() - i*INTERVAL_SEC*1000);
+    frames.push({ time:t, ymdhms:fmtUtc(t) });
+  }
+
+  elSlider.min=&#x27;0&#x27;;
+  elSlider.max=String(frames.length-1);
+  elSlider.value=String(frames.length-1);
+  elLabel.textContent=frames.length+&#x27;/&#x27;+frames.length;
+
+  layers.radar = new Array(frames.length).fill(null);
+
+  updateRiverBaseLayer();
+  updateFloodBaseLayer();
+  [&#x27;rain_mesh&#x27;,&#x27;land&#x27;,&#x27;inund&#x27;].forEach(function(tp){
+    if(visible[tp]) updateRiskBaseLayer(tp);
+  });
+
+  isLoading=false;
+  showFrame(frames.length-1);
+  elStatus.textContent=&#x27;&#x27;;
+
+  /* radar のロード完了後に再生開始 */
+  var loaded=false;
+  function onLoad(){
+    if(!loaded){ loaded=true; clearLoadUI(); play(); }
+  }
+  var l = layers.radar[frames.length-1];
+  if(!l){ onLoad(); return; }
+  var n=false;
+  l.on(&#x27;load&#x27;, function(){ if(!n){n=true;onLoad();} });
+  setTimeout(function(){ if(!n){n=true;onLoad();} }, LOAD_TIMEOUT);
+}
+
+/* ── 自動更新 ── */
+function scheduleAuto(){
+  clearTimeout(autoTimerId);
+  autoTimerId = setTimeout(function(){
+    if(!isHistoricalMode()){
+      var bt = getBaseTime(LEAD_SEC, INTERVAL_SEC);
+      if(!latestBaseTime || bt.getTime()!==latestBaseTime.getTime()) buildFrames();
+    }
+    scheduleAuto();
+  }, AUTO_INTERVAL);
+}
+
+/* ── レイヤーON/OFF ── */
+var BTN_IDS   = { rain_mesh:&#x27;btnRain&#x27;, land:&#x27;btnLand&#x27;, inund:&#x27;btnInund&#x27;, flood:&#x27;btnFlood&#x27;, radar:&#x27;btnRadar&#x27; };
+var BTN_CLASS = { rain_mesh:&#x27;act-rain&#x27;, land:&#x27;act-land&#x27;, inund:&#x27;act-inund&#x27;, flood:&#x27;act-flood&#x27;, radar:&#x27;act-radar&#x27; };
+
+window.toggleLayer = function(type){
+  visible[type] = !visible[type];
+  var btn = document.getElementById(BTN_IDS[type]);
+  btn.className = visible[type] ? BTN_CLASS[type] : &#x27;&#x27;;
+  if(type === &#x27;flood&#x27;){
+    updateRiverBaseLayer();
+    updateFloodBaseLayer();
+    if(visible[&#x27;flood&#x27;] &amp;&amp; frames.length &amp;&amp; currentIdx &gt;= 0){
+      scheduleDesignatedRiverToFrame(frames[currentIdx].ymdhms);
+    } else {
+      clearDesignatedRiverLayers();
+      designatedRiverCurrentYmdhms = null;
+    }
+  } else if(type === &#x27;rain_mesh&#x27; || type === &#x27;land&#x27; || type === &#x27;inund&#x27;){
+    if(visible[type]){
+      if(frames.length &amp;&amp; currentIdx &gt;= 0) applyRiskToYmdhms(type, frames[currentIdx].ymdhms);
+    } else {
+      var grid = riskCanvasGrid[type];
+      if(grid &amp;&amp; map.hasLayer(grid)) map.removeLayer(grid);
+    }
+  } else if(type === &#x27;radar&#x27;){
+    if(currentIdx&gt;=0 &amp;&amp; layers.radar[currentIdx]){
+      var l = layers.radar[currentIdx];
+      if(visible[&#x27;radar&#x27;]){
+        if(!map.hasLayer(l)) l.addTo(map);
+        l.setOpacity(0.4);
+      } else {
+        if(map.hasLayer(l)) map.removeLayer(l);
+      }
+    }
+  }
+  updateLegendType();
+};
+
+/* ── 凡例 ── */
+var legendShown=false;
+var legendType=&#x27;rain_mesh&#x27;;
+
+function updateLegendType(){
+  var order=[&#x27;rain_mesh&#x27;,&#x27;land&#x27;,&#x27;inund&#x27;,&#x27;flood&#x27;];
+  for(var i=0;i&lt;order.length;i++){
+    if(visible[order[i]] &amp;&amp; LEGEND[order[i]]){
+      legendType=order[i];
+      if(legendShown) applyLegend(legendType);
+      return;
+    }
+  }
+}
+function applyLegend(type){
+  if(!LEGEND[type]) return;
+  document.getElementById(&#x27;legTitle&#x27;).textContent = LEGEND[type].name;
+  fetch(LEGEND[type].url)
+    .then(function(r){ return r.text(); })
+    .then(function(svgText){
+      var wrap = document.getElementById(&#x27;legSvgWrap&#x27;);
+      wrap.innerHTML = svgText;
+      var svg = wrap.querySelector(&#x27;svg&#x27;);
+      if(svg){ svg.style.width=&#x27;224px&#x27;; svg.style.height=&#x27;auto&#x27;; }
+      wrap.querySelectorAll(&#x27;text&#x27;).forEach(function(t){
+        var content = (t.textContent || &#x27;&#x27;).trim();
+        var f = t.getAttribute(&#x27;fill&#x27;);
+        var isDark = (content === &#x27;低&#x27; ||
+                      content === &#x27;危険度&#x27; ||
+                      content === &#x27;危&#x27; || content === &#x27;険&#x27; || content === &#x27;度&#x27;);
+        if(isDark){
+          t.setAttribute(&#x27;fill&#x27;,&#x27;#000000&#x27;);
+        } else if(!f || f===&#x27;black&#x27; || f===&#x27;#000&#x27; || f===&#x27;#000000&#x27;){
+          t.setAttribute(&#x27;fill&#x27;,&#x27;white&#x27;);
+        }
+      });
+    })
+    .catch(function(){
+      document.getElementById(&#x27;legSvgWrap&#x27;).innerHTML =
+        &#x27;&lt;img src=&quot;&#x27;+LEGEND[type].url+&#x27;&quot; style=&quot;width:224px;height:auto&quot;/&gt;&#x27;;
+    });
+}
+
+window.toggleLegend = function(){
+  var panel = document.getElementById(&#x27;legendPanel&#x27;);
+  legendShown = !legendShown;
+  if(legendShown){
+    updateLegendType();
+    applyLegend(legendType);
+    panel.style.display=&#x27;block&#x27;;
+    document.getElementById(&#x27;legendBtn&#x27;).className=&#x27;active&#x27;;
+  }else{
+    panel.style.display=&#x27;none&#x27;;
+    document.getElementById(&#x27;legendBtn&#x27;).className=&#x27;&#x27;;
+  }
+};
+
+/* ── 時間範囲・過去モード ── */
+function updateHistoricalUI(){
+  var btnNow   = document.getElementById(&#x27;btnNow&#x27;);
+  var btnFwd   = document.getElementById(&#x27;btnFwd&#x27;);
+  var histLabel = document.getElementById(&#x27;histLabel&#x27;);
+  if(isHistoricalMode()){
+    btnNow.style.display = &#x27;&#x27;;
+    btnFwd.style.display = &#x27;&#x27;;
+    var h = Math.floor(historicalOffsetMin/60), m = historicalOffsetMin%60;
+    histLabel.textContent = (h&gt;0 ? h+&#x27;時間&#x27; : &#x27;&#x27;) + (m&gt;0 ? m+&#x27;分&#x27; : &#x27;&#x27;) + &#x27;前&#x27;;
+  } else {
+    btnNow.style.display = &#x27;none&#x27;;
+    btnFwd.style.display = &#x27;none&#x27;;
+    histLabel.textContent = &#x27;&#x27;;
+  }
+}
+
+window.setTimeRange = function(h){
+  timeRangeHours = h;
+  [&#x27;1&#x27;,&#x27;2&#x27;,&#x27;3&#x27;].forEach(function(x){
+    document.getElementById(&#x27;t&#x27;+x+&#x27;h&#x27;).className = (parseInt(x)===h) ? &#x27;active&#x27; : &#x27;&#x27;;
+  });
+  buildFrames();
+};
+
+window.stepBack = function(min){
+  historicalOffsetMin += min;
+  updateHistoricalUI();
+  clearTimeout(autoTimerId);
+  buildFrames();
+};
+
+window.stepForward = function(min){
+  historicalOffsetMin = Math.max(0, historicalOffsetMin - min);
+  updateHistoricalUI();
+  buildFrames();
+};
+
+window.goNow = function(){
+  historicalOffsetMin = 0;
+  latestBaseTime = null;
+  updateHistoricalUI();
+  buildFrames();
+  scheduleAuto();
+};
+
+/* ── UI操作 ── */
+window.onBuild = function(){ latestBaseTime=null; buildFrames(); };
+window.onPlay  = play;
+window.onPause = pause;
+
+window.onSlider = function(v){
+  pause();
+  showFrame(parseInt(v,10));
+};
+
+window.onSpeedChange = function(v){
+  speedIdx = parseInt(v,10);
+  if(playing){ pause(); play(); }
+};
+
+/* ── ベースマップ明暗切り替え ── */
+window.toggleBaseMap = function(){
+  baseOpacityIdx = (baseOpacityIdx + 1) % BASE_OPACITIES.length;
+  baseLayer.setOpacity(BASE_OPACITIES[baseOpacityIdx]);
+  /* 既存タイルのフィルターを更新 */
+  var f = BASE_FILTERS[baseOpacityIdx];
+  baseLayer.eachLayer ? baseLayer.eachLayer(function(l){ if(l._image) l._image.style.filter=f; }) : void 0;
+  document.querySelectorAll(&#x27;.leaflet-tile-pane img&#x27;).forEach(function(img){
+    if(img.src &amp;&amp; img.src.indexOf(&#x27;pale&#x27;) &gt; -1) img.style.filter = f;
+  });
+  var btn = document.getElementById(&#x27;btnBaseMap&#x27;);
+  btn.textContent = BASE_LABELS[baseOpacityIdx];
+  btn.className = baseOpacityIdx === 2 ? &#x27;active&#x27; : &#x27;&#x27;;
+};
+
+/* ── 浸水・洪水重ね合わせ ── */
+var inundFloodMode = true;
+window.toggleInundFlood = function(){
+  inundFloodMode = !inundFloodMode;
+  visible[&#x27;inund&#x27;] = inundFloodMode;
+  visible[&#x27;flood&#x27;] = inundFloodMode;
+  document.getElementById(&#x27;btnInund&#x27;).className     = inundFloodMode ? BTN_CLASS[&#x27;inund&#x27;] : &#x27;&#x27;;
+  document.getElementById(&#x27;btnFlood&#x27;).className     = inundFloodMode ? BTN_CLASS[&#x27;flood&#x27;] : &#x27;&#x27;;
+  document.getElementById(&#x27;btnInundFlood&#x27;).className = inundFloodMode ? &#x27;active&#x27; : &#x27;&#x27;;
+  reapplyOpacity();
+  updateRiverBaseLayer();
+  updateFloodBaseLayer();
+  if(inundFloodMode &amp;&amp; frames.length &amp;&amp; currentIdx &gt;= 0){
+    applyRiskToYmdhms(&#x27;inund&#x27;, frames[currentIdx].ymdhms);
+    scheduleDesignatedRiverToFrame(frames[currentIdx].ymdhms);
+  } else {
+    var g = riskCanvasGrid[&#x27;inund&#x27;];
+    if(g &amp;&amp; map.hasLayer(g)) map.removeLayer(g);
+    clearDesignatedRiverLayers();
+    designatedRiverCurrentYmdhms = null;
+  }
+  updateLegendType();
+};
+
+/* ズーム中はアニメーション停止・終了後に再開 */
+map.on(&#x27;zoomstart&#x27;, function(){ _wasPlaying=playing; pause(); });
+map.on(&#x27;zoomend&#x27;, function(){
+  saveState();
+  clearTimeout(floodFrameTimer); floodFrameTimer=null;
+  /* Canvas GridLayer（rain_mesh/land/inund/flood）はズーム後自動でタイル再取得 */
+  /* radar のラスタータイルのみ nativeMax 変化時に再構築 */
+  var radarChanged = false;
+  if(layers.radar.length &amp;&amp; currentIdx &gt;= 0){
+    var fc = calcFetchCoords(map.getZoom(), 0, 0, RADAR_NATIVE_MAX);
+    var savedNMax = layers.radar[currentIdx] ?
+      layers.radar[currentIdx].options.maxNativeZoom : -1;
+    if(fc.z !== savedNMax){
+      radarChanged = true;
+      var savedIdx = currentIdx;
+      var nextIdx = (savedIdx + 1) % frames.length;
+      [savedIdx, nextIdx].forEach(function(fi){
+        if(fi &lt; 0 || !layers.radar[fi]) return;
+        var wasIn = map.hasLayer(layers.radar[fi]);
+        map.removeLayer(layers.radar[fi]);
+        layers.radar[fi] = makeRadarLayer(frames[fi].ymdhms);
+        if(wasIn) layers.radar[fi].addTo(map);
+      });
+      reapplyOpacity();
+    }
+  }
+  reapplyOpacity();
+  refreshDesignatedRiverStyle();
+  setTimeout(function(){ reapplyOpacity(); if(_wasPlaying) play(); }, 300);
+});
+map.on(&#x27;moveend&#x27;, function(){ saveState(); setTimeout(reapplyOpacity, 100); });
+
+/* ── 初期化 ── */
+(function(){
+  var s=loadState();
+  if(s&amp;&amp;s.lat!=null&amp;&amp;s.zoom!=null) map.setView([s.lat,s.lng],s.zoom);
+  /* 指定河川静的データを先行フェッチ（フォールバック用） */
+  fetch(&#x27;https://www.jma.go.jp/bosai/jmatile/data/map/none/none/none/surf/designated_river/data.geojson?id=map_designated_river&#x27;)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      designatedRiverStaticData = d;
+      /* 静的データ到着後：フレームが既に表示中なら再適用（起動直後に静的データが間に合わなかった場合） */
+      if(designatedRiverCurrentYmdhms){
+        applyDesignatedRiverToYmdhms(designatedRiverCurrentYmdhms);
+      }
+    })
+    .catch(function(){});
+  buildFrames();
+  scheduleAuto();
+  /* 安全網: Canvas GridLayer が外れていた場合に再追加して再描画 */
+  setInterval(function(){
+    if(isLoading || currentIdx&lt;0) return;
+    reapplyOpacity();
+    if(visible[&#x27;flood&#x27;] &amp;&amp; frames.length){
+      if(floodCanvasGrid &amp;&amp; !map.hasLayer(floodCanvasGrid)){
+        floodCanvasGrid.addTo(map); redrawFloodCanvases();
+      }
+    }
+    [&#x27;rain_mesh&#x27;,&#x27;land&#x27;,&#x27;inund&#x27;].forEach(function(tp){
+      if(visible[tp] &amp;&amp; frames.length){
+        var g = riskCanvasGrid[tp];
+        if(g &amp;&amp; !map.hasLayer(g)){ g.addTo(map); redrawRiskCanvases(tp); }
+      }
+    });
+  }, 2000);
+})();
+
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;" style="flex:1;border:none;width:100%;height:100%" title="キキクル" sandbox="allow-scripts allow-same-origin"></iframe></div><!--/$--></div></div></div></div><div class="css-g5y9jx r-1p0dtai r-zchlnj r-1d2f490 r-105ug2t" style="border-top-width:1px;background-color:rgba(255,255,255,1.00);border-top-color:rgba(216,216,216,1.00);border-right-color:rgba(216,216,216,1.00);border-bottom-color:rgba(216,216,216,1.00);border-left-color:rgba(216,216,216,1.00);padding-top:0px;padding-right:0px;padding-left:0px;height:60px;padding-bottom:8px;transform:translateY(0px)"><div class="css-g5y9jx r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af r-633pao"></div><div role="tablist" class="css-g5y9jx r-13awgt0 r-18u37iz"><div class="css-g5y9jx r-13awgt0" style="border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;overflow-x:visible;overflow-y:visible"><a href="/iphone-weather-app/" role="tab" aria-selected="false" tabindex="0" class="css-g5y9jx r-1otgn73 r-1awozwy r-1onu96p r-eqz5dr r-1h0z5md r-1uu6nss" style="cursor:pointer;flex:1;background-color:rgba(0,0,0,0.00);border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;opacity:1"><div class="css-g5y9jx r-h0d30l r-726pan"><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:0;min-width:25px"><div dir="auto" class="css-146c3p1"></div></div><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:1"><div dir="auto" class="css-146c3p1"></div></div></div><div dir="auto" class="css-146c3p1 r-dnmrzs r-1udh08x r-1udbk01 r-3s2u2q r-1iln25a r-1niwhzg r-q4m81j r-10x49cs" style="color:rgba(142,142,143,1.00);font-family:system-ui, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;font-weight:500">天気予報</div></a></div><div class="css-g5y9jx r-13awgt0" style="border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;overflow-x:visible;overflow-y:visible"><a href="/iphone-weather-app/radar" role="tab" aria-selected="false" tabindex="0" class="css-g5y9jx r-1otgn73 r-1awozwy r-1onu96p r-eqz5dr r-1h0z5md r-1uu6nss" style="cursor:pointer;flex:1;background-color:rgba(0,0,0,0.00);border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;opacity:1"><div class="css-g5y9jx r-h0d30l r-726pan"><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:0;min-width:25px"><div dir="auto" class="css-146c3p1"></div></div><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:1"><div dir="auto" class="css-146c3p1"></div></div></div><div dir="auto" class="css-146c3p1 r-dnmrzs r-1udh08x r-1udbk01 r-3s2u2q r-1iln25a r-1niwhzg r-q4m81j r-10x49cs" style="color:rgba(142,142,143,1.00);font-family:system-ui, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;font-weight:500">衛星/レーダー</div></a></div><div class="css-g5y9jx r-13awgt0" style="border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;overflow-x:visible;overflow-y:visible"><a href="/iphone-weather-app/kikikuru" role="tab" aria-selected="true" tabindex="0" class="css-g5y9jx r-1otgn73 r-1awozwy r-1onu96p r-eqz5dr r-1h0z5md r-1uu6nss" style="cursor:pointer;flex:1;background-color:rgba(0,0,0,0.00);border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;opacity:1"><div class="css-g5y9jx r-h0d30l r-726pan"><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:1;min-width:25px"><div class="css-g5y9jx" style="opacity:1"><div class="css-g5y9jx r-1mlwlqe r-1udh08x r-417010" style="width:24px;height:24px"><div class="css-g5y9jx r-1niwhzg r-vvn4in r-u6sd8q r-1p0dtai r-1pi2tsx r-1d2f490 r-u8s1d r-zchlnj r-ipm5af r-13qz1uu r-1wyyakw r-ehq7j7"></div></div></div></div><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:0"><div class="css-g5y9jx" style="opacity:0.45"><div class="css-g5y9jx r-1mlwlqe r-1udh08x r-417010" style="width:24px;height:24px"><div class="css-g5y9jx r-1niwhzg r-vvn4in r-u6sd8q r-1p0dtai r-1pi2tsx r-1d2f490 r-u8s1d r-zchlnj r-ipm5af r-13qz1uu r-1wyyakw r-ehq7j7"></div></div></div></div></div><div dir="auto" class="css-146c3p1 r-dnmrzs r-1udh08x r-1udbk01 r-3s2u2q r-1iln25a r-1niwhzg r-q4m81j r-10x49cs" style="color:rgba(10,126,164,1.00);font-family:system-ui, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;font-weight:500">キキクル</div></a></div><div class="css-g5y9jx r-13awgt0" style="border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;overflow-x:visible;overflow-y:visible"><a href="/iphone-weather-app/explore" role="tab" aria-selected="false" tabindex="0" class="css-g5y9jx r-1otgn73 r-1awozwy r-1onu96p r-eqz5dr r-1h0z5md r-1uu6nss" style="cursor:pointer;flex:1;background-color:rgba(0,0,0,0.00);border-top-left-radius:0px;border-top-right-radius:0px;border-bottom-right-radius:0px;border-bottom-left-radius:0px;opacity:1"><div class="css-g5y9jx r-h0d30l r-726pan"><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:0;min-width:25px"><div dir="auto" class="css-146c3p1"></div></div><div class="css-g5y9jx r-1awozwy r-1kihuf0 r-1pi2tsx r-1777fci r-u8s1d r-13qz1uu" style="opacity:1"><div dir="auto" class="css-146c3p1"></div></div></div><div dir="auto" class="css-146c3p1 r-dnmrzs r-1udh08x r-1udbk01 r-3s2u2q r-1iln25a r-1niwhzg r-q4m81j r-10x49cs" style="color:rgba(142,142,143,1.00);font-family:system-ui, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;font-weight:500">Explore</div></a></div></div></div></div><!--/$--></div></div></div></div><!--/$--></div></div><script src="/iphone-weather-app/_expo/static/js/web/entry-9a86b7a25558b576d55789d65ea7d678.js" defer></script>
+</body></html>
