@@ -207,7 +207,7 @@ var map=L.map('map',{
   zoomAnimation:false,
   tap:false
 }).setView([35.5,137.0],6);
-map.setMinZoom(4);map.setMaxZoom(12);
+map.setMinZoom(5);map.setMaxZoom(12); /* minZoom: iOSメモリ対策で4→5に制限 */
 
 /* CartoDB Dark（常時表示ベースマップ）— ズーム中も黒画面にならない */
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',{
@@ -310,8 +310,8 @@ function getEffectiveRadarNativeMax(){
 function makeSatLayer(f,band){
   var l=L.tileLayer(satUrl(f.area,fmtUtc(f.time),band),{
     minNativeZoom:f.nativeZoom,maxNativeZoom:f.nativeZoom,
-    minZoom:4,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:2,pane:'satPane'
+    minZoom:5,maxZoom:12,opacity:0,
+    updateWhenIdle:false,keepBuffer:1,pane:'satPane'
   });
   l.on('tileload',function(){reapplyOpacity();});
   l.on('load',function(){reapplyOpacity();});
@@ -320,8 +320,8 @@ function makeSatLayer(f,band){
 function makeRadarLayer(ymdhms,nMax){
   var l=L.tileLayer(radarUrl(ymdhms),{
     minNativeZoom:4,maxNativeZoom:nMax||10,
-    minZoom:4,maxZoom:12,opacity:0,
-    updateWhenIdle:false,keepBuffer:2,pane:'radarPane'
+    minZoom:5,maxZoom:12,opacity:0,
+    updateWhenIdle:false,keepBuffer:1,pane:'radarPane'
   });
   l.on('tileload',function(e){
     e.tile.style.imageRendering='pixelated';
