@@ -886,7 +886,9 @@ function renderAmedas(data){
   var cfg=AMEDAS_TYPES[amedasKind];
   if(!cfg) return;
 
-  /* ズームアウト時の間引き: 湿度観測局を優先してセルごとに1点 */
+  /* ズームアウト時の間引き: elemsの'1'の個数（観測要素数）が多い地点を優先してセルごとに1点
+     優先1（スコア大）= 那覇・名護・久米島など多要素観測
+     優先2（スコア小）= 糸数など日照のみ等の少要素観測 */
   var THIN={6:1.0,7:0.5,8:0.2};
   var gridDeg=THIN[z]||0;
   var selectedCodes=null;
@@ -898,8 +900,10 @@ function renderAmedas(data){
       var la0=s0.lat[0]+s0.lat[1]/60,lo0=s0.lon[0]+s0.lon[1]/60;
       if(la0<sw.lat-0.1||la0>ne.lat+0.1||lo0<sw.lng-0.1||lo0>ne.lng+0.1) continue;
       var ck=Math.floor(la0/gridDeg)+'_'+Math.floor(lo0/gridDeg);
-      var hasH=!!(data[c0].humidity);
-      if(!cellBest[ck]||(!cellBest[ck].h&&hasH)) cellBest[ck]={code:c0,h:hasH};
+      var el0=s0.elems||'';
+      var score0=0;
+      for(var ei=0;ei<el0.length;ei++) if(el0[ei]==='1') score0++;
+      if(!cellBest[ck]||score0>cellBest[ck].s) cellBest[ck]={code:c0,s:score0};
     }
     selectedCodes={};
     for(var ck2 in cellBest) selectedCodes[cellBest[ck2].code]=1;
