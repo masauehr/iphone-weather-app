@@ -35,14 +35,6 @@ export default function RadarScreen() {
         scrollEnabled={false}
         bounces={false}
         overScrollMode="never"
-        onShouldStartLoadWithRequest={(request) => {
-          /* <a>タグのタップでJMAアメダスURLに遷移しようとしたら外部ブラウザで開く */
-          if (request.url.startsWith('https://www.jma.go.jp/bosai/amedas/')) {
-            Linking.openURL(request.url);
-            return false;
-          }
-          return true;
-        }}
         onMessage={(event) => {
           try {
             const data = JSON.parse(event.nativeEvent.data);

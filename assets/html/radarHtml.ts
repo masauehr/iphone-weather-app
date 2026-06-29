@@ -861,13 +861,6 @@ function fmtJst(d){
     pad2(j.getUTCHours())+pad2(j.getUTCMinutes())+'00';
 }
 
-/* アメダスリンクラッパー: title属性でホバー地点名、pointer-events:autoで親のnoneを上書き */
-function amedasLink(inner,code,name){
-  var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+code;
-  return '<a href="'+url+'" title="'+name+'" target="_blank"'+
-    ' style="text-decoration:none;display:inline-block;pointer-events:auto">'+inner+'</a>';
-}
-
 /* テキストラベルHTML（青系→白縁取り、それ以外→黒縁取り） */
 function styledText(txt,color){
   var oc=outlineColor(color);
@@ -956,7 +949,6 @@ function renderAmedas(data){
       ax=14;ay=7;
     }
     if(!html) continue;
-    html=amedasLink(html,code,stName); /* <a>タグでラップ: タップ/クリックで気象庁ページ、titleで地点名 */
     var icon=L.divIcon({html:html,className:'',iconSize:[0,0],iconAnchor:[ax,ay]});
     var mk=L.marker([lat,lon],{icon:icon,interactive:false,keyboard:false});
     mk.addTo(map);
@@ -1013,7 +1005,7 @@ map.on('mousemove',function(e){
 });
 map.on('mouseout',function(){hideAmLabel();});
 
-/* ダブルクリック/ダブルタップ: アメダス地点近くなら気象庁ページを開く */
+/* PC: ダブルクリックでアメダス地点近くなら気象庁ページを開く */
 map.on('dblclick',function(e){
   if(!amedasOn||!amedasPositions.length) return;
   var hit=nearestAmedas(e.latlng,25);
@@ -1021,13 +1013,38 @@ map.on('dblclick',function(e){
   L.DomEvent.stop(e); /* マップのダブルクリックズームを防止 */
   hideAmLabel();
   var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+hit.code;
-  /* RN WebView: postMessageでネイティブ側でLinkingを使って外部ブラウザを開く */
-  if(typeof window.ReactNativeWebView!=='undefined'){
-    window.ReactNativeWebView.postMessage(JSON.stringify({type:'openUrl',url:url}));
-  }else{
-    window.open(url,'_blank');
-  }
+  window.open(url,'_blank');
 });
+
+/* スマホ: touchendでダブルタップを自前検知（tap:falseのためLeaflet dblclickが発火しない） */
+var _lastTap=null;
+var DTAP_MS=350,DTAP_PX=30;
+document.getElementById('map').addEventListener('touchend',function(e){
+  if(!amedasOn||!amedasPositions.length){_lastTap=null;return;}
+  var t=e.changedTouches[0];
+  var now=Date.now(),x=t.clientX,y=t.clientY;
+  if(_lastTap){
+    var dt=now-_lastTap.t,dx=x-_lastTap.x,dy=y-_lastTap.y;
+    if(dt<DTAP_MS&&Math.sqrt(dx*dx+dy*dy)<DTAP_PX){
+      var rect=document.getElementById('map').getBoundingClientRect();
+      var ll=map.containerPointToLatLng([x-rect.left,y-rect.top]);
+      var hit=nearestAmedas(ll,25);
+      if(hit){
+        e.preventDefault(); /* ダブルタップズームを防止 */
+        hideAmLabel();
+        var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+hit.code;
+        if(typeof window.ReactNativeWebView!=='undefined'){
+          window.ReactNativeWebView.postMessage(JSON.stringify({type:'openUrl',url:url}));
+        }else{
+          window.open(url,'_blank');
+        }
+      }
+      _lastTap=null;return;
+    }
+  }
+  _lastTap={t:now,x:x,y:y};
+  setTimeout(function(){_lastTap=null;},DTAP_MS);
+},{passive:false});
 
 function scheduleAmedasUpdate(delay){
   clearTimeout(amedasTimer);
