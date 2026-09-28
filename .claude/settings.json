@@ -29,7 +29,6 @@
           {
             "type": "command",
             "command": "cmd=$(jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -qE 'git( -C [^ ]+)? push' && echo \"$cmd\" | grep -qv 'gh-pages' && echo \"$cmd\" | grep -qv 'pc_docs'; then cd /Users/masahiro/projects/mobile_app && npm run deploy 2>&1; fi",
-            "if": "Bash(git *)",
             "timeout": 180,
             "statusMessage": "Webアプリをデプロイ中 (npm run deploy)..."
           }

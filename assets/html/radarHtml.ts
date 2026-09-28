@@ -210,10 +210,12 @@ var map=L.map('map',{
 map.setMinZoom(5);map.setMaxZoom(12); /* minZoom: iOSメモリ対策で4→5に制限 */
 
 /* CartoDB Dark（常時表示ベースマップ）— ズーム中も黒画面にならない */
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',{
+/* 2026-08-28のCARTOポリシー変更でAPIキー必須化（無料枠: 月500万リクエスト） */
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png?key={key}',{
   maxZoom:19,
   subdomains:['a','b','c','d'],
-  attribution:'© CartoDB | データ: 気象庁'
+  attribution:'© CARTO | データ: 気象庁',
+  key:'cb1_4108_1_936707f67d4427e512a7d29c'
 }).addTo(map);
 
 map.createPane('satPane');

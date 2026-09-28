@@ -675,6 +675,32 @@ function autoLoop() {
 }
 ```
 
+### 8-6. ベースマップ（Leaflet + CARTO）
+
+**Leaflet とは**: オープンソースの軽量JS地図ライブラリ。タイル画像を並べて地図を描画し、レイヤーの重ね合わせ・ズーム・パンを扱う。8-1で述べた通り本アプリではWebView/iframe内のHTML文字列として実行している。
+
+**CARTO とは**: 位置情報分析・地図可視化のSaaSを提供するスペインの企業（旧社名 CartoDB。2018年に CARTO へ改称）。企業向け位置データ分析が主力事業だが、その一環として無料の背景地図タイル配信（`basemaps.cartocdn.com`）を提供しており、Leaflet・Mapbox GL・deck.gl 等で広く使われる定番ベースマップの1つ。
+
+レーダー・衛星タブ（`radarHtml.ts`）では、CARTO Dark（`dark_nolabels`）を常時表示の背景ベースマップとして使用している。ズーム中に黒画面にならない安定性が採用理由。
+
+```javascript
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png?key={key}',{
+  maxZoom:19,
+  subdomains:['a','b','c','d'],
+  attribution:'© CARTO | データ: 気象庁',
+  key:'（CARTO Basemapsで取得した無料APIキー）'
+}).addTo(map);
+```
+
+**2026-08-28: APIキー必須化への対応**
+
+CARTOが2026-08-28頃にポリシーを変更し、APIキーなし（匿名）のタイルリクエストに対して「API KEY REQUIRED」の透かし入りタイルを返すようになった（利用トラフィックを把握するための施策）。対応として無料APIキー（https://carto.com/basemaps/apikey/ で取得、メールアドレスのみでアカウント登録不要、無料枠は**月500万リクエスト**）を取得し、タイルURLに `?key={key}` パラメータとして付与した。
+
+- Leafletの `L.tileLayer` はURLテンプレート内の `{変数名}` を options の値で自動置換する仕組みのため、URLテンプレートに `{key}` を含めた上で options に `key:'...'` を渡す必要がある（options に追加するだけではURLに反映されない）。
+- キー取得フォームの「Restrictions（Referer制限・モバイルアプリ制限・IP制限）」はすべてOFFにした。Web版（GitHub Pages）・iPhone実機（Expo Go経由のWebView）・ローカル開発（`localhost`）など複数環境からアクセスするため、制限をかけると特定環境で読み込めなくなるリスクがある。個人利用の消費量（概算で月数千〜1万リクエスト程度）は無料枠に対して大きく余裕があるため、制限の必要性は薄いと判断。
+- このAPIキーはブラウザ側のタイルURLに直接埋め込むクライアントサイド公開前提の設計（CARTO公式のクライアントサイド実装例もURL直書き）のため、`.env` に分離せずコードに直書きしている。サーバーサイド専用の秘密鍵とは性質が異なる。
+- CARTO Basemaps利用規約により、CARTOとOpenStreetMap（フォールバック用途で使う場合）のattributionを表示し続ける必要がある。attribution表記は当時の正式社名「CARTO」を使用（旧社名「CartoDB」ではない）。
+
 ---
 
 ## 9. 天気予報画面の技術詳細
@@ -1398,6 +1424,27 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 ---
 
 ## 13. 改修履歴
+
+### 2026-09-28 出典表記の追加・CARTO APIキー対応
+
+#### 全タブ共通
+
+| 改修 | 内容 |
+|------|------|
+| 気象庁データの出典表記追加 | レーダー・衛星タブ（`radarHtml.ts`）とキキクルタブ（`kikikuruHtml.ts`）で、地図タイル提供元（CartoDB/国土地理院）のattributionのみで気象庁データ自体の出典表記が欠けていたため、`| データ: 気象庁` を追加 |
+
+#### レーダー・衛星タブ（radarHtml.ts）
+
+| 改修 | 内容 |
+|------|------|
+| CARTO APIキー対応 | CARTOが2026-08-28頃にポリシー変更し、キーなしタイルリクエストに「API KEY REQUIRED」の透かしが入るようになったため、無料APIキーを取得しタイルURLに `?key={key}` を付与（詳細は「8-6. ベースマップ（Leaflet + CARTO）」参照） |
+| attribution表記修正 | 旧社名「CartoDB」→現在の正式社名「CARTO」に修正 |
+
+#### 設定（.claude/settings.json）
+
+| 改修 | 内容 |
+|------|------|
+| 自動デプロイフックの条件修正 | PostToolUseフックの `"if": "Bash(git *)"` 条件により、`cd ... && git push` のような複合コマンド実行時にフックが発火しない不具合を修正（条件を削除し、フック内部のgrep判定のみで動作するよう変更） |
 
 ### 2026-06-26 キキクルビューア機能拡張・地図スタイル変更
 
