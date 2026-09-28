@@ -10,7 +10,15 @@
       "Bash(git -C /Users/masahiro/projects/mobile_app add .claude/settings.json MANUAL.md)",
       "Bash(git -C /Users/masahiro/projects/pc_docs add manuals/automation/iphone-weather-app.md)",
       "Bash(git -C /Users/masahiro/projects/pc_docs commit -m ' *)",
-      "Bash(git -C /Users/masahiro/projects/mobile_app ls-files assets/geodata/)"
+      "Bash(git -C /Users/masahiro/projects/mobile_app ls-files assets/geodata/)",
+      "Bash(curl -s \"https://www.jma.go.jp/bosai/risk/\")",
+      "Bash(curl -s \"https://www.jma.go.jp/bosai/risk/table/risk.properties__e5a679bb8e4cb1cf273e.xml\")",
+      "Bash(curl -s \"https://www.jma.go.jp/bosai/jmatile/table/jmatile.properties__8f09b62937127ac173c5.xml\")",
+      "Bash(curl -s \"https://www.jma.go.jp/bosai/jmatile/js/jmatile.bundle__65a962629190341fd1a3.js\")",
+      "Bash(npm --prefix /Users/masahiro/projects/mobile_app run deploy)",
+      "Bash(curl -s \"https://www.jma.go.jp/bosai/risk/images/legend_jp_normal_heavyrain.svg\")",
+      "Bash(git -C /Users/masahiro/projects/mobile_app add assets/html/kikikuruHtml.ts)",
+      "Bash(python3 -c ' *)"
     ]
   },
   "hooks": {
