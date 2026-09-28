@@ -165,7 +165,7 @@ var BASE_LABELS    = ['地図暗', '地図中', '地図明'];
 var baseOpacityIdx = 1;
 var baseLayer = L.tileLayer(BASE_CHIRIIN,{
   maxZoom:18, opacity:BASE_OPACITIES[baseOpacityIdx],
-  attribution:'© 国土地理院'
+  attribution:'© 国土地理院 | データ: 気象庁'
 }).addTo(map);
 baseLayer.on('tileload', function(e){
   e.tile.style.filter = BASE_FILTERS[baseOpacityIdx];

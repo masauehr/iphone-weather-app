@@ -213,7 +213,7 @@ map.setMinZoom(5);map.setMaxZoom(12); /* minZoom: iOSメモリ対策で4→5に�
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',{
   maxZoom:19,
   subdomains:['a','b','c','d'],
-  attribution:'© CartoDB'
+  attribution:'© CartoDB | データ: 気象庁'
 }).addTo(map);
 
 map.createPane('satPane');
