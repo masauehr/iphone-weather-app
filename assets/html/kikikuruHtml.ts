@@ -218,7 +218,7 @@ function getHazardLayer(key){
   if(!hazardLayers[key]){
     hazardLayers[key] = L.tileLayer(HAZARD_TILES[key].url, {
       pane:'hazardPane', minZoom:4, maxZoom:18, maxNativeZoom:17, opacity:0.65,
-      attribution:'国土交通省 重ねるハザードマップ'
+      attribution:'出典：ハザードマップポータルサイト'
     });
   }
   return hazardLayers[key];
