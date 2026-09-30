@@ -24,6 +24,10 @@ button.act-land{background:#cc3300;border-color:#ff5533;color:#fff}
 button.act-inund{background:#0066bb;border-color:#0099ff;color:#fff}
 button.act-flood{background:#337722;border-color:#55aa33;color:#fff}
 button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
+button.act-hazflood{background:#1565c0;border-color:#42a5f5;color:#fff}
+button.act-hazdosha{background:#8d6e63;border-color:#bcaaa4;color:#fff}
+button.act-haztsunami{background:#00695c;border-color:#4db6ac;color:#fff}
+button.act-relief{background:#6d4c41;border-color:#a1887f;color:#fff}
 .sep{color:#555;font-size:10px}
 #map{flex:1;background:#000;touch-action:none}
 #bottom{padding:4px 6px;background:#0f3460;flex-shrink:0}
@@ -75,6 +79,13 @@ button.act-radar{background:#226644;border-color:#33aa66;color:#fff}
     <button id="btnFwd" onclick="stepForward(60)" style="display:none">1h▶</button>
     <button id="btnNow" onclick="goNow()" style="display:none;background:#c62828;border-color:#e53935">▶現在</button>
     <span id="histLabel" style="font-size:10px;color:#ffb74d;margin-left:2px"></span>
+  </div>
+  <div class="ctrl-row">
+    <button id="btnRelief" onclick="toggleReliefMap()">標高地図</button>
+    <span class="sep">|</span>
+    <button id="btnHazFlood" onclick="toggleHazard('hazFlood')">洪水HM</button>
+    <button id="btnHazDosha" onclick="toggleHazard('hazDosha')">土砂HM</button>
+    <button id="btnHazTsunami" onclick="toggleHazard('hazTsunami')">津波HM</button>
   </div>
 </div>
 
@@ -171,6 +182,62 @@ baseLayer.on('tileload', function(e){
   e.tile.style.filter = BASE_FILTERS[baseOpacityIdx];
 });
 
+/* 色別標高図（国土地理院）: 通常地図と排他切り替え */
+var BASE_RELIEF = 'https://cyberjapandata.gsi.go.jp/xyz/relief/{z}/{x}/{y}.png';
+var reliefLayer = L.tileLayer(BASE_RELIEF, {
+  minZoom:4, maxZoom:14, minNativeZoom:5, maxNativeZoom:15,
+  attribution:'© 国土地理院（色別標高図）'
+});
+var reliefMode = false;
+window.toggleReliefMap = function(){
+  reliefMode = !reliefMode;
+  if(reliefMode){
+    map.removeLayer(baseLayer);
+    reliefLayer.addTo(map);
+  } else {
+    map.removeLayer(reliefLayer);
+    baseLayer.addTo(map);
+  }
+  document.getElementById('btnRelief').className = reliefMode ? 'act-relief' : '';
+};
+
+/* 重ねるハザードマップ（国土交通省）: 洪水浸水想定・土砂災害警戒区域・津波浸水想定 */
+var HAZARD_TILES = {
+  hazFlood:   { url:'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png' },
+  hazDosha1:  { url:'https://disaportaldata.gsi.go.jp/raster/05_dosekiryukeikaikuiki/{z}/{x}/{y}.png' },
+  hazDosha2:  { url:'https://disaportaldata.gsi.go.jp/raster/05_kyukeishakeikaikuiki/{z}/{x}/{y}.png' },
+  hazDosha3:  { url:'https://disaportaldata.gsi.go.jp/raster/05_jisuberikeikaikuiki/{z}/{x}/{y}.png' },
+  hazTsunami: { url:'https://disaportaldata.gsi.go.jp/raster/04_tsunami_newlegend_data/{z}/{x}/{y}.png' }
+};
+var HAZARD_GROUP = { hazDosha:['hazDosha1','hazDosha2','hazDosha3'] };
+var HAZARD_BTN   = { hazFlood:'btnHazFlood', hazDosha:'btnHazDosha', hazTsunami:'btnHazTsunami' };
+var HAZARD_CLASS = { hazFlood:'act-hazflood', hazDosha:'act-hazdosha', hazTsunami:'act-haztsunami' };
+var hazardLayers  = {};
+var hazardVisible = { hazFlood:false, hazDosha:false, hazTsunami:false };
+function getHazardLayer(key){
+  if(!hazardLayers[key]){
+    hazardLayers[key] = L.tileLayer(HAZARD_TILES[key].url, {
+      pane:'hazardPane', minZoom:4, maxZoom:18, maxNativeZoom:17, opacity:0.65,
+      attribution:'国土交通省 重ねるハザードマップ'
+    });
+  }
+  return hazardLayers[key];
+}
+window.toggleHazard = function(group){
+  hazardVisible[group] = !hazardVisible[group];
+  var keys = HAZARD_GROUP[group] || [group];
+  keys.forEach(function(k){
+    var layer = getHazardLayer(k);
+    if(hazardVisible[group]){
+      if(!map.hasLayer(layer)) layer.addTo(map);
+    } else {
+      if(map.hasLayer(layer)) map.removeLayer(layer);
+    }
+  });
+  document.getElementById(HAZARD_BTN[group]).className =
+    hazardVisible[group] ? HAZARD_CLASS[group] : '';
+};
+
 /* ペイン定義 */
 map.createPane('rainPane');      map.getPane('rainPane').style.zIndex      = 201;
 map.createPane('landPane');      map.getPane('landPane').style.zIndex      = 202;
@@ -180,6 +247,7 @@ map.createPane('floodRiskPane'); map.getPane('floodRiskPane').style.zIndex = 205
 map.createPane('designatedRiverPane');      map.getPane('designatedRiverPane').style.zIndex      = 300;
 map.createPane('radarPane');               map.getPane('radarPane').style.zIndex               = 350;
 map.createPane('designatedRiverLabelPane'); map.getPane('designatedRiverLabelPane').style.zIndex = 600;
+map.createPane('hazardPane');              map.getPane('hazardPane').style.zIndex               = 220;
 /* pane レベルで multiply 設定（canvas 個別だと pane の stacking context で効かない） */
 map.getPane('rainPane').style.mixBlendMode  = 'multiply';
 map.getPane('landPane').style.mixBlendMode  = 'multiply';
