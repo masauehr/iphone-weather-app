@@ -794,6 +794,10 @@ kikikuruHtml.ts（Leaflet HTML・純粋なJavaScript）
 | 洪水危険度PBF（flood） | `bosai/jmatile/data/risk/{ymdhms}/none/{ymdhms}/surf/flood/{z}/{x}/{y}.pbf` | ✅ |
 | 全河川背景PNG（静的） | `bosai/jmatile/data/map/none/none/none/surf/flood/{z}/{x}/{y}.png` | ❌（時刻なし） |
 | 降水レーダー（nowc） | `bosai/jmatile/data/nowc/{ymdhms}/none/{ymdhms}/surf/hrpns/{z}/{x}/{y}.png` | ✅ |
+| 色別標高図（国土地理院） | `cyberjapandata.gsi.go.jp/xyz/relief/{z}/{x}/{y}.png` | ❌（native 5–15） |
+| 洪水浸水想定区域（重ねるハザードマップ） | `disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png` | ❌（2–17） |
+| 土砂災害警戒区域（重ねるハザードマップ） | `disaportaldata.gsi.go.jp/raster/05_{dosekiryukeikaikuiki\|kyukeishakeikaikuiki\|jisuberikeikaikuiki}/{z}/{x}/{y}.png` | ❌（2–17） |
+| 津波浸水想定（重ねるハザードマップ） | `disaportaldata.gsi.go.jp/raster/04_tsunami_newlegend_data/{z}/{x}/{y}.png` | ❌（2–17） |
 
 - `{ymdhms}` : `yyyyMMddHHmmss` 形式、10分刻み
 - flood PBFのタイル: 偶数ズームのみ存在（z=4,6,8,10,12,14）/ rain_mesh・land・inund PNGのnativeZoom: 4〜13（同様に偶数のみ）
@@ -834,6 +838,7 @@ map.createPane('floodRiskPane');           map.getPane('floodRiskPane').style.zI
 map.createPane('designatedRiverPane');     map.getPane('designatedRiverPane').style.zIndex     = 300; // 指定河川
 map.createPane('radarPane');               map.getPane('radarPane').style.zIndex               = 350; // レーダー
 map.createPane('designatedRiverLabelPane');map.getPane('designatedRiverLabelPane').style.zIndex= 600; // 指定河川ラベル（最前面）
+map.createPane('hazardPane');              map.getPane('hazardPane').style.zIndex              = 220; // 重ねるハザードマップ
 ```
 
 ### 10-5. ベースマップ（国土地理院淡色地図）
@@ -1279,6 +1284,59 @@ onMessage={(event) => {
 
 `<a>` タグ方式はタップ1回でリンクが開いてしまい、地図操作（スクロール・ズーム）と混在して使いにくい。また `interactive:false` を外すとマーカー生成時に Leaflet が DOM イベントリスナーを多数登録し、大量地点表示時のメモリ増加の原因となる。
 
+### 10-12. 標高地図・重ねるハザードマップレイヤー（2026-09-30追加）
+
+キキクルタブに、国土地理院「色別標高図」と国交省「重ねるハザードマップ」のXYZタイルを追加した。タイルURL一覧は10-2参照、pane設計は10-4参照。
+
+**標高地図（ベースマップと排他切替）**:
+
+```javascript
+var reliefLayer = L.tileLayer(BASE_RELIEF, {
+  minZoom:4, maxZoom:14, minNativeZoom:5, maxNativeZoom:15,
+  attribution:'© 国土地理院（色別標高図）'
+});
+var reliefMode = false;
+window.toggleReliefMap = function(){
+  reliefMode = !reliefMode;
+  if(reliefMode){
+    map.removeLayer(baseLayer);
+    reliefLayer.addTo(map);
+  } else {
+    map.removeLayer(reliefLayer);
+    baseLayer.addTo(map);
+  }
+  ...
+};
+```
+
+pale淡色地図と色別標高図を同時に表示する必要はないため、`addTo`/`removeLayer` で単純に入れ替える方式にした（filterやopacityの併存管理をせずに済む）。
+
+**重ねるハザードマップ（3ボタン・土砂は3レイヤーを1ボタンでグルーピング）**:
+
+```javascript
+var HAZARD_GROUP = { hazDosha:['hazDosha1','hazDosha2','hazDosha3'] };
+window.toggleHazard = function(group){
+  hazardVisible[group] = !hazardVisible[group];
+  var keys = HAZARD_GROUP[group] || [group];
+  keys.forEach(function(k){
+    var layer = getHazardLayer(k);
+    if(hazardVisible[group]){ if(!map.hasLayer(layer)) layer.addTo(map); }
+    else { if(map.hasLayer(layer)) map.removeLayer(layer); }
+  });
+  ...
+};
+```
+
+土砂災害警戒区域は「土石流・急傾斜地の崩壊・地すべり」の3種類がそれぞれ別タイルURLで提供されているが、UI上はボタン1個（土砂HM）にまとめてグループ管理している。`HAZARD_GROUP` に定義がない場合（洪水・津波）は `[group]` にフォールバックして単一レイヤーとして扱う汎用実装。
+
+**ハザードタイルが低ズームで見えない**:
+
+重ねるハザードマップのタイルはzoom 2–17に対応と謳われているが、低ズーム（zoom6程度・都道府県〜広域表示）ではデータが提供されているタイル座標がまばらで、実際にはほぼ全タイルが404になり見た目上何も表示されない。zoom10前後までズームインして初めて着色が確認できる（洪水浸水想定は河川沿いの低地、土砂災害警戒区域は山間部斜面、津波浸水想定は太平洋沿岸などデータが密なエリアで顕著）。動作確認時にこれを「動いていない」と誤認しないよう注意。
+
+**国土数値情報（KSJ）は今回見送り**:
+
+国土数値情報ダウンロードサービスは重ねるハザードマップと異なりXYZタイル配信ではなく、shapefile/GeoJSONの静的ダウンロードが基本。動的にLeafletへ重ねるには事前にダウンロード・変換してassetsに同梱する作業が必要なため、今回は対象外とした。
+
 ---
 
 ## 11. JMA API 構造メモ
@@ -1424,6 +1482,16 @@ Claude Code でコードを修正・push するだけでWebアプリが自動更
 ---
 
 ## 13. 改修履歴
+
+### 2026-09-30 キキクルタブに標高地図・重ねるハザードマップレイヤーを追加
+
+#### キキクルタブ（kikikuruHtml.ts）
+
+| 改修 | 内容 |
+|------|------|
+| 標高地図ボタン追加 | 国土地理院「色別標高図」（`cyberjapandata.gsi.go.jp/xyz/relief/`）を追加し、淡色ベース地図と`addTo`/`removeLayer`で排他切替（詳細: 10-12） |
+| 重ねるハザードマップ3ボタン追加 | 国交省「重ねるハザードマップ」の洪水浸水想定区域・土砂災害警戒区域（土石流/急傾斜地/地すべりを1ボタンでグルーピング）・津波浸水想定をタイル重畳表示。専用に`hazardPane`（zIndex=220）を新設（詳細: 10-12） |
+| 国土数値情報は見送り | shapefile/GeoJSON静的配布でXYZタイル未提供のため、動的重畳には事前変換作業が別途必要と判断し今回は対象外 |
 
 ### 2026-09-28 出典表記の追加・CARTO APIキー対応
 
