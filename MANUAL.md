@@ -90,7 +90,7 @@ TypeScriptはJavaScriptの「型付きスーパーセット」。コンパイル
 ### 開発機要件
 
 - **Mac必須**（Xcodeが必要なため。iOS開発はWindowsでは不可）
-- Xcode 16以上（Expo SDK 54の要件）
+- Xcode 16以上（Expo SDK 54時点の要件。SDK 58の要件は公式ドキュメントで要確認）
 - iOS実機テストは Expo Go アプリ（無料）で可能
 - App Store配布には Apple Developer Program（年$99）が必要
 

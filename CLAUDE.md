@@ -88,7 +88,7 @@ json[1] — 週間予報（7日間）
 ---
 
 ## 技術スタック
-- React Native（Expo SDK 54）
+- React Native（Expo SDK 58）
 - TypeScript
 - expo-router（ファイルベースルーティング）
 - JMA API（気象庁）

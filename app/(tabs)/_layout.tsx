@@ -16,7 +16,8 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
+        /* SDK58でpressColorの型(null許容)が食い違うためキャストで回避 */
+        tabBarButton: HapticTab as any,
         /* webではラベルが画面外に切れないよう高さを確保 */
         tabBarStyle: Platform.OS === 'web' ? { height: 60, paddingBottom: 8 } : undefined,
       }}>

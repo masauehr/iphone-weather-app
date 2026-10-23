@@ -124,7 +124,7 @@ deploy.js                  ← GitHub Pagesデプロイスクリプト（カス�
 
 | 項目 | 内容 |
 |------|------|
-| フレームワーク | React Native（Expo SDK 54） |
+| フレームワーク | React Native（Expo SDK 58） |
 | 言語 | TypeScript |
 | ルーティング | expo-router（ファイルベース） |
 | 永続化 | @react-native-async-storage/async-storage |

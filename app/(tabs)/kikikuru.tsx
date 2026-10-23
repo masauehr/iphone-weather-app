@@ -24,7 +24,7 @@ export default function KikikuruScreen() {
       <iframe
         key={iframeKey}
         srcDoc={kikikuruHtml}
-        style={styles.iframe as any}
+        style={iframeStyle as any}
         title="キキクル"
         sandbox="allow-scripts allow-same-origin"
       />
@@ -37,10 +37,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a2e',
   },
-  iframe: {
-    flex: 1,
-    border: 'none',
-    width: '100%',
-    height: '100%',
-  },
 });
+
+/* web専用のiframeスタイル（borderはRNのStyleSheet型に無いため別定義） */
+const iframeStyle = {
+  flex: 1,
+  border: 'none',
+  width: '100%',
+  height: '100%',
+};
