@@ -113,8 +113,12 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
       <option value="snow1h">1h降雪</option>
       <option value="snow6h">6h降雪</option>
       <option value="snow24h">24h降雪</option>
+      <option value="twDaily">当日雨量（台湾のみ）</option>
     </select>
     <span id="amedasStatus" style="font-size:10px;color:#aaa;margin-left:4px"></span>
+    <span class="sep">|</span>
+    <button id="twObsBtn" onclick="toggleTwObs()" title="台湾の地上観測（中央氣象署・10分更新）を表示">台湾観測</button>
+    <span id="twObsStatus" style="font-size:10px;color:#aaa"></span>
   </div>
 </div>
 
@@ -766,6 +770,157 @@ function twSet(on){
 }
 window.toggleTw=function(){twSet(!twOn);};
 
+/* ── 台湾観測（中央氣象署 O-A0003-001 10分綜観観測・363局）── */
+/* アメダスと同じ見た目（矢羽・数値ラベル・JMA配色）で表示する。キー不要の公開S3 JSONを使用。
+   日本のアメダス処理とは独立（種別選択だけ共有）。出典表示は規約上の義務。
+   気圧はAirPressure=測站気圧（海面気圧ではなく高山で欠測も多い）のため出さない。
+   雨量はNow.Precipitation=当日累積（10分雨量ではない）。常に最新値のみ（過去再生は非対応）。 */
+var TWO_URL='https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0003-001.json';
+var TWO_POLL=10*60*1000;
+var TWO_ATTR='台湾観測: 提供機關／交通部中央氣象署';
+var twObsOn=false,twObsData=[],twObsMarkers=[],twObsPoll=null,twObsTimer=null;
+var twObsBusy=false,twObsErr=false,twObsTime=0;
+
+/* 欠測(-99等)→null */
+function twObsNum(x){
+  var v=parseFloat(x);
+  return (isNaN(v)||v<=-90)?null:v;
+}
+function twObsParse(j){
+  var st=j.cwaopendata.dataset.Station,out=[],tmax=0;
+  for(var i=0;i<st.length;i++){
+    var s=st[i],w=s.WeatherElement||{},cs=(s.GeoInfo&&s.GeoInfo.Coordinates)||[];
+    var lat=null,lon=null;
+    for(var k=0;k<cs.length;k++){
+      if(cs[k].CoordinateName==='WGS84'){
+        lat=parseFloat(cs[k].StationLatitude);lon=parseFloat(cs[k].StationLongitude);
+      }
+    }
+    if(lat===null||isNaN(lat)||isNaN(lon))continue;
+    var t=s.ObsTime&&s.ObsTime.DateTime?Date.parse(s.ObsTime.DateTime):0;
+    if(t>tmax)tmax=t;
+    out.push({name:s.StationName,lat:lat,lon:lon,
+      wd:twObsNum(w.WindDirection),ws:twObsNum(w.WindSpeed),
+      temp:twObsNum(w.AirTemperature),rh:twObsNum(w.RelativeHumidity),
+      rain:twObsNum(w.Now&&w.Now.Precipitation)});
+  }
+  twObsTime=tmax;
+  return out;
+}
+
+/* 種別ごとの値・配色・表示（台湾が対応する種別のみ） */
+var TWO_TYPES={
+  wind:{isArrow:true,scale:'wind',
+    getVal:function(d){return d.ws;},fmt:function(v){return v.toFixed(0);}},
+  temp:{scale:'temp',
+    getVal:function(d){return d.temp;},fmt:function(v){return v.toFixed(1);}},
+  dewPoint:{scale:'temp',
+    getVal:function(d){
+      if(d.temp==null||d.rh==null||d.rh<=0)return null;
+      var g=Math.log(d.rh/100)+17.62*d.temp/(243.12+d.temp);
+      return 243.12*g/(17.62-g);
+    },fmt:function(v){return v.toFixed(1);}},
+  humidity:{scale:'humidity',
+    getVal:function(d){return d.rh;},fmt:function(v){return v.toFixed(0);}},
+  twDaily:{scale:'precip_24h',
+    getVal:function(d){return d.rain;},fmt:function(v){return v.toFixed(1);}}
+};
+
+function twObsClear(){
+  for(var i=0;i<twObsMarkers.length;i++)map.removeLayer(twObsMarkers[i]);
+  twObsMarkers=[];
+}
+function twObsSetStatus(t){document.getElementById('twObsStatus').textContent=t;}
+
+function twObsRender(){
+  twObsClear();
+  if(!twObsOn)return;
+  if(twObsErr&&!twObsData.length){twObsSetStatus('取得失敗');return;}
+  if(!twObsData.length){twObsSetStatus('取得中…');return;}
+  var d0=new Date(twObsTime);
+  var info=twObsData.length+'局 '+pad2(d0.getHours())+':'+pad2(d0.getMinutes());
+  var cfg=TWO_TYPES[amedasKind];
+  if(!cfg){twObsSetStatus('この種別は台湾非対応');return;}
+  var z=map.getZoom();
+  if(z<6){twObsSetStatus('ズーム6以上で表示');return;}
+  twObsSetStatus(info);
+
+  var b=map.getBounds(),sw=b.getSouthWest(),ne=b.getNorthEast();
+  var THIN={6:1.0,7:0.5,8:0.2};
+  var gridDeg=THIN[z]||0,seen={};
+  for(var i=0;i<twObsData.length;i++){
+    var d=twObsData[i];
+    if(d.lat<sw.lat-0.1||d.lat>ne.lat+0.1||d.lon<sw.lng-0.1||d.lon>ne.lng+0.1)continue;
+    var val=cfg.getVal(d);
+    if(val===null||val===undefined)continue;
+    if(gridDeg>0){  /* ズームアウト時の間引き: セルごとに先頭1局 */
+      var ck=Math.floor(d.lat/gridDeg)+'_'+Math.floor(d.lon/gridDeg);
+      if(seen[ck])continue;
+      seen[ck]=1;
+    }
+    var c=amedasColor(cfg.scale,val),html='',ax=0,ay=0;
+    if(cfg.isArrow){
+      if(val>0.2&&d.wd!==null){
+        var rot=(d.wd+180)%360;  /* 風向(吹いてくる方位) → 吹先方向 */
+        var stroke=BLUE_FILL[c]?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.85)';
+        var oc=outlineColor(c);
+        var sh='-1px 0 '+oc+',0 1px '+oc+',1px 0 '+oc+',0 -1px '+oc;
+        html='<div style="text-align:center;pointer-events:none">'+
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="28" viewBox="0 0 12 20"'+
+          ' style="transform-origin:center;transform:rotate('+rot+'deg);display:block;margin:auto">'+
+          '<polygon points="6,0 0,20 6,15 12,20" stroke="'+stroke+'" stroke-width="1.5" fill="'+c+'"/></svg>'+
+          '<div style="font-size:13px;font-weight:bold;color:'+c+';text-shadow:'+sh+';line-height:1">'+val.toFixed(0)+'</div>'+
+          '</div>';
+        ax=9;ay=14;
+      }else{
+        html='<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10">'+
+          '<circle cx="5" cy="5" r="4" stroke="rgba(0,0,0,0.7)" stroke-width="1" fill="rgb(160,210,255)"/></svg>';
+        ax=5;ay=5;
+      }
+    }else{
+      html=styledText(cfg.fmt(val),c);ax=14;ay=7;
+    }
+    var mk=L.marker([d.lat,d.lon],{icon:L.divIcon({html:html,className:'',iconSize:[0,0],iconAnchor:[ax,ay]}),
+      interactive:false,keyboard:false});
+    mk.addTo(map);
+    twObsMarkers.push(mk);
+  }
+}
+function twObsSchedule(ms){
+  clearTimeout(twObsTimer);
+  twObsTimer=setTimeout(twObsRender,ms||300);
+}
+
+function twObsFetch(){
+  if(!twObsOn||twObsBusy)return;
+  twObsBusy=true;
+  fetch(TWO_URL+'?_='+Date.now(),{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(j){
+    twObsData=twObsParse(j);twObsErr=false;
+  },function(){twObsErr=true;}).then(function(){
+    twObsBusy=false;twObsRender();
+  });
+}
+function twObsSet(on){
+  twObsOn=on;
+  try{localStorage.setItem('twObsOn',on?'1':'0');}catch(e){}
+  document.getElementById('twObsBtn').className=on?'active':'';
+  clearInterval(twObsPoll);twObsPoll=null;
+  if(on){
+    map.attributionControl.addAttribution(TWO_ATTR);
+    twObsSetStatus('取得中…');
+    twObsFetch();
+    twObsPoll=setInterval(twObsFetch,TWO_POLL);
+  }else{
+    map.attributionControl.removeAttribution(TWO_ATTR);
+    twObsClear();twObsData=[];twObsSetStatus('');
+  }
+}
+window.toggleTwObs=function(){twObsSet(!twObsOn);};
+map.on('moveend',function(){if(twObsOn)twObsSchedule(300);});
+
 /* ── メイン: フレーム構築 ── */
 function buildFrames(preserveView){
   if(isLoading)return;
@@ -1287,6 +1442,7 @@ window.toggleAmedas=function(){
 window.onAmedasKindChange=function(){
   amedasKind=document.getElementById('amedasKind').value;
   if(amedasOn) scheduleAmedasUpdate();
+  if(twObsOn) twObsRender();  /* 台湾観測も同じ種別選択に連動 */
 };
 
 window.onPlay=play;
@@ -1320,6 +1476,7 @@ window.onSlider=function(v){
   buildFrames(true);  /* 常に現在のビューを維持して構築 */
   /* 台湾レーダー: 前回ONなら復元（保存済みフレームを読み込み、取得を再開） */
   try{if(localStorage.getItem('twOn')==='1')twSet(true);}catch(e){}
+  try{if(localStorage.getItem('twObsOn')==='1')twObsSet(true);}catch(e){}
   updateAutoUI();
   scheduleAuto();
   /* アメダスデフォルトON: ボタンをアクティブに */
