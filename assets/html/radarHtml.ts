@@ -593,6 +593,15 @@ function loadAll(band,area){
   }
 }
 
+/* 応答が止まった通信を打ち切る（止まると「取得中」フラグが戻らず、以降の更新が全て止まるため）。
+   台湾レーダー・台湾観測の両方で使う */
+function withTimeout(p,ms){
+  return new Promise(function(res,rej){
+    var t=setTimeout(function(){rej(new Error('timeout'));},ms||30000);
+    p.then(function(v){clearTimeout(t);res(v);},function(e){clearTimeout(t);rej(e);});
+  });
+}
+
 /* ── 台湾レーダー（中央氣象署 雷達整合回波圖）── */
 /* 配信リポジトリ taiwan-radar-frames（GitHub Actionsが10分ごとに更新・過去3時間分）の
    透過PNGを読むだけ。APIキーは使わない（キーは配信側のGitHub secretにのみ存在）。
@@ -623,10 +632,10 @@ function twSetAttr(text){
 function twLoad(){
   if(!twOn||twBusy)return;
   twBusy=true;
-  fetch(TW_BASE+'index.json?_='+Date.now(),{cache:'no-store'}).then(function(r){
+  withTimeout(fetch(TW_BASE+'index.json?_='+Date.now(),{cache:'no-store'}).then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
-  }).then(function(idx){
+  }),30000).then(function(idx){
     var keep={},i;
     for(i=0;i<idx.frames.length;i++)keep[idx.frames[i].file]=1;
     twFrames=twFrames.filter(function(f){
@@ -818,10 +827,10 @@ function twObsSchedule(ms){
 function twObsFetch(){
   if(!twObsOn||twObsBusy)return;
   twObsBusy=true;
-  fetch(TWO_URL+'?_='+Date.now(),{cache:'no-store'}).then(function(r){
+  withTimeout(fetch(TWO_URL+'?_='+Date.now(),{cache:'no-store'}).then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
-  }).then(function(j){
+  }),30000).then(function(j){
     twObsData=twObsParse(j);twObsErr=false;
   },function(){twObsErr=true;}).then(function(){
     twObsBusy=false;twObsRender();
@@ -844,6 +853,12 @@ function twObsSet(on){
 }
 window.toggleTwObs=function(){twObsSet(!twObsOn);};
 map.on('moveend',function(){if(twObsOn)twObsSchedule(300);});
+
+/* 画面に戻ったとき・回線復帰時に即再取得（バックグラウンド中は定期実行が間引かれ、スリープ復帰後は古いまま残るため） */
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden){twObsFetch();twLoad();}
+});
+window.addEventListener('online',function(){twObsFetch();twLoad();});
 
 /* ── メイン: フレーム構築 ── */
 function buildFrames(preserveView){
