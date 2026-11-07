@@ -69,6 +69,9 @@ select{padding:3px 4px;border:1px solid #4a90e2;background:#1a3a5c;color:#e0e0e0
       <button id="mSat"   onclick="setMode('sat')">衛星</button>
     </div>
     <span class="sep">|</span>
+    <button id="twBtn" onclick="toggleTw()" title="台湾レーダー（中央氣象署）を重ねる">台湾</button>
+    <span id="twStatus" style="font-size:10px;color:#aaa"></span>
+    <span class="sep">|</span>
     <label style="font-size:11px"><input type="checkbox" id="osmOn" onchange="toggleOsm(this.checked)"> OSM</label>
     <span class="sep">|</span>
     <select id="speedSelect" onchange="onSpeedChange(this.value)">
@@ -423,6 +426,7 @@ function showFrame(idx){
     if(prevRadarIdx>=0&&radarLayers[prevRadarIdx])radarLayers[prevRadarIdx].setOpacity(0);
     prevRadarIdx=-1;
   }
+  twShow(satFrames[idx].time);  /* 台湾レーダー: 同時刻に最も近い1枚だけ表示 */
   elSlider.value=String(idx);
   elLabel.textContent=(idx+1)+'/'+satFrames.length;
   elTime.textContent=fmtLocal(satFrames[idx].time);
@@ -450,6 +454,7 @@ function applyMode(){
       prevRadarIdx=ri;
     }
   }
+  twRefresh();  /* 表示モード変更を台湾にも反映（衛星のみ=非表示） */
 }
 
 /* ── 再生制御 ── */
@@ -583,6 +588,183 @@ function loadAll(band,area){
     });
   }
 }
+
+/* ── 台湾レーダー（中央氣象署 雷達整合回波圖 O-A0058-001）── */
+/* 過去画像のAPIが無いため、アプリを開いている間に10分ごとの最新画像を取得・縮小し、
+   IndexedDBに溜めて動画にする。画像取得にAPIキーは不要（キーはこのコードに含めない）。
+   出典表示は規約上の義務（提供機關／交通部中央氣象署）。 */
+var TW_URL='https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png';
+var TW_BOUNDS=[[17.75,115.00],[29.25,126.50]]; /* 緯度17.75-29.25 / 経度115.00-126.50 */
+var TW_SIZE=1000;             /* 縮小後の一辺(px)。3600pxのままではiOSのメモリを超える */
+var TW_MAX_FRAMES=13;         /* 約2時間分（10分間隔） */
+var TW_KEEP_MS=3*3600*1000;   /* 保持期間 */
+var TW_LAG_MIN=7;             /* 配信(Last-Modified)は観測の8〜16分後（実測2回: 8.5分・15.5分）。7分引いて10分切捨てで観測時刻を推定（遅れが7〜17分なら正確） */
+var TW_POLL=5*60*1000;        /* 取得間隔（更新は10分ごと） */
+var TW_MATCH_MS=15*60*1000;   /* 日本側フレームとの許容時刻差（超えたら台湾は非表示） */
+var TW_OPACITY=0.75;
+var TW_ATTR='台湾: 提供機關／交通部中央氣象署 雷達整合回波圖（時刻は推定）';
+var twOn=false,twFrames=[],twPollId=null,twBusy=false,twErr=false,twDb=null;
+
+map.createPane('twPane');
+map.getPane('twPane').style.zIndex=360;            /* レーダー(350)の上・海岸線(600)の下 */
+map.getPane('twPane').style.pointerEvents='none';
+
+/* IndexedDB（使えない環境ではメモリのみで動作） */
+function twOpenDb(cb){
+  try{
+    var rq=indexedDB.open('twRadar',1);
+    rq.onupgradeneeded=function(){rq.result.createObjectStore('f',{keyPath:'t'});};
+    rq.onsuccess=function(){twDb=rq.result;cb();};
+    rq.onerror=function(){cb();};
+  }catch(e){cb();}
+}
+function twDbPut(t,blob){
+  if(!twDb)return;
+  try{twDb.transaction('f','readwrite').objectStore('f').put({t:t,blob:blob});}catch(e){}
+}
+function twDbDel(t){
+  if(!twDb)return;
+  try{twDb.transaction('f','readwrite').objectStore('f').delete(t);}catch(e){}
+}
+function twDbLoad(cb){
+  if(!twDb){cb([]);return;}
+  try{
+    var rq=twDb.transaction('f').objectStore('f').getAll();
+    rq.onsuccess=function(){cb(rq.result||[]);};
+    rq.onerror=function(){cb([]);};
+  }catch(e){cb([]);}
+}
+
+/* フレーム追加・古いものの削除 */
+function twAdd(t,blob,persist){
+  for(var i=0;i<twFrames.length;i++)if(twFrames[i].t===t)return;
+  var url=URL.createObjectURL(blob);
+  var layer=L.imageOverlay(url,TW_BOUNDS,{pane:'twPane',opacity:0,interactive:false});
+  layer.addTo(map);
+  twFrames.push({t:t,url:url,layer:layer});
+  twFrames.sort(function(a,b){return a.t-b.t;});
+  if(persist)twDbPut(t,blob);
+  twTrim();
+}
+function twTrim(){
+  var lim=Date.now()-TW_KEEP_MS;
+  while(twFrames.length&&(twFrames.length>TW_MAX_FRAMES||twFrames[0].t<lim)){
+    var f=twFrames.shift();
+    map.removeLayer(f.layer);URL.revokeObjectURL(f.url);twDbDel(f.t);
+  }
+}
+/* 表示OFF時はメモリを解放（IndexedDBの保存分は残す） */
+function twClear(){
+  twFrames.forEach(function(f){map.removeLayer(f.layer);URL.revokeObjectURL(f.url);});
+  twFrames=[];
+}
+
+/* 画像を縮小用にデコード */
+function twDecode(blob){
+  if(window.createImageBitmap)return createImageBitmap(blob);
+  return new Promise(function(res,rej){
+    var im=new Image(),u=URL.createObjectURL(blob);
+    im.onload=function(){URL.revokeObjectURL(u);res(im);};
+    im.onerror=rej;
+    im.src=u;
+  });
+}
+
+/* 元画像は不透明（灰色の背景・格子線・県境・文字・凡例入り）のため、
+   彩度の低い画素を透明にしてエコー（色付き）だけを残す。
+   右下の凡例(dBZ)と左上のレーダー局名マークは領域ごと消す（位置は元画像の仕様に依存）。 */
+function twKeyOut(g){
+  var S=TW_SIZE,im=g.getImageData(0,0,S,S),p=im.data;
+  var lx=Math.floor(S*0.935),ly=Math.floor(S*0.685);   /* 凡例: 右下 */
+  var mx=Math.floor(S*0.06),my=Math.floor(S*0.23);     /* 局名マーク: 左上 */
+  for(var y=0;y<S;y++){
+    for(var x=0;x<S;x++){
+      var i=(y*S+x)*4;
+      var hi=Math.max(p[i],p[i+1],p[i+2]),lo=Math.min(p[i],p[i+1],p[i+2]);
+      var sat=hi-lo;
+      if((x>=lx&&y>=ly)||(x<mx&&y<my)||sat<15){p[i+3]=0;}
+      else if(sat<40){p[i+3]=Math.round((sat-15)/25*255);}
+    }
+  }
+  g.putImageData(im,0,0);
+}
+
+/* 最新画像を取得 → 観測時刻を推定 → 縮小 → 保存 */
+function twFetch(){
+  if(!twOn||twBusy)return;
+  twBusy=true;
+  fetch(TW_URL+'?_='+Date.now(),{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var lm=r.headers.get('Last-Modified');
+    var t=(lm?Date.parse(lm):Date.now())-TW_LAG_MIN*60000;
+    t=t-(t%600000);
+    return r.blob().then(function(b){return {t:t,blob:b};});
+  }).then(function(o){
+    for(var i=0;i<twFrames.length;i++)if(twFrames[i].t===o.t)return;  /* 取得済み */
+    return twDecode(o.blob).then(function(bmp){
+      var c=document.createElement('canvas');c.width=TW_SIZE;c.height=TW_SIZE;
+      var g=c.getContext('2d');
+      g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+      g.drawImage(bmp,0,0,TW_SIZE,TW_SIZE);
+      if(bmp.close)bmp.close();
+      twKeyOut(g);
+      return new Promise(function(res){c.toBlob(res,'image/png');});
+    }).then(function(small){
+      if(small&&twOn)twAdd(o.t,small,true);
+    });
+  }).then(function(){twErr=false;},function(){twErr=true;}).then(function(){
+    twBusy=false;twUpdateUI();twRefresh();
+  });
+}
+
+/* 日本側のフレーム時刻に最も近い台湾フレームだけを表示 */
+function twShow(time){
+  var best=null,bestD=Infinity,i;
+  if(twOn&&displayMode!=='sat'&&time){
+    for(i=0;i<twFrames.length;i++){
+      var d=Math.abs(twFrames[i].t-time.getTime());
+      if(d<bestD){bestD=d;best=twFrames[i];}
+    }
+    if(bestD>TW_MATCH_MS)best=null;
+  }
+  for(i=0;i<twFrames.length;i++)twFrames[i].layer.setOpacity(twFrames[i]===best?TW_OPACITY:0);
+}
+function twRefresh(){
+  twShow(currentIdx>=0&&satFrames[currentIdx]?satFrames[currentIdx].time:null);
+}
+function twUpdateUI(){
+  var el=document.getElementById('twStatus'),n=twFrames.length;
+  if(!twOn){el.textContent='';return;}
+  if(twErr&&!n){el.textContent='取得失敗';return;}
+  if(!n){el.textContent='取得中…';return;}
+  var d=new Date(twFrames[n-1].t);
+  el.textContent=n+'枚 〜約'+pad2(d.getHours())+':'+pad2(d.getMinutes());
+}
+
+function twSet(on){
+  twOn=on;
+  try{localStorage.setItem('twOn',on?'1':'0');}catch(e){}
+  document.getElementById('twBtn').className=on?'active':'';
+  clearInterval(twPollId);twPollId=null;
+  if(on){
+    map.attributionControl.addAttribution(TW_ATTR);
+    twOpenDb(function(){
+      twDbLoad(function(rows){
+        var lim=Date.now()-TW_KEEP_MS;
+        rows.sort(function(a,b){return a.t-b.t;});
+        rows.forEach(function(r){if(r.t>=lim&&twOn)twAdd(r.t,r.blob,false);});
+        twUpdateUI();twRefresh();
+        twFetch();
+        twPollId=setInterval(twFetch,TW_POLL);
+      });
+    });
+  } else {
+    map.attributionControl.removeAttribution(TW_ATTR);
+    twClear();
+  }
+  twUpdateUI();
+}
+window.toggleTw=function(){twSet(!twOn);};
 
 /* ── メイン: フレーム構築 ── */
 function buildFrames(preserveView){
@@ -1136,6 +1318,8 @@ window.onSlider=function(v){
     if(s.lat!=null&&s.zoom!=null)map.setView([s.lat,s.lng],s.zoom);
   }
   buildFrames(true);  /* 常に現在のビューを維持して構築 */
+  /* 台湾レーダー: 前回ONなら復元（保存済みフレームを読み込み、取得を再開） */
+  try{if(localStorage.getItem('twOn')==='1')twSet(true);}catch(e){}
   updateAutoUI();
   scheduleAuto();
   /* アメダスデフォルトON: ボタンをアクティブに */

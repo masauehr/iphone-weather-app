@@ -28,6 +28,10 @@ yarn-error.*
 
 # macOS
 .DS_Store
+
+# 認証情報（コミット禁止）
+.env
+.env.*
 *.pem
 
 # local env files
