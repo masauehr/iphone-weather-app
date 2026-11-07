@@ -593,132 +593,65 @@ function loadAll(band,area){
   }
 }
 
-/* ── 台湾レーダー（中央氣象署 雷達整合回波圖 O-A0058-001）── */
-/* 過去画像のAPIが無いため、アプリを開いている間に10分ごとの最新画像を取得・縮小し、
-   IndexedDBに溜めて動画にする。画像取得にAPIキーは不要（キーはこのコードに含めない）。
-   出典表示は規約上の義務（提供機關／交通部中央氣象署）。 */
-var TW_URL='https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png';
-var TW_BOUNDS=[[17.75,115.00],[29.25,126.50]]; /* 緯度17.75-29.25 / 経度115.00-126.50 */
-var TW_SIZE=1000;             /* 縮小後の一辺(px)。3600pxのままではiOSのメモリを超える */
-var TW_MAX_FRAMES=13;         /* 約2時間分（10分間隔） */
-var TW_KEEP_MS=3*3600*1000;   /* 保持期間 */
-var TW_LAG_MIN=7;             /* 配信(Last-Modified)は観測の8〜16分後（実測2回: 8.5分・15.5分）。7分引いて10分切捨てで観測時刻を推定（遅れが7〜17分なら正確） */
-var TW_POLL=5*60*1000;        /* 取得間隔（更新は10分ごと） */
+/* ── 台湾レーダー（中央氣象署 雷達整合回波圖）── */
+/* 配信リポジトリ taiwan-radar-frames（GitHub Actionsが10分ごとに更新・過去3時間分）の
+   透過PNGを読むだけ。APIキーは使わない（キーは配信側のGitHub secretにのみ存在）。
+   index.json: {bounds, attribution, frames:[{t(UTC ISO), file}]}。時刻は公式の観測時刻（推定ではない）。
+   出典表示は規約上の義務（index.json の attribution を地図右下に表示）。 */
+var TW_BASE='https://masauehr.github.io/taiwan-radar-frames/';
+var TW_POLL=5*60*1000;        /* index.json の確認間隔（配信は10分ごと） */
 var TW_MATCH_MS=15*60*1000;   /* 日本側フレームとの許容時刻差（超えたら台湾は非表示） */
 var TW_OPACITY=0.75;
-var TW_ATTR='台湾: 提供機關／交通部中央氣象署 雷達整合回波圖（時刻は推定）';
-var twOn=false,twFrames=[],twPollId=null,twBusy=false,twErr=false,twDb=null;
+var twOn=false,twFrames=[],twPollId=null,twBusy=false,twErr=false,twAttrText='';
 
 map.createPane('twPane');
 map.getPane('twPane').style.zIndex=360;            /* レーダー(350)の上・海岸線(600)の下 */
 map.getPane('twPane').style.pointerEvents='none';
 
-/* IndexedDB（使えない環境ではメモリのみで動作） */
-function twOpenDb(cb){
-  try{
-    var rq=indexedDB.open('twRadar',1);
-    rq.onupgradeneeded=function(){rq.result.createObjectStore('f',{keyPath:'t'});};
-    rq.onsuccess=function(){twDb=rq.result;cb();};
-    rq.onerror=function(){cb();};
-  }catch(e){cb();}
-}
-function twDbPut(t,blob){
-  if(!twDb)return;
-  try{twDb.transaction('f','readwrite').objectStore('f').put({t:t,blob:blob});}catch(e){}
-}
-function twDbDel(t){
-  if(!twDb)return;
-  try{twDb.transaction('f','readwrite').objectStore('f').delete(t);}catch(e){}
-}
-function twDbLoad(cb){
-  if(!twDb){cb([]);return;}
-  try{
-    var rq=twDb.transaction('f').objectStore('f').getAll();
-    rq.onsuccess=function(){cb(rq.result||[]);};
-    rq.onerror=function(){cb([]);};
-  }catch(e){cb([]);}
+/* 旧方式（ブラウザ内蓄積）のIndexedDBを掃除（残っていても害はないが容量を空ける） */
+try{indexedDB.deleteDatabase('twRadar');}catch(e){}
+
+/* 出典表示の更新（配信側の文言に追従） */
+function twSetAttr(text){
+  if(twAttrText===text)return;
+  if(twAttrText)map.attributionControl.removeAttribution(twAttrText);
+  twAttrText=text;
+  if(text)map.attributionControl.addAttribution(text);
 }
 
-/* フレーム追加・古いものの削除 */
-function twAdd(t,blob,persist){
-  for(var i=0;i<twFrames.length;i++)if(twFrames[i].t===t)return;
-  var url=URL.createObjectURL(blob);
-  var layer=L.imageOverlay(url,TW_BOUNDS,{pane:'twPane',opacity:0,interactive:false});
-  layer.addTo(map);
-  twFrames.push({t:t,url:url,layer:layer});
-  twFrames.sort(function(a,b){return a.t-b.t;});
-  if(persist)twDbPut(t,blob);
-  twTrim();
-}
-function twTrim(){
-  var lim=Date.now()-TW_KEEP_MS;
-  while(twFrames.length&&(twFrames.length>TW_MAX_FRAMES||twFrames[0].t<lim)){
-    var f=twFrames.shift();
-    map.removeLayer(f.layer);URL.revokeObjectURL(f.url);twDbDel(f.t);
-  }
-}
-/* 表示OFF時はメモリを解放（IndexedDBの保存分は残す） */
-function twClear(){
-  twFrames.forEach(function(f){map.removeLayer(f.layer);URL.revokeObjectURL(f.url);});
-  twFrames=[];
-}
-
-/* 画像を縮小用にデコード */
-function twDecode(blob){
-  if(window.createImageBitmap)return createImageBitmap(blob);
-  return new Promise(function(res,rej){
-    var im=new Image(),u=URL.createObjectURL(blob);
-    im.onload=function(){URL.revokeObjectURL(u);res(im);};
-    im.onerror=rej;
-    im.src=u;
-  });
-}
-
-/* 元画像は不透明（灰色の背景・格子線・県境・文字・凡例入り）のため、
-   彩度の低い画素を透明にしてエコー（色付き）だけを残す。
-   右下の凡例(dBZ)と左上のレーダー局名マークは領域ごと消す（位置は元画像の仕様に依存）。 */
-function twKeyOut(g){
-  var S=TW_SIZE,im=g.getImageData(0,0,S,S),p=im.data;
-  var lx=Math.floor(S*0.935),ly=Math.floor(S*0.685);   /* 凡例: 右下 */
-  var mx=Math.floor(S*0.06),my=Math.floor(S*0.23);     /* 局名マーク: 左上 */
-  for(var y=0;y<S;y++){
-    for(var x=0;x<S;x++){
-      var i=(y*S+x)*4;
-      var hi=Math.max(p[i],p[i+1],p[i+2]),lo=Math.min(p[i],p[i+1],p[i+2]);
-      var sat=hi-lo;
-      if((x>=lx&&y>=ly)||(x<mx&&y<my)||sat<15){p[i+3]=0;}
-      else if(sat<40){p[i+3]=Math.round((sat-15)/25*255);}
-    }
-  }
-  g.putImageData(im,0,0);
-}
-
-/* 最新画像を取得 → 観測時刻を推定 → 縮小 → 保存 */
-function twFetch(){
+/* index.json を読み、新しいフレームを追加・消えたフレームを削除 */
+function twLoad(){
   if(!twOn||twBusy)return;
   twBusy=true;
-  fetch(TW_URL+'?_='+Date.now(),{cache:'no-store'}).then(function(r){
+  fetch(TW_BASE+'index.json?_='+Date.now(),{cache:'no-store'}).then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);
-    var lm=r.headers.get('Last-Modified');
-    var t=(lm?Date.parse(lm):Date.now())-TW_LAG_MIN*60000;
-    t=t-(t%600000);
-    return r.blob().then(function(b){return {t:t,blob:b};});
-  }).then(function(o){
-    for(var i=0;i<twFrames.length;i++)if(twFrames[i].t===o.t)return;  /* 取得済み */
-    return twDecode(o.blob).then(function(bmp){
-      var c=document.createElement('canvas');c.width=TW_SIZE;c.height=TW_SIZE;
-      var g=c.getContext('2d');
-      g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
-      g.drawImage(bmp,0,0,TW_SIZE,TW_SIZE);
-      if(bmp.close)bmp.close();
-      twKeyOut(g);
-      return new Promise(function(res){c.toBlob(res,'image/png');});
-    }).then(function(small){
-      if(small&&twOn)twAdd(o.t,small,true);
+    return r.json();
+  }).then(function(idx){
+    var keep={},i;
+    for(i=0;i<idx.frames.length;i++)keep[idx.frames[i].file]=1;
+    twFrames=twFrames.filter(function(f){
+      if(keep[f.file])return true;
+      map.removeLayer(f.layer);return false;
     });
-  }).then(function(){twErr=false;},function(){twErr=true;}).then(function(){
+    var have={};
+    for(i=0;i<twFrames.length;i++)have[twFrames[i].file]=1;
+    for(i=0;i<idx.frames.length;i++){
+      var f=idx.frames[i];
+      if(have[f.file])continue;
+      var layer=L.imageOverlay(TW_BASE+f.file,idx.bounds,{pane:'twPane',opacity:0,interactive:false});
+      layer.addTo(map);
+      twFrames.push({t:Date.parse(f.t),file:f.file,layer:layer});
+    }
+    twFrames.sort(function(a,b){return a.t-b.t;});
+    twSetAttr('台湾レーダー: '+(idx.attribution||'交通部中央氣象署'));
+    twErr=false;
+  }).catch(function(){twErr=true;}).then(function(){
     twBusy=false;twUpdateUI();twRefresh();
   });
+}
+function twClear(){
+  twFrames.forEach(function(f){map.removeLayer(f.layer);});
+  twFrames=[];
 }
 
 /* 日本側のフレーム時刻に最も近い台湾フレームだけを表示 */
@@ -742,7 +675,7 @@ function twUpdateUI(){
   if(twErr&&!n){el.textContent='取得失敗';return;}
   if(!n){el.textContent='取得中…';return;}
   var d=new Date(twFrames[n-1].t);
-  el.textContent=n+'枚 〜約'+pad2(d.getHours())+':'+pad2(d.getMinutes());
+  el.textContent=n+'枚 〜'+pad2(d.getHours())+':'+pad2(d.getMinutes());
 }
 
 function twSet(on){
@@ -751,20 +684,11 @@ function twSet(on){
   document.getElementById('twBtn').className=on?'active':'';
   clearInterval(twPollId);twPollId=null;
   if(on){
-    map.attributionControl.addAttribution(TW_ATTR);
-    twOpenDb(function(){
-      twDbLoad(function(rows){
-        var lim=Date.now()-TW_KEEP_MS;
-        rows.sort(function(a,b){return a.t-b.t;});
-        rows.forEach(function(r){if(r.t>=lim&&twOn)twAdd(r.t,r.blob,false);});
-        twUpdateUI();twRefresh();
-        twFetch();
-        twPollId=setInterval(twFetch,TW_POLL);
-      });
-    });
+    twLoad();
+    twPollId=setInterval(twLoad,TW_POLL);
   } else {
-    map.attributionControl.removeAttribution(TW_ATTR);
     twClear();
+    twSetAttr('');
   }
   twUpdateUI();
 }
