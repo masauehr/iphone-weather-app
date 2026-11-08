@@ -709,13 +709,15 @@ window.toggleTw=function(){twSet(!twOn);};
    配信リポジトリ taiwan-radar-frames が10分ごとに保存した観測スナップショット（過去3時間分）を読む。
    配信に観測が無い間は、気象署の公開S3 JSON（最新のみ・キー不要）を直接取得する。
    日本のアメダス処理とは独立（種別選択だけ共有）。出典表示は規約上の義務。
-   気圧はAirPressure=測站気圧（海面気圧ではなく高山で欠測も多い）のため出さない。
+   気圧はAirPressure=測站気圧（観測は約30局のみ・山は欠測）。標高500m以下の局だけ、標高と気温から
+   標準大気の式で海面気圧に換算して表示する（簡易的な推定で、気象庁・気象署の海面気圧とは別物）。
    雨量はNow.Precipitation=当日累積（10分雨量ではない）。 */
 var TWO_URL='https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0003-001.json';
 var TWO_POLL=5*60*1000;          /* 配信の確認間隔（配信は10分ごと） */
 var TWO_MATCH_MS=15*60*1000;     /* 動画のコマの時刻との許容差（超えたら台湾観測は非表示） */
 var TWO_KEYS=['wd','ws','temp','rh','rain','gust','pres','weather'];  /* 配信のスナップショットの値の並び */
 var TWO_ATTR='台湾観測: 提供機關／交通部中央氣象署';
+var TWO_SLP_MAX_ALT=500;         /* 海面気圧に換算する標高の上限(m)。高いと誤差が大きい */
 var twObsOn=false,twObsData=[],twObsMarkers=[],twObsPoll=null,twObsTimer=null;
 var twObsBusy=false,twObsErr=false,twObsTime=0;
 var twObsStations=[],twObsSnaps=[],twObsKeys=TWO_KEYS,twObsFeed=false,twObsLatest=[];
@@ -725,6 +727,11 @@ var twObsShownIdx=-9,twObsOut=false;   /* 表示中のスナップショット(-
 function twObsNum(x){
   var v=parseFloat(x);
   return (isNaN(v)||v<=-90)?null:v;
+}
+/* 測站気圧 → 海面気圧（標準大気の式。気温は観測所の気温で代用）。標高が高い・値が欠けるときは null */
+function twObsSlp(d){
+  if(d.pres==null||d.temp==null||d.alt==null||d.alt>TWO_SLP_MAX_ALT)return null;
+  return d.pres*Math.pow(1-0.0065*d.alt/(d.temp+0.0065*d.alt+273.15),-5.257);
 }
 /* 気象署の最新ファイル → 地点ごとの配列（配信に観測が無いときの代替・最新のみ） */
 function twObsParse(j){
@@ -743,7 +750,8 @@ function twObsParse(j){
     out.push({name:s.StationName,lat:lat,lon:lon,
       wd:twObsNum(w.WindDirection),ws:twObsNum(w.WindSpeed),
       temp:twObsNum(w.AirTemperature),rh:twObsNum(w.RelativeHumidity),
-      rain:twObsNum(w.Now&&w.Now.Precipitation)});
+      rain:twObsNum(w.Now&&w.Now.Precipitation),
+      alt:twObsNum((s.GeoInfo||{}).StationAltitude),pres:twObsNum(w.AirPressure)});
   }
   return {list:out,t:tmax};
 }
@@ -762,6 +770,8 @@ var TWO_TYPES={
     },fmt:function(v){return v.toFixed(1);}},
   humidity:{scale:'humidity',
     getVal:function(d){return d.rh;},fmt:function(v){return v.toFixed(0);}},
+  normalPressure:{scale:'pressure',
+    getVal:function(d){return twObsSlp(d);},fmt:function(v){return v.toFixed(0);}},
   twDaily:{scale:'precip_24h',
     getVal:function(d){return d.rain;},fmt:function(v){return v.toFixed(1);}}
 };
@@ -792,7 +802,7 @@ function twObsBuild(i){
   for(k=0;k<twObsStations.length;k++){
     var m=twObsStations[k],a=sn.v[m.id];
     if(!a)continue;
-    out.push({name:m.name,lat:m.lat,lon:m.lon,wd:a[ix.wd],ws:a[ix.ws],temp:a[ix.temp],rh:a[ix.rh],rain:a[ix.rain]});
+    out.push({name:m.name,lat:m.lat,lon:m.lon,alt:m.alt,wd:a[ix.wd],ws:a[ix.ws],temp:a[ix.temp],rh:a[ix.rh],rain:a[ix.rain],pres:a[ix.pres]});
   }
   twObsData=out;twObsTime=sn.t;
 }
