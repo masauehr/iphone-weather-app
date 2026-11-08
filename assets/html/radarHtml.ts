@@ -721,6 +721,7 @@ var TWO_SLP_MAX_ALT=500;         /* 海面気圧に換算する標高の上限(m
 var twObsOn=false,twObsData=[],twObsMarkers=[],twObsPoll=null,twObsTimer=null;
 var twObsBusy=false,twObsErr=false,twObsTime=0;
 var twObsStations=[],twObsSnaps=[],twObsKeys=TWO_KEYS,twObsFeed=false,twObsLatest=[];
+var twObsPositions=[];                 /* 描画中の地点 [{id,lat,lon,name,county}]（ホバーの地点名・ダブルクリックのリンク用） */
 var twObsShownIdx=-9,twObsOut=false;   /* 表示中のスナップショット(-9=未表示)・範囲外か */
 
 /* 欠測(-99等)→null */
@@ -747,7 +748,7 @@ function twObsParse(j){
     if(lat===null||isNaN(lat)||isNaN(lon))continue;
     var t=s.ObsTime&&s.ObsTime.DateTime?Date.parse(s.ObsTime.DateTime):0;
     if(t>tmax)tmax=t;
-    out.push({name:s.StationName,lat:lat,lon:lon,
+    out.push({id:s.StationId,county:(s.GeoInfo||{}).CountyName||'',name:s.StationName,lat:lat,lon:lon,
       wd:twObsNum(w.WindDirection),ws:twObsNum(w.WindSpeed),
       temp:twObsNum(w.AirTemperature),rh:twObsNum(w.RelativeHumidity),
       rain:twObsNum(w.Now&&w.Now.Precipitation),
@@ -779,6 +780,7 @@ var TWO_TYPES={
 function twObsClear(){
   for(var i=0;i<twObsMarkers.length;i++)map.removeLayer(twObsMarkers[i]);
   twObsMarkers=[];
+  twObsPositions=[];
 }
 function twObsSetStatus(t){document.getElementById('twObsStatus').textContent=t;}
 
@@ -802,7 +804,7 @@ function twObsBuild(i){
   for(k=0;k<twObsStations.length;k++){
     var m=twObsStations[k],a=sn.v[m.id];
     if(!a)continue;
-    out.push({name:m.name,lat:m.lat,lon:m.lon,alt:m.alt,wd:a[ix.wd],ws:a[ix.ws],temp:a[ix.temp],rh:a[ix.rh],rain:a[ix.rain],pres:a[ix.pres]});
+    out.push({id:m.id,county:m.county,name:m.name,lat:m.lat,lon:m.lon,alt:m.alt,wd:a[ix.wd],ws:a[ix.ws],temp:a[ix.temp],rh:a[ix.rh],rain:a[ix.rain],pres:a[ix.pres]});
   }
   twObsData=out;twObsTime=sn.t;
 }
@@ -872,6 +874,7 @@ function twObsRender(){
       interactive:false,keyboard:false});
     mk.addTo(map);
     twObsMarkers.push(mk);
+    twObsPositions.push({id:d.id,lat:d.lat,lon:d.lon,name:d.name,county:d.county});
   }
 }
 function twObsSchedule(ms){
@@ -1347,51 +1350,67 @@ function showAmLabel(name,cx,cy){
 }
 function hideAmLabel(){ _amTooltip.style.display='none'; }
 
-/* ピクセル距離で最寄りのアメダス地点を返す */
-function nearestAmedas(latlng,threshPx){
-  var best=null,bestD=threshPx||22;
+/* 台湾観測地点の気象署ページ。ID=観測データの地点IDの末尾1文字を除いたもの（基隆466940→46694など。
+   新北・高雄・台北・離島の地点でページが開くことを確認済み。存在しないIDではデータの表が空になる） */
+function twObsUrl(p){
+  return 'https://www.cwa.gov.tw/V8/C/W/OBS_Station.html?ID='+encodeURIComponent(String(p.id).slice(0,-1));
+}
+/* 日本のアメダス・台湾観測のうち、ピクセル距離で最も近い地点を {name,url} で返す（なければ null） */
+function nearestStation(latlng,threshPx){
+  var best=null,bestD=threshPx||22,i,p,sp,dx,dy,d;
   var cp=map.latLngToContainerPoint(latlng);
-  for(var i=0;i<amedasPositions.length;i++){
-    var p=amedasPositions[i];
-    var sp=map.latLngToContainerPoint([p.lat,p.lon]);
-    var dx=cp.x-sp.x,dy=cp.y-sp.y;
-    var d=Math.sqrt(dx*dx+dy*dy);
-    if(d<bestD){bestD=d;best=p;}
+  if(amedasOn){
+    for(i=0;i<amedasPositions.length;i++){
+      p=amedasPositions[i];
+      sp=map.latLngToContainerPoint([p.lat,p.lon]);
+      dx=cp.x-sp.x;dy=cp.y-sp.y;d=Math.sqrt(dx*dx+dy*dy);
+      if(d<bestD){bestD=d;best={name:p.name,url:'https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+p.code};}
+    }
+  }
+  if(twObsOn){
+    for(i=0;i<twObsPositions.length;i++){
+      p=twObsPositions[i];
+      sp=map.latLngToContainerPoint([p.lat,p.lon]);
+      dx=cp.x-sp.x;dy=cp.y-sp.y;d=Math.sqrt(dx*dx+dy*dy);
+      if(d<bestD){bestD=d;best={name:p.name+(p.county?'（'+p.county+'）':''),url:twObsUrl(p)};}
+    }
   }
   return best;
 }
+function hasStations(){
+  return (amedasOn&&amedasPositions.length>0)||(twObsOn&&twObsPositions.length>0);
+}
 
-/* PC: mousemove でホバー地点名表示（80ms throttle） */
+/* PC: mousemove でホバー地点名表示（80ms throttle）。日本のアメダスと台湾観測の両方 */
 var _mmThrottle=null;
 map.on('mousemove',function(e){
-  if(!amedasOn||!amedasPositions.length){hideAmLabel();return;}
+  if(!hasStations()){hideAmLabel();return;}
   if(_mmThrottle) return;
   _mmThrottle=setTimeout(function(){
     _mmThrottle=null;
-    if(!amedasOn){hideAmLabel();return;}
-    var hit=nearestAmedas(e.latlng,22);
+    if(!hasStations()){hideAmLabel();return;}
+    var hit=nearestStation(e.latlng,22);
     if(hit){var cp=map.latLngToContainerPoint(e.latlng);showAmLabel(hit.name,cp.x,cp.y);}
     else hideAmLabel();
   },80);
 });
 map.on('mouseout',function(){hideAmLabel();});
 
-/* PC: ダブルクリックでアメダス地点近くなら気象庁ページを開く */
+/* PC: ダブルクリックで地点近くなら観測ページ（日本=気象庁／台湾=気象署）を開く */
 map.on('dblclick',function(e){
-  if(!amedasOn||!amedasPositions.length) return;
-  var hit=nearestAmedas(e.latlng,25);
+  if(!hasStations()) return;
+  var hit=nearestStation(e.latlng,25);
   if(!hit) return;
   L.DomEvent.stop(e); /* マップのダブルクリックズームを防止 */
   hideAmLabel();
-  var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+hit.code;
-  window.open(url,'_blank');
+  window.open(hit.url,'_blank');
 });
 
 /* スマホ: touchendでダブルタップを自前検知（tap:falseのためLeaflet dblclickが発火しない） */
 var _lastTap=null;
 var DTAP_MS=350,DTAP_PX=30;
 document.getElementById('map').addEventListener('touchend',function(e){
-  if(!amedasOn||!amedasPositions.length){_lastTap=null;return;}
+  if(!hasStations()){_lastTap=null;return;}
   var t=e.changedTouches[0];
   var now=Date.now(),x=t.clientX,y=t.clientY;
   if(_lastTap){
@@ -1399,11 +1418,11 @@ document.getElementById('map').addEventListener('touchend',function(e){
     if(dt<DTAP_MS&&Math.sqrt(dx*dx+dy*dy)<DTAP_PX){
       var rect=document.getElementById('map').getBoundingClientRect();
       var ll=map.containerPointToLatLng([x-rect.left,y-rect.top]);
-      var hit=nearestAmedas(ll,25);
+      var hit=nearestStation(ll,25);
       if(hit){
         e.preventDefault(); /* ダブルタップズームを防止 */
         hideAmLabel();
-        var url='https://www.jma.go.jp/bosai/amedas/#area_type=offices&amdno='+hit.code;
+        var url=hit.url;
         if(typeof window.ReactNativeWebView!=='undefined'){
           window.ReactNativeWebView.postMessage(JSON.stringify({type:'openUrl',url:url}));
         }else{
