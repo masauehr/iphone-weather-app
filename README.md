@@ -6,6 +6,7 @@ React Native + Expo で作成したiPhone向け気象アプリ。
 - **公開URL（Web版）**: https://masauehr.github.io/iphone-weather-app/
 - **GitHubリポジトリ**: https://github.com/masauehr/iphone-weather-app
 - **対応地域**: 全47都道府県（class10s サブ地域対応）
+- **関連アプリ**: [台湾天気ビューア](https://masauehr.github.io/taiwan-weather-viewer/)（台湾特化の学習・実験用Webアプリ・[リポジトリ](https://github.com/masauehr/taiwan-weather-viewer)）。台湾レーダー・台湾観測のデータは、配信リポジトリ [taiwan-radar-frames](https://github.com/masauehr/taiwan-radar-frames) から読む
 - **実際の利用形態**: スマホのWebブラウザでWeb版（GitHub Pages）を開いて使う。Expo Go・ネイティブアプリは使っていない（動作確認はWeb版をスマホのブラウザで行う）
 
 詳しい技術仕様・開発手順は [MANUAL.md](MANUAL.md) を参照。台湾のデータの特徴と蓄積サービスは [taiwan-radar-frames の DATA_OVERVIEW.md](https://github.com/masauehr/taiwan-radar-frames/blob/main/DATA_OVERVIEW.md) にまとめている。
