@@ -431,6 +431,7 @@ function showFrame(idx){
     prevRadarIdx=-1;
   }
   twShow(satFrames[idx].time);  /* 台湾レーダー: 同時刻に最も近い1枚だけ表示 */
+  twObsApply(false);            /* 台湾観測: 同時刻に最も近い観測スナップショットに切替（変わったときだけ再描画） */
   elSlider.value=String(idx);
   elLabel.textContent=(idx+1)+'/'+satFrames.length;
   elTime.textContent=fmtLocal(satFrames[idx].time);
@@ -607,7 +608,7 @@ function withTimeout(p,ms){
    透過PNGを読むだけ。APIキーは使わない（キーは配信側のGitHub secretにのみ存在）。
    index.json: {bounds, attribution, frames:[{t(UTC ISO), file}]}。時刻は公式の観測時刻（推定ではない）。
    出典表示は規約上の義務（index.json の attribution を地図右下に表示）。 */
-var TW_BASE='https://masauehr.github.io/taiwan-radar-frames/';
+var TW_BASE=window.TW_BASE_OVERRIDE||'https://masauehr.github.io/taiwan-radar-frames/';  /* TW_BASE_OVERRIDE は検証用 */
 var TW_POLL=5*60*1000;        /* index.json の確認間隔（配信は10分ごと） */
 var TW_MATCH_MS=15*60*1000;   /* 日本側フレームとの許容時刻差（超えたら台湾は非表示） */
 var TW_OPACITY=0.75;
@@ -704,21 +705,28 @@ function twSet(on){
 window.toggleTw=function(){twSet(!twOn);};
 
 /* ── 台湾観測（中央氣象署 O-A0003-001 10分綜観観測・363局）── */
-/* アメダスと同じ見た目（矢羽・数値ラベル・JMA配色）で表示する。キー不要の公開S3 JSONを使用。
+/* アメダスと同じ見た目（矢羽・数値ラベル・JMA配色）で表示し、動画のコマの時刻に追従する。
+   配信リポジトリ taiwan-radar-frames が10分ごとに保存した観測スナップショット（過去3時間分）を読む。
+   配信に観測が無い間は、気象署の公開S3 JSON（最新のみ・キー不要）を直接取得する。
    日本のアメダス処理とは独立（種別選択だけ共有）。出典表示は規約上の義務。
    気圧はAirPressure=測站気圧（海面気圧ではなく高山で欠測も多い）のため出さない。
-   雨量はNow.Precipitation=当日累積（10分雨量ではない）。常に最新値のみ（過去再生は非対応）。 */
+   雨量はNow.Precipitation=当日累積（10分雨量ではない）。 */
 var TWO_URL='https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0003-001.json';
-var TWO_POLL=10*60*1000;
+var TWO_POLL=5*60*1000;          /* 配信の確認間隔（配信は10分ごと） */
+var TWO_MATCH_MS=15*60*1000;     /* 動画のコマの時刻との許容差（超えたら台湾観測は非表示） */
+var TWO_KEYS=['wd','ws','temp','rh','rain','gust','pres','weather'];  /* 配信のスナップショットの値の並び */
 var TWO_ATTR='台湾観測: 提供機關／交通部中央氣象署';
 var twObsOn=false,twObsData=[],twObsMarkers=[],twObsPoll=null,twObsTimer=null;
 var twObsBusy=false,twObsErr=false,twObsTime=0;
+var twObsStations=[],twObsSnaps=[],twObsKeys=TWO_KEYS,twObsFeed=false,twObsLatest=[];
+var twObsShownIdx=-9,twObsOut=false;   /* 表示中のスナップショット(-9=未表示)・範囲外か */
 
 /* 欠測(-99等)→null */
 function twObsNum(x){
   var v=parseFloat(x);
   return (isNaN(v)||v<=-90)?null:v;
 }
+/* 気象署の最新ファイル → 地点ごとの配列（配信に観測が無いときの代替・最新のみ） */
 function twObsParse(j){
   var st=j.cwaopendata.dataset.Station,out=[],tmax=0;
   for(var i=0;i<st.length;i++){
@@ -737,8 +745,7 @@ function twObsParse(j){
       temp:twObsNum(w.AirTemperature),rh:twObsNum(w.RelativeHumidity),
       rain:twObsNum(w.Now&&w.Now.Precipitation)});
   }
-  twObsTime=tmax;
-  return out;
+  return {list:out,t:tmax};
 }
 
 /* 種別ごとの値・配色・表示（台湾が対応する種別のみ） */
@@ -765,13 +772,51 @@ function twObsClear(){
 }
 function twObsSetStatus(t){document.getElementById('twObsStatus').textContent=t;}
 
+/* 動画のコマの時刻に最も近い観測スナップショットを選ぶ。-1=観測なし / -2=許容差を超える */
+function twObsPick(time){
+  if(!twObsSnaps.length)return -1;
+  if(!time||!twObsFeed)return twObsSnaps.length-1;   /* 時刻指定なし・最新のみ → 最新 */
+  var best=-1,bestD=Infinity;
+  for(var i=0;i<twObsSnaps.length;i++){
+    var d=Math.abs(twObsSnaps[i].t-time.getTime());
+    if(d<bestD){bestD=d;best=i;}
+  }
+  return bestD>TWO_MATCH_MS?-2:best;
+}
+/* スナップショット＋地点情報 → 描画用の配列 */
+function twObsBuild(i){
+  var sn=twObsSnaps[i];
+  if(!twObsFeed){twObsData=twObsLatest;twObsTime=sn.t;return;}
+  var ix={},k,out=[];
+  for(k=0;k<twObsKeys.length;k++)ix[twObsKeys[k]]=k;
+  for(k=0;k<twObsStations.length;k++){
+    var m=twObsStations[k],a=sn.v[m.id];
+    if(!a)continue;
+    out.push({name:m.name,lat:m.lat,lon:m.lon,wd:a[ix.wd],ws:a[ix.ws],temp:a[ix.temp],rh:a[ix.rh],rain:a[ix.rain]});
+  }
+  twObsData=out;twObsTime=sn.t;
+}
+/* 現在の動画のコマに合わせて表示するスナップショットを更新（変わったときだけ再描画） */
+function twObsApply(force){
+  if(!twObsOn)return;
+  var fr=(currentIdx>=0&&satFrames[currentIdx])?satFrames[currentIdx].time:null;
+  var i=twObsPick(fr);
+  if(!force&&i===twObsShownIdx)return;
+  twObsShownIdx=i;
+  twObsOut=(i===-2);
+  if(i>=0)twObsBuild(i);else twObsData=[];
+  twObsRender();
+}
+
 function twObsRender(){
   twObsClear();
   if(!twObsOn)return;
-  if(twObsErr&&!twObsData.length){twObsSetStatus('取得失敗');return;}
-  if(!twObsData.length){twObsSetStatus('取得中…');return;}
+  if(twObsErr&&!twObsSnaps.length){twObsSetStatus('取得失敗');return;}
+  if(!twObsSnaps.length){twObsSetStatus('取得中…');return;}
+  if(twObsOut){twObsSetStatus('この時刻の観測なし');return;}
+  if(!twObsData.length)return;
   var d0=new Date(twObsTime);
-  var info=twObsData.length+'局 '+pad2(d0.getHours())+':'+pad2(d0.getMinutes());
+  var info=twObsData.length+'局 '+pad2(d0.getHours())+':'+pad2(d0.getMinutes())+(twObsFeed?'':'（最新のみ）');
   var cfg=TWO_TYPES[amedasKind];
   if(!cfg){twObsSetStatus('この種別は台湾非対応');return;}
   var z=map.getZoom();
@@ -824,16 +869,49 @@ function twObsSchedule(ms){
   twObsTimer=setTimeout(twObsRender,ms||300);
 }
 
+/* JSON取得（30秒で打ち切り） */
+function twObsJson(url,bust){
+  return withTimeout(fetch(bust?url+(url.indexOf('?')<0?'?':'&')+'_='+Date.now():url,{cache:bust?'no-store':'default'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  }),30000);
+}
+/* 配信から観測を読む。観測が無ければ false */
+function twObsLoadFeed(){
+  return twObsJson(TW_BASE+'index.json',true).then(function(idx){
+    var o=idx.obs;
+    if(!o||!o.frames||!o.frames.length)return false;
+    twObsKeys=o.keys||TWO_KEYS;
+    var pSt=twObsStations.length&&twObsFeed?Promise.resolve():
+      twObsJson(TW_BASE+o.stations,true).then(function(j){twObsStations=j.stations;});
+    return pSt.then(function(){
+      var have={},i;
+      for(i=0;i<twObsSnaps.length;i++)have[twObsSnaps[i].file]=twObsSnaps[i];
+      return Promise.all(o.frames.map(function(f){
+        if(have[f.file])return have[f.file];
+        return twObsJson(TW_BASE+f.file,false).then(function(j){return {t:Date.parse(j.t),file:f.file,v:j.v};});
+      }));
+    }).then(function(list){
+      list.sort(function(a,b){return a.t-b.t;});
+      twObsSnaps=list;twObsFeed=true;
+      return true;
+    });
+  });
+}
+/* 気象署の最新ファイルを直接取得（配信に観測が無いときの代替・最新のみ） */
+function twObsLoadLatest(){
+  return twObsJson(TWO_URL,true).then(function(j){
+    var r=twObsParse(j);
+    twObsLatest=r.list;twObsSnaps=[{t:r.t,file:'latest',v:null}];twObsFeed=false;
+  });
+}
 function twObsFetch(){
   if(!twObsOn||twObsBusy)return;
   twObsBusy=true;
-  withTimeout(fetch(TWO_URL+'?_='+Date.now(),{cache:'no-store'}).then(function(r){
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.json();
-  }),30000).then(function(j){
-    twObsData=twObsParse(j);twObsErr=false;
-  },function(){twObsErr=true;}).then(function(){
-    twObsBusy=false;twObsRender();
+  twObsLoadFeed().catch(function(){return false;}).then(function(ok){
+    return ok?true:twObsLoadLatest();
+  }).then(function(){twObsErr=false;},function(){twObsErr=true;}).then(function(){
+    twObsBusy=false;twObsApply(true);
   });
 }
 function twObsSet(on){
@@ -848,7 +926,8 @@ function twObsSet(on){
     twObsPoll=setInterval(twObsFetch,TWO_POLL);
   }else{
     map.attributionControl.removeAttribution(TWO_ATTR);
-    twObsClear();twObsData=[];twObsSetStatus('');
+    twObsClear();twObsData=[];twObsSnaps=[];twObsStations=[];twObsLatest=[];
+    twObsFeed=false;twObsShownIdx=-9;twObsOut=false;twObsSetStatus('');
   }
 }
 window.toggleTwObs=function(){twObsSet(!twObsOn);};
