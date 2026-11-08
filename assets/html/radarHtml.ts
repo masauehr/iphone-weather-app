@@ -215,6 +215,12 @@ var map=L.map('map',{
   tap:false
 }).setView([35.5,137.0],6);
 map.setMinZoom(5);map.setMaxZoom(12); /* minZoom: iOSメモリ対策で4→5に制限 */
+/* 操作パネルの高さが変わると（台湾観測の状態表示の文言・有無で折り返しが変わる等）、地図の枠が上下に動く。
+   Leaflet は枠の大きさの変化に気づかず、地図の中身が一緒にずれて表示範囲が北にずれて見えるため、
+   枠の大きさが変わったら、中心を保ったまま地図を更新する（アニメーションなし） */
+if(window.ResizeObserver){
+  new ResizeObserver(function(){map.invalidateSize({animate:false});}).observe(document.getElementById('map'));
+}
 
 /* CartoDB Dark（常時表示ベースマップ）— ズーム中も黒画面にならない */
 /* 2026-08-28のCARTOポリシー変更でAPIキー必須化（無料枠: 月500万リクエスト） */
