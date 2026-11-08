@@ -703,6 +703,8 @@ CARTOが2026-08-28頃にポリシーを変更し、APIキーなし（匿名）�
 
 ### 8-7. 台湾レーダー（中央氣象署）の重ね合わせ
 
+> 台湾のデータの特徴・蓄積サービス・今回の修正のまとめは [taiwan-radar-frames の DATA_OVERVIEW.md](https://github.com/masauehr/taiwan-radar-frames/blob/main/DATA_OVERVIEW.md)（`pc_docs/manuals/automation/taiwan-data-overview.md` に同内容）。
+
 コントロールの **[台湾]ボタン**で、台湾・石垣島・与那国島周辺を含む台湾中央氣象署（CWA）のレーダー合成エコー図を重ねる。衛星・気象庁レーダーとは独立した `twPane`（zIndex=360）に `L.imageOverlay` で描画する。
 
 **配信リポジトリ `taiwan-radar-frames` の画像を読むだけ**（2026-11-07にブラウザ内蓄積方式から変更）。
