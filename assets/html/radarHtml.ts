@@ -618,6 +618,12 @@ var TW_BASE=window.TW_BASE_OVERRIDE||'https://masauehr.github.io/taiwan-radar-fr
 var TW_POLL=5*60*1000;        /* index.json の確認間隔（配信は10分ごと） */
 var TW_MATCH_MS=15*60*1000;   /* 日本側フレームとの許容時刻差（超えたら台湾は非表示） */
 var TW_OPACITY=0.75;
+/* [台湾]・[台湾観測]のON/OFFの保存キー。既定をONにした2026-11-08にV2へ変更（それ以前に保存されたOFFを一度リセットするため） */
+var TW_KEY='twOnV2',TW_OBS_KEY='twObsOnV2';
+/* 保存が無い初回はON。ユーザーが自分でOFFにした（'0'が保存された）場合だけOFFのまま */
+function twDefaultOn(key){
+  try{return localStorage.getItem(key)!=='0';}catch(e){return true;}
+}
 var twOn=false,twFrames=[],twPollId=null,twBusy=false,twErr=false,twAttrText='';
 
 map.createPane('twPane');
@@ -696,7 +702,7 @@ function twUpdateUI(){
 
 function twSet(on){
   twOn=on;
-  try{localStorage.setItem('twOn',on?'1':'0');}catch(e){}
+  try{localStorage.setItem(TW_KEY,on?'1':'0');}catch(e){}
   document.getElementById('twBtn').className=on?'active':'';
   clearInterval(twPollId);twPollId=null;
   if(on){
@@ -935,7 +941,7 @@ function twObsFetch(){
 }
 function twObsSet(on){
   twObsOn=on;
-  try{localStorage.setItem('twObsOn',on?'1':'0');}catch(e){}
+  try{localStorage.setItem(TW_OBS_KEY,on?'1':'0');}catch(e){}
   document.getElementById('twObsBtn').className=on?'active':'';
   clearInterval(twObsPoll);twObsPoll=null;
   if(on){
@@ -1527,9 +1533,9 @@ window.onSlider=function(v){
     if(s.lat!=null&&s.zoom!=null)map.setView([s.lat,s.lng],s.zoom);
   }
   buildFrames(true);  /* 常に現在のビューを維持して構築 */
-  /* 台湾レーダー: 前回ONなら復元（保存済みフレームを読み込み、取得を再開） */
-  try{if(localStorage.getItem('twOn')==='1')twSet(true);}catch(e){}
-  try{if(localStorage.getItem('twObsOn')==='1')twObsSet(true);}catch(e){}
+  /* 台湾レーダー・台湾観測: 既定はON（前回ユーザーがOFFにした場合だけOFFのまま） */
+  if(twDefaultOn(TW_KEY))twSet(true);
+  if(twDefaultOn(TW_OBS_KEY))twObsSet(true);
   updateAutoUI();
   scheduleAuto();
   /* アメダスデフォルトON: ボタンをアクティブに */
