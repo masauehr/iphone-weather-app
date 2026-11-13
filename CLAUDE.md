@@ -1,4 +1,4 @@
-# CLAUDE.md — MyFirstApp（衛星・レーダー・キキクルアプリ）
+# CLAUDE.md — MyFirstApp（衛星・レーダー・キキクル App）
 
 ## プロジェクト概要
 React Native + Expo で作成したiPhone向け天気予報アプリ。
